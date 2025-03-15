@@ -1,0 +1,29 @@
+.login-card {
+    height: auto;
+    .right-side {
+        padding-top: 70px;
+        padding-right: 40px;
+        padding-bottom: 70px;
+
+        .uni-name {
+            margin-bottom: 25px;
+        }
+
+        .lable-text {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+    }
+    .left-side {
+        padding-left: 40px;
+        padding-top: 70px;
+        padding-bottom: 70px;
+    }
+}
