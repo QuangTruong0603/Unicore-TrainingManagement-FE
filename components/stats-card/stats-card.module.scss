@@ -1,0 +1,31 @@
+.statsCard {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #fee8dd;
+  
+  .iconWrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.04);
+    margin-bottom: 0.75rem;
+
+    svg {
+      color: #666;
+    }
+  }
+  
+  .statsValue {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+  }
+  
+  .statsLabel {
+    // color: #666;
+    font-size: 0.9rem;
+  }
+} 

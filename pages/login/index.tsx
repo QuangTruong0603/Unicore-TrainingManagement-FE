@@ -1,18 +1,51 @@
-import React, { useState } from "react";
-import { Input, Button, Card, Spacer, Image } from "@heroui/react";
+import React, { FormEvent, useEffect, useState } from "react";
+import { Input, Button, Card, Spacer, Image, Form } from "@heroui/react";
 import { Logo } from "@/components/icons/icons";
 
 import "./index.scss";
+import { on } from "node:stream";
 
 export default function StudentLogin() {
   const [isVisible, setIsVisible] = useState(false);
-  const [registrationNumber, setRegistrationNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [submitted, setSubmitted] = useState<Record<string, string> | null>(null);
 
-  const handleLogin = (e: any) => {
+  useEffect(() => {
+    if (!submitted) return; // Không gọi API nếu chưa submit
+
+    const login = async () => {
+     
+
+      try {
+        const res = await fetch("https://localhost:5001/api/u/Auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submitted), // Gửi dữ liệu login
+        });
+
+        if (!res.ok) throw new Error("Login failed!");
+
+        const data = await res.json();
+        
+     
+      } catch (err) {
+      
+      } finally {
+     
+        setSubmitted(null); // Reset tránh gọi API liên tục
+      }
+    };
+
+    login();
+  }, [submitted]);
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Đăng nhập với:", { registrationNumber, password });
+    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+    setSubmitted(data);
   };
+
+  
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-orange-50 p-4">
@@ -40,11 +73,11 @@ export default function StudentLogin() {
               </span>
             </div>
 
-            <form onSubmit={handleLogin}>
+            <Form onSubmit={onSubmit}>
               <label className="lable-text">Account</label>
               <Input
-                value={registrationNumber}
-                onChange={(e) => setRegistrationNumber(e.target.value)}
+                name="email"
+                errorMessage="Please enter a valid email"
                 placeholder="Enter account"
                 fullWidth
                 required
@@ -53,9 +86,9 @@ export default function StudentLogin() {
 
               <label className="lable-text mb-3">Password</label>
               <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
                 placeholder="Enter password"
+                errorMessage="Please enter a valid password"
                 fullWidth
                 type={isVisible ? "text" : "password"}
                 required
@@ -68,7 +101,7 @@ export default function StudentLogin() {
               >
                 Login
               </Button>
-            </form>
+            </Form>
             <p className="forgot-password bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex justify-center pt-4">
               Forgot password?
             </p>
