@@ -1,62 +1,52 @@
-import React, { FormEvent, useEffect, useState } from "react";
+'use client'
+import React, { FormEvent, useState } from "react";
 import { Input, Button, Card, Spacer, Image, Form } from "@heroui/react";
 import { Logo } from "@/components/icons/icons";
-
+import { useLogin } from "@/services/auth/auth.hooks";
+import { loginSchema } from "@/services/auth/auth.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/router";
 import "./index.scss";
-import { on } from "node:stream";
 
 export default function StudentLogin() {
   const [isVisible, setIsVisible] = useState(false);
-  const [submitted, setSubmitted] = useState<Record<string, string> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const login = useLogin();
 
-  useEffect(() => {
-    if (!submitted) return; // Không gọi API nếu chưa submit
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(loginSchema)
+  });
 
-    const login = async () => {
-     
-
-      try {
-        const res = await fetch("https://localhost:5001/api/u/Auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(submitted), // Gửi dữ liệu login
-        });
-
-        if (!res.ok) throw new Error("Login failed!");
-
-        const data = await res.json();
-        
-     
-      } catch (err) {
+  const onSubmit = async (data: any) => {
+    try {
+      setError(null);
+      const response = await login.mutateAsync(data);
       
-      } finally {
-     
-        setSubmitted(null); // Reset tránh gọi API liên tục
-      }
-    };
-
-    login();
-  }, [submitted]);
-
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
-    setSubmitted(data);
+      // Lưu token vào localStorage hoặc cookie
+      localStorage.setItem('token', response.token);
+      
+      // Chuyển hướng về trang chủ
+      router.push('/');
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.');
+    }
   };
-
-  
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-orange-50 p-4">
       <Card className="w-full login-card max-w-4xl shadow-lg">
         <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/2 left-side p-6 flex items-center justify-center  rounded-l-lg">
+          <div className="w-full md:w-1/2 left-side p-6 flex items-center justify-center rounded-l-lg">
             <div className="relative">
               <Image
                 src="/images/graduation.png"
                 alt="School"
-              
                 className="object-cover"
               />
             </div>
@@ -73,11 +63,11 @@ export default function StudentLogin() {
               </span>
             </div>
 
-            <Form onSubmit={onSubmit}>
-              <label className="lable-text">Account</label>
+            <Form onSubmit={handleSubmit(onSubmit)}>
+              <label className="lable-text">Email</label>
               <Input
-                name="email"
-                errorMessage="Please enter a valid email"
+                {...register("email")}
+                errorMessage={errors.email?.message as string}
                 placeholder="Enter account"
                 fullWidth
                 required
@@ -86,9 +76,9 @@ export default function StudentLogin() {
 
               <label className="lable-text mb-3">Password</label>
               <Input
-                name="password"
+                {...register("password")}
                 placeholder="Enter password"
-                errorMessage="Please enter a valid password"
+                errorMessage={errors.password?.message as string}
                 fullWidth
                 type={isVisible ? "text" : "password"}
                 required
@@ -98,8 +88,9 @@ export default function StudentLogin() {
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                disabled={login.isPending}
               >
-                Login
+                {login.isPending ? "Logging in..." : "Login"}
               </Button>
             </Form>
             <p className="forgot-password bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex justify-center pt-4">
