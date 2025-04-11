@@ -64,6 +64,11 @@ const Sidebar: React.FC<ISidebarProps> = ({
       title: "Messages",
       icon: <Mail size={20} />,
     },
+    {
+      key: "/courses",
+      title: "Courses",
+      icon: <BookOpen size={20} />,
+    },
   ];
 
   const bottomMenuItems: IMenuItem[] = [

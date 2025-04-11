@@ -27,11 +27,7 @@ export default function StudentLogin() {
     try {
       setError(null);
       const response = await login.mutateAsync(data);
-      
-      // Lưu token vào localStorage hoặc cookie
       localStorage.setItem('token', response.token);
-      
-      // Chuyển hướng về trang chủ
       router.push('/');
     } catch (error: any) {
       setError(error.message || 'Login failed. Please try again.');

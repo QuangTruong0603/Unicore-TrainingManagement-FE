@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
+import { Table as HeroTable, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
 import styles from './table.module.scss';
 
 export interface TableData {
@@ -32,7 +32,7 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
           )}
         </div>
       )}
-      <Table aria-label={title}>
+      <HeroTable aria-label={title}>
         <TableHeader>
           <TableColumn>ACTIVITY</TableColumn>
           <TableColumn>DATE</TableColumn>
@@ -51,7 +51,65 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </HeroTable>
     </div>
   );
 };
+
+export interface Column<T> {
+  key: string;
+  title: string;
+  sortable?: boolean;
+  render: (item: T) => React.ReactNode;
+}
+
+interface TableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  isLoading?: boolean;
+  sortKey?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (key: string) => void;
+}
+
+export function DataTable<T>({
+  data,
+  columns,
+  isLoading,
+  sortKey,
+  sortDirection,
+  onSort
+}: TableProps<T>) {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return (
+    <HeroTable>
+      <TableHeader>
+        {columns.map((column) => (
+          <TableColumn 
+            key={column.key}
+            allowsSorting={column.sortable}
+            onClick={() => column.sortable && onSort?.(column.key)}
+          >
+            {column.title}
+          </TableColumn>
+        ))}
+      </TableHeader>
+      <TableBody items={data}>
+        {(item: T) => (
+          <TableRow>
+            {columns.map((column) => (
+              <TableCell key={column.key}>{column.render(item)}</TableCell>
+            ))}
+          </TableRow>
+        )}
+      </TableBody>
+    </HeroTable>
+  );
+}
