@@ -27,6 +27,14 @@ interface CreateCourseData {
   parallelCourseId?: string;
 }
 
+interface UpdateCourseData {
+  name: string;
+  description: string;
+  price: number;
+  majorId: string;
+  isActive: boolean;
+}
+
 const API_URL = 'https://localhost:6001/api';
 
 export const courseService = {
@@ -56,5 +64,24 @@ export const courseService = {
     });
 
     return response.data;
+  },
+
+  updateCourse: async (id: string, data: UpdateCourseData): Promise<Course> => {
+    const response = await axios.put(`${API_URL}/c/Courses/${id}`, data, {
+      headers: {
+        'accept': 'text/plain',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return response.data;
+  },
+
+  deleteCourse: async (id: string): Promise<void> => {
+    await axios.delete(`${API_URL}/c/Courses/${id}`, {
+      headers: {
+        'accept': 'text/plain'
+      }
+    });
   }
 }; 

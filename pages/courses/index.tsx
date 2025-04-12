@@ -37,14 +37,27 @@ export default function CoursesPage() {
     (state) => state.course
   );
   const [majors, setMajors] = useState<Major[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
+  // Create modal
   const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onOpenChange: onCreateOpenChange,
+  } = useDisclosure();
+  // Update modal
+  const {
+    isOpen: isUpdateOpen,
+    onOpen: onUpdateOpen,
+    onOpenChange: onUpdateOpenChange,
+  } = useDisclosure();
+
+  // Create form
+  const {
+    register: createRegister,
+    handleSubmit: createHandleSubmit,
+    reset: createReset,
+    formState: { errors: createErrors, isSubmitting: isCreateSubmitting },
   } = useForm({
     defaultValues: {
       code: "",
@@ -57,6 +70,23 @@ export default function CoursesPage() {
       isOpening: true,
       isHavePracticeClass: false,
       isUseForCalculateScore: true,
+    },
+  });
+
+  // Update form
+  const {
+    register: updateRegister,
+    handleSubmit: updateHandleSubmit,
+    reset: updateReset,
+    setValue: updateSetValue,
+    formState: { errors: updateErrors, isSubmitting: isUpdateSubmitting },
+  } = useForm({
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      majorId: "",
+      isActive: true,
     },
   });
 
@@ -92,17 +122,74 @@ export default function CoursesPage() {
     fetchCourses();
   }, [query, dispatch]);
 
-  const onSubmit = async (data: any) => {
+  const handleEdit = (course: Course) => {
+    setSelectedCourse(course);
+    updateSetValue("name", course.name);
+    updateSetValue("description", course.description);
+    updateSetValue("price", course.price);
+    updateSetValue("majorId", course.majorId);
+    updateSetValue("isActive", course.isOpening);
+    onUpdateOpen();
+  };
+
+  const animals = [
+    { key: "cat", label: "Cat" },
+    { key: "dog", label: "Dog" },
+    { key: "elephant", label: "Elephant" },
+    { key: "lion", label: "Lion" },
+    { key: "tiger", label: "Tiger" },
+    { key: "giraffe", label: "Giraffe" },
+    { key: "dolphin", label: "Dolphin" },
+    { key: "penguin", label: "Penguin" },
+    { key: "zebra", label: "Zebra" },
+    { key: "shark", label: "Shark" },
+    { key: "whale", label: "Whale" },
+    { key: "otter", label: "Otter" },
+    { key: "crocodile", label: "Crocodile" },
+  ];
+
+  const handleDelete = async (course: Course) => {
+    if (window.confirm(`Are you sure you want to delete ${course.name}?`)) {
+      try {
+        await courseService.deleteCourse(course.id);
+        // Refetch courses after deleting
+        const response = await courseService.getCourses(query);
+        dispatch(setCourses(response.data.data));
+        dispatch(setTotal(response.data.total));
+      } catch (error) {
+        console.error("Failed to delete course:", error);
+      }
+    }
+  };
+
+  const onCreateSubmit = async (data: any) => {
     try {
       await courseService.createCourse(data);
-      setIsModalOpen(false);
-      reset();
-      // Refetch courses after creating a new one
+      onCreateOpenChange();
+      createReset();
+      // Refetch courses after creating
       const response = await courseService.getCourses(query);
       dispatch(setCourses(response.data.data));
       dispatch(setTotal(response.data.total));
     } catch (error) {
       console.error("Failed to create course:", error);
+    }
+  };
+
+  const onUpdateSubmit = async (data: any) => {
+    try {
+      if (selectedCourse) {
+        await courseService.updateCourse(selectedCourse.id, data);
+        onUpdateOpenChange();
+        updateReset();
+        setSelectedCourse(null);
+        // Refetch courses after updating
+        const response = await courseService.getCourses(query);
+        dispatch(setCourses(response.data.data));
+        dispatch(setTotal(response.data.total));
+      }
+    } catch (error) {
+      console.error("Failed to update course:", error);
     }
   };
 
@@ -166,10 +253,19 @@ export default function CoursesPage() {
       title: "Actions",
       render: (course: Course) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="bordered">
+          <Button
+            size="sm"
+            variant="bordered"
+            onPress={() => handleEdit(course)}
+          >
             Edit
           </Button>
-          <Button size="sm" variant="flat" color="danger">
+          <Button
+            size="sm"
+            variant="flat"
+            color="danger"
+            onPress={() => handleDelete(course)}
+          >
             Delete
           </Button>
         </div>
@@ -179,11 +275,10 @@ export default function CoursesPage() {
 
   return (
     <DefaultLayout>
-      <>abc</>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Courses</h1>
-          <Button variant="solid" color="primary" onPress={onOpen}>
+          <Button variant="solid" color="primary" onPress={onCreateOpen}>
             Add Course
           </Button>
         </div>
@@ -222,7 +317,8 @@ export default function CoursesPage() {
           />
         </div>
 
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        {/* Create Course Modal */}
+        <Modal isOpen={isCreateOpen} onOpenChange={onCreateOpenChange}>
           <ModalContent>
             {(onClose) => (
               <>
@@ -230,15 +326,18 @@ export default function CoursesPage() {
                   Add New Course
                 </ModalHeader>
                 <ModalBody>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={createHandleSubmit(onCreateSubmit)}
+                    className="space-y-4"
+                  >
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
                           Code
                         </label>
                         <Input
-                          {...register("code")}
-                          errorMessage={errors.code?.message}
+                          {...createRegister("code")}
+                          errorMessage={createErrors.code?.message}
                           placeholder="Enter course code"
                         />
                       </div>
@@ -247,8 +346,8 @@ export default function CoursesPage() {
                           Name
                         </label>
                         <Input
-                          {...register("name")}
-                          errorMessage={errors.name?.message}
+                          {...createRegister("name")}
+                          errorMessage={createErrors.name?.message}
                           placeholder="Enter course name"
                         />
                       </div>
@@ -259,8 +358,8 @@ export default function CoursesPage() {
                         Description
                       </label>
                       <Input
-                        {...register("description")}
-                        errorMessage={errors.description?.message}
+                        {...createRegister("description")}
+                        errorMessage={createErrors.description?.message}
                         placeholder="Enter course description"
                       />
                     </div>
@@ -272,8 +371,8 @@ export default function CoursesPage() {
                         </label>
                         <Input
                           type="number"
-                          {...register("price")}
-                          errorMessage={errors.price?.message}
+                          {...createRegister("price")}
+                          errorMessage={createErrors.price?.message}
                           placeholder="Enter price"
                         />
                       </div>
@@ -283,8 +382,8 @@ export default function CoursesPage() {
                         </label>
                         <Input
                           type="number"
-                          {...register("credit")}
-                          errorMessage={errors.credit?.message}
+                          {...createRegister("credit")}
+                          errorMessage={createErrors.credit?.message}
                           placeholder="Enter credits"
                         />
                       </div>
@@ -295,13 +394,15 @@ export default function CoursesPage() {
                         Major
                       </label>
                       <Select
-                        {...register("majorId")}
+                        {...createRegister("majorId")}
                         placeholder="Select a major"
+                        items={majors}
                         className="w-full"
+                        selectionMode="single"
                       >
                         {majors.map((major) => (
-                          <SelectItem key={major.id} textValue={major.name}>
-                            {major.name} ({major.code})
+                          <SelectItem key={major.id}>
+                            {`${major.name} (${major.code})`}
                           </SelectItem>
                         ))}
                       </Select>
@@ -314,19 +415,21 @@ export default function CoursesPage() {
                         </label>
                         <Input
                           type="number"
-                          {...register("minCreditCanApply")}
-                          errorMessage={errors.minCreditCanApply?.message}
+                          {...createRegister("minCreditCanApply")}
+                          errorMessage={createErrors.minCreditCanApply?.message}
                           placeholder="Enter minimum credits"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Checkbox {...register("isOpening")}>Is Opening</Checkbox>
-                      <Checkbox {...register("isHavePracticeClass")}>
+                      <Checkbox {...createRegister("isOpening")}>
+                        Is Opening
+                      </Checkbox>
+                      <Checkbox {...createRegister("isHavePracticeClass")}>
                         Has Practice Class
                       </Checkbox>
-                      <Checkbox {...register("isUseForCalculateScore")}>
+                      <Checkbox {...createRegister("isUseForCalculateScore")}>
                         Use for Score Calculation
                       </Checkbox>
                     </div>
@@ -338,10 +441,99 @@ export default function CoursesPage() {
                   </Button>
                   <Button
                     color="primary"
-                    onClick={handleSubmit(onSubmit)}
-                    disabled={isSubmitting}
+                    onClick={createHandleSubmit(onCreateSubmit)}
+                    disabled={isCreateSubmitting}
                   >
-                    {isSubmitting ? "Creating..." : "Create Course"}
+                    {isCreateSubmitting ? "Creating..." : "Create Course"}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Update Course Modal */}
+        <Modal isOpen={isUpdateOpen} onOpenChange={onUpdateOpenChange}>
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Edit Course
+                </ModalHeader>
+                <ModalBody>
+                  <form
+                    onSubmit={updateHandleSubmit(onUpdateSubmit)}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Name
+                      </label>
+                      <Input
+                        {...updateRegister("name")}
+                        errorMessage={updateErrors.name?.message}
+                        placeholder="Enter course name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Description
+                      </label>
+                      <Input
+                        {...updateRegister("description")}
+                        errorMessage={updateErrors.description?.message}
+                        placeholder="Enter course description"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Price
+                      </label>
+                      <Input
+                        type="number"
+                        {...updateRegister("price")}
+                        errorMessage={updateErrors.price?.message}
+                        placeholder="Enter price"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Major
+                      </label>
+                      <Select
+                        placeholder="Select a major"
+                        items={majors}
+                        className="w-full"
+                        selectionMode="single"
+                      >
+                        {majors.map((major) => (
+                          <SelectItem key={major.id}>
+                            {`${major.name} (${major.code})`}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Checkbox {...updateRegister("isActive")}>
+                        Is Active
+                      </Checkbox>
+                    </div>
+                  </form>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    Close
+                  </Button>
+                  <Button
+                    color="primary"
+                    onClick={updateHandleSubmit(onUpdateSubmit)}
+                    disabled={isUpdateSubmitting}
+                  >
+                    {isUpdateSubmitting ? "Updating..." : "Update Course"}
                   </Button>
                 </ModalFooter>
               </>
