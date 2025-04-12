@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { Course, CourseQuery } from "./course.schema";
 
 interface CourseResponse {
@@ -26,43 +27,34 @@ interface CreateCourseData {
   parallelCourseId?: string;
 }
 
+const API_URL = 'https://localhost:6001/api';
+
 export const courseService = {
   getCourses: async (query: CourseQuery): Promise<CourseResponse> => {
-    const params = new URLSearchParams({
+    const params = {
       'Pagination.PageNumber': query.pageNumber.toString(),
       'Pagination.ItemsPerpage': query.itemsPerpage.toString(),
       ...(query.searchQuery && { 'Filter.SearchQuery': query.searchQuery }),
       ...(query.isDesc && { 'Order.IsDesc': query.isDesc.toString() })
-    });
+    };
 
-    const response = await fetch(`https://localhost:6001/api/c/Courses/page?${params}`, {
-      method: 'GET',
+    const response = await axios.get(`${API_URL}/c/Courses/page`, {
+      params,
       headers: {
         'accept': 'text/plain'
       }
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch courses');
-    }
-
-    return response.json();
+    return response.data;
   },
 
   createCourse: async (data: CreateCourseData): Promise<Course> => {
-    const response = await fetch('https://localhost:6001/api/c/Courses', {
-      method: 'POST',
+    const response = await axios.post(`${API_URL}/c/Courses`, data, {
       headers: {
-        // 'accept': 'text/plain',
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
+      }
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to create course');
-    }
-
-    return response.json();
+    return response.data;
   }
 }; 
