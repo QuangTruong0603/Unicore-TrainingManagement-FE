@@ -1,15 +1,14 @@
-import axios from 'axios';
-import { MajorResponse } from './major.schema';
+import { majorClient } from "../api/http-client";
+import { API_ENDPOINTS } from "../api/api-config";
 
-const API_URL = 'https://localhost:7001/api';
+import { MajorListResponse } from "./major.dto";
 
 export const majorService = {
-  getMajors: async (): Promise<MajorResponse> => {
-    const response = await axios.get(`${API_URL}/m/Major`, {
+  getMajors: async (): Promise<MajorListResponse> => {
+    return majorClient.get(API_ENDPOINTS.MAJORS, {
       headers: {
-        'accept': 'text/plain'
-      }
+        accept: "text/plain",
+      },
     });
-    return response.data;
-  }
-}; 
+  },
+};

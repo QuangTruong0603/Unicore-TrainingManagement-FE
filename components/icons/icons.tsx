@@ -2,11 +2,7 @@ import * as React from "react";
 
 import { IconSvgProps } from "@/types";
 
-export const Logo: React.FC<IconSvgProps> = ({
-  size = 36,
-  height,
-  ...props
-}) => (
+export const Logo: React.FC<IconSvgProps> = ({ size = 36, ...props }) => (
   <div
     className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold p-2 text-lg 
              rounded-tl-2xl rounded-tr-2xl rounded-bl-lg rounded-br-2xl"
@@ -14,36 +10,6 @@ export const Logo: React.FC<IconSvgProps> = ({
     UNI
   </div>
 );
-
-// export const Logo: React.FC<IconSvgProps> = ({
-//   size = 36,
-//   height,
-//   ...props
-// }) => (
-//   <svg
-//     version="1.0"
-//     xmlns="http://www.w3.org/2000/svg"
-//     width="70pt"
-//     height="70pt"
-//     viewBox="0 0 1350.000000 1350.000000"
-//     preserveAspectRatio="xMidYMid meet"
-//     {...props}
-//   >
-//     <defs>
-//       <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-//         <stop offset="0%" style={{ stopColor: "#f8c3a3", stopOpacity: 1 }} />
-//         <stop offset="100%" style={{ stopColor: "#d96b40", stopOpacity: 1 }} />
-//       </linearGradient>
-//     </defs>
-//     <g
-//       transform="translate(0.000000,1350.000000) scale(0.100000,-0.100000)"
-//       fill="url(#grad1)"
-//       stroke="none"
-//     >
-//       <path d="M8427 9783 c-18 -5 -33 -34 -157 -298 ..." />
-//     </g>
-//   </svg>
-// );
 
 export const DiscordIcon: React.FC<IconSvgProps> = ({
   size = 24,

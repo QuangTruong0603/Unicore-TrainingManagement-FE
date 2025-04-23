@@ -1,35 +1,45 @@
-import { useState, useEffect } from "react";
-import DefaultLayout from "@/layouts/default";
-import {
-  Input,
-  Button,
-  Pagination,
-  Modal,
-  Checkbox,
-  useDisclosure,
-  ModalFooter,
-  ModalBody,
-  ModalContent,
-  ModalHeader,
-  Select,
-  SelectItem,
-} from "@heroui/react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
+import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
+
+import { CourseFilter } from "@/components/course/course-filter";
+import { CourseModal } from "@/components/course/course-modal";
 import { DataTable } from "@/components/ui/table/table";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import DefaultLayout from "@/layouts/default";
+import { Course } from "@/services/course/course.schema";
 import { courseService } from "@/services/course/course.service";
+import { Major } from "@/services/major/major.schema";
+import { majorService } from "@/services/major/major.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setCourses,
+  setError,
+  setLoading,
   setQuery,
   setTotal,
-  setLoading,
-  setError,
 } from "@/store/slices/courseSlice";
-import { Course } from "@/services/course/course.schema";
-import { majorService } from "@/services/major/major.service";
-import { Major } from "@/services/major/major.schema";
+
+interface FilterChip {
+  id: string;
+  label: string;
+}
+
+// Custom hook for debounced values
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function CoursesPage() {
   const dispatch = useAppDispatch();
@@ -38,6 +48,13 @@ export default function CoursesPage() {
   );
   const [majors, setMajors] = useState<Major[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+  const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
+  const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
+  const [searchInputValue, setSearchInputValue] = useState<string>(
+    query.searchQuery || ""
+  );
+  const debouncedSearchValue = useDebounce<string>(searchInputValue, 600);
 
   // Create modal
   const {
@@ -52,62 +69,33 @@ export default function CoursesPage() {
     onOpenChange: onUpdateOpenChange,
   } = useDisclosure();
 
-  // Create form
-  const {
-    register: createRegister,
-    handleSubmit: createHandleSubmit,
-    reset: createReset,
-    formState: { errors: createErrors, isSubmitting: isCreateSubmitting },
-  } = useForm({
-    defaultValues: {
-      code: "",
-      name: "",
-      description: "",
-      price: 0,
-      credit: 0,
-      minCreditCanApply: 0,
-      majorId: "",
-      isOpening: true,
-      isHavePracticeClass: false,
-      isUseForCalculateScore: true,
-    },
-  });
-
-  // Update form
-  const {
-    register: updateRegister,
-    handleSubmit: updateHandleSubmit,
-    reset: updateReset,
-    setValue: updateSetValue,
-    formState: { errors: updateErrors, isSubmitting: isUpdateSubmitting },
-  } = useForm({
-    defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      majorId: "",
-      isActive: true,
-    },
-  });
-
   useEffect(() => {
     const fetchMajors = async () => {
       try {
         const response = await majorService.getMajors();
+
         setMajors(response.data);
-      } catch (error) {
-        console.error("Failed to fetch majors:", error);
+      } catch (_error) {
+        // Error handling without console.error
       }
     };
 
     fetchMajors();
   }, []);
 
+  // Effect for handling debounced search
+  useEffect(() => {
+    dispatch(
+      setQuery({ ...query, searchQuery: debouncedSearchValue, pageNumber: 1 })
+    );
+  }, [debouncedSearchValue, dispatch]);
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         dispatch(setLoading(true));
         const response = await courseService.getCourses(query);
+
         dispatch(setCourses(response.data.data));
         dispatch(setTotal(response.data.total));
       } catch (error) {
@@ -120,33 +108,102 @@ export default function CoursesPage() {
     };
 
     fetchCourses();
+
+    // Update filter chips whenever query changes
+    updateFilterChipsFromQuery();
   }, [query, dispatch]);
+
+  // Update filter chips based on current query
+  const updateFilterChipsFromQuery = () => {
+    if (!query.filters) {
+      setFilterChips([]);
+
+      return;
+    }
+
+    const newChips: FilterChip[] = [];
+
+    // Price range filter
+    if (query.filters.priceRange) {
+      const [min, max] = query.filters.priceRange;
+
+      newChips.push({
+        id: "price",
+        label: `Price: $${min} - $${max}`,
+      });
+    }
+
+    // Credit range filter
+    if (query.filters.creditRange) {
+      const [min, max] = query.filters.creditRange;
+
+      newChips.push({
+        id: "credit",
+        label: `Credits: ${min} - ${max}`,
+      });
+    }
+
+    // Major filter
+    if (query.filters.majorIds?.length) {
+      const selectedMajors = majors
+        .filter((m) => query.filters?.majorIds?.includes(m.id))
+        .map((m) => m.code)
+        .join(", ");
+
+      newChips.push({
+        id: "majorIds",
+        label: `Majors: ${selectedMajors || "Selected"}`,
+      });
+    }
+
+    // Status filter
+    if (
+      query.filters.isOpening !== undefined &&
+      query.filters.isOpening !== null
+    ) {
+      newChips.push({
+        id: "status",
+        label: `Status: ${query.filters.isOpening ? "Opening" : "Normal"}`,
+      });
+    }
+
+    // Practice class filter
+    if (
+      query.filters.isHavePracticeClass !== undefined &&
+      query.filters.isHavePracticeClass !== null
+    ) {
+      newChips.push({
+        id: "practiceClass",
+        label: `Practice Class: ${query.filters.isHavePracticeClass ? "Yes" : "No"}`,
+      });
+    }
+
+    // Score calculation filter
+    if (
+      query.filters.isUseForCalculateScore !== undefined &&
+      query.filters.isUseForCalculateScore !== null
+    ) {
+      newChips.push({
+        id: "scoreCalculation",
+        label: `Used for Score: ${query.filters.isUseForCalculateScore ? "Yes" : "No"}`,
+      });
+    }
+
+    // Min credit filter
+    if (query.filters.minCreditCanApply) {
+      newChips.push({
+        id: "minCreditApply",
+        label: `Min Credits to Apply: ${query.filters.minCreditCanApply}`,
+      });
+    }
+
+    setFilterChips(newChips);
+  };
 
   const handleEdit = (course: Course) => {
     setSelectedCourse(course);
-    updateSetValue("name", course.name);
-    updateSetValue("description", course.description);
-    updateSetValue("price", course.price);
-    updateSetValue("majorId", course.majorId);
-    updateSetValue("isActive", course.isOpening);
     onUpdateOpen();
   };
-
-  const animals = [
-    { key: "cat", label: "Cat" },
-    { key: "dog", label: "Dog" },
-    { key: "elephant", label: "Elephant" },
-    { key: "lion", label: "Lion" },
-    { key: "tiger", label: "Tiger" },
-    { key: "giraffe", label: "Giraffe" },
-    { key: "dolphin", label: "Dolphin" },
-    { key: "penguin", label: "Penguin" },
-    { key: "zebra", label: "Zebra" },
-    { key: "shark", label: "Shark" },
-    { key: "whale", label: "Whale" },
-    { key: "otter", label: "Otter" },
-    { key: "crocodile", label: "Crocodile" },
-  ];
 
   const handleDelete = async (course: Course) => {
     if (window.confirm(`Are you sure you want to delete ${course.name}?`)) {
@@ -154,42 +211,49 @@ export default function CoursesPage() {
         await courseService.deleteCourse(course.id);
         // Refetch courses after deleting
         const response = await courseService.getCourses(query);
+
         dispatch(setCourses(response.data.data));
         dispatch(setTotal(response.data.total));
-      } catch (error) {
-        console.error("Failed to delete course:", error);
+      } catch (_error) {
+        // Error handling without console.error
       }
     }
   };
 
   const onCreateSubmit = async (data: any) => {
     try {
+      setIsCreateSubmitting(true);
       await courseService.createCourse(data);
       onCreateOpenChange();
-      createReset();
       // Refetch courses after creating
       const response = await courseService.getCourses(query);
+
       dispatch(setCourses(response.data.data));
       dispatch(setTotal(response.data.total));
-    } catch (error) {
-      console.error("Failed to create course:", error);
+    } catch (_error) {
+      // Error handling without console.error
+    } finally {
+      setIsCreateSubmitting(false);
     }
   };
 
   const onUpdateSubmit = async (data: any) => {
     try {
       if (selectedCourse) {
+        setIsUpdateSubmitting(true);
         await courseService.updateCourse(selectedCourse.id, data);
         onUpdateOpenChange();
-        updateReset();
         setSelectedCourse(null);
         // Refetch courses after updating
         const response = await courseService.getCourses(query);
+
         dispatch(setCourses(response.data.data));
         dispatch(setTotal(response.data.total));
       }
-    } catch (error) {
-      console.error("Failed to update course:", error);
+    } catch (_error) {
+      // Error handling without console.error
+    } finally {
+      setIsUpdateSubmitting(false);
     }
   };
 
@@ -209,6 +273,23 @@ export default function CoursesPage() {
 
   const handlePageChange = (page: number) => {
     dispatch(setQuery({ ...query, pageNumber: page }));
+  };
+
+  const handleFilterChange = (newQuery: any) => {
+    dispatch(setQuery(newQuery));
+  };
+
+  const handleFilterClear = () => {
+    dispatch(
+      setQuery({
+        pageNumber: 1,
+        itemsPerpage: query.itemsPerpage,
+        searchQuery: query.searchQuery,
+        orderBy: "name",
+        isDesc: false,
+        filters: {},
+      })
+    );
   };
 
   const columns = [
@@ -261,9 +342,9 @@ export default function CoursesPage() {
             Edit
           </Button>
           <Button
+            color="danger"
             size="sm"
             variant="flat"
-            color="danger"
             onPress={() => handleDelete(course)}
           >
             Delete
@@ -278,268 +359,93 @@ export default function CoursesPage() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Courses</h1>
-          <Button variant="solid" color="primary" onPress={onCreateOpen}>
+          <Button color="primary" variant="solid" onPress={onCreateOpen}>
             Add Course
           </Button>
         </div>
 
-        <div className="mb-4">
-          <div className="relative">
-            <Input
-              placeholder="Search courses..."
-              value={query.searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
+        <div className="mb-6">
+          {/* Search and filter container */}
+          <div className="flex items-center gap-4 mb-2">
+            <div className="relative flex-1">
+              <Input
+                className="pl-10 w-full rounded-xl"
+                placeholder="Search courses..."
+                value={searchInputValue}
+                onChange={(e) => setSearchInputValue(e.target.value)}
+              />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
+              {searchInputValue !== debouncedSearchValue && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                </div>
+              )}
+            </div>
+            <CourseFilter
+              majors={majors}
+              query={query}
+              onFilterChange={handleFilterChange}
+              onFilterClear={handleFilterClear}
             />
           </div>
+
+          {/* Filter chips display - increased margin-top */}
+          {filterChips.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {filterChips.map((chip) => (
+                <div
+                  key={chip.id}
+                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs"
+                >
+                  {chip.label}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow">
           <DataTable
-            data={courses}
             columns={columns}
+            data={courses}
             isLoading={isLoading}
-            sortKey={query.orderBy}
             sortDirection={query.isDesc ? "desc" : "asc"}
+            sortKey={query.orderBy}
             onSort={handleSort}
           />
         </div>
 
         <div className="mt-4 flex justify-end">
           <Pagination
-            total={Math.ceil(total / query.itemsPerpage)}
             page={query.pageNumber}
+            total={Math.ceil(total / query.itemsPerpage)}
             onChange={handlePageChange}
           />
         </div>
 
         {/* Create Course Modal */}
-        <Modal isOpen={isCreateOpen} onOpenChange={onCreateOpenChange}>
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="flex flex-col gap-1">
-                  Add New Course
-                </ModalHeader>
-                <ModalBody>
-                  <form
-                    onSubmit={createHandleSubmit(onCreateSubmit)}
-                    className="space-y-4"
-                  >
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Code
-                        </label>
-                        <Input
-                          {...createRegister("code")}
-                          errorMessage={createErrors.code?.message}
-                          placeholder="Enter course code"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Name
-                        </label>
-                        <Input
-                          {...createRegister("name")}
-                          errorMessage={createErrors.name?.message}
-                          placeholder="Enter course name"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Description
-                      </label>
-                      <Input
-                        {...createRegister("description")}
-                        errorMessage={createErrors.description?.message}
-                        placeholder="Enter course description"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Price
-                        </label>
-                        <Input
-                          type="number"
-                          {...createRegister("price")}
-                          errorMessage={createErrors.price?.message}
-                          placeholder="Enter price"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Credit
-                        </label>
-                        <Input
-                          type="number"
-                          {...createRegister("credit")}
-                          errorMessage={createErrors.credit?.message}
-                          placeholder="Enter credits"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Major
-                      </label>
-                      <Select
-                        {...createRegister("majorId")}
-                        placeholder="Select a major"
-                        items={majors}
-                        className="w-full"
-                        selectionMode="single"
-                      >
-                        {majors.map((major) => (
-                          <SelectItem key={major.id}>
-                            {`${major.name} (${major.code})`}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Min Credits to Apply
-                        </label>
-                        <Input
-                          type="number"
-                          {...createRegister("minCreditCanApply")}
-                          errorMessage={createErrors.minCreditCanApply?.message}
-                          placeholder="Enter minimum credits"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Checkbox {...createRegister("isOpening")}>
-                        Is Opening
-                      </Checkbox>
-                      <Checkbox {...createRegister("isHavePracticeClass")}>
-                        Has Practice Class
-                      </Checkbox>
-                      <Checkbox {...createRegister("isUseForCalculateScore")}>
-                        Use for Score Calculation
-                      </Checkbox>
-                    </div>
-                  </form>
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="danger" variant="light" onPress={onClose}>
-                    Close
-                  </Button>
-                  <Button
-                    color="primary"
-                    onClick={createHandleSubmit(onCreateSubmit)}
-                    disabled={isCreateSubmitting}
-                  >
-                    {isCreateSubmitting ? "Creating..." : "Create Course"}
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
+        <CourseModal
+          isOpen={isCreateOpen}
+          isSubmitting={isCreateSubmitting}
+          majors={majors}
+          mode="create"
+          onOpenChange={onCreateOpenChange}
+          onSubmit={onCreateSubmit}
+        />
 
         {/* Update Course Modal */}
-        <Modal isOpen={isUpdateOpen} onOpenChange={onUpdateOpenChange}>
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="flex flex-col gap-1">
-                  Edit Course
-                </ModalHeader>
-                <ModalBody>
-                  <form
-                    onSubmit={updateHandleSubmit(onUpdateSubmit)}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Name
-                      </label>
-                      <Input
-                        {...updateRegister("name")}
-                        errorMessage={updateErrors.name?.message}
-                        placeholder="Enter course name"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Description
-                      </label>
-                      <Input
-                        {...updateRegister("description")}
-                        errorMessage={updateErrors.description?.message}
-                        placeholder="Enter course description"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Price
-                      </label>
-                      <Input
-                        type="number"
-                        {...updateRegister("price")}
-                        errorMessage={updateErrors.price?.message}
-                        placeholder="Enter price"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Major
-                      </label>
-                      <Select
-                        placeholder="Select a major"
-                        items={majors}
-                        className="w-full"
-                        selectionMode="single"
-                      >
-                        {majors.map((major) => (
-                          <SelectItem key={major.id}>
-                            {`${major.name} (${major.code})`}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Checkbox {...updateRegister("isActive")}>
-                        Is Active
-                      </Checkbox>
-                    </div>
-                  </form>
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="danger" variant="light" onPress={onClose}>
-                    Close
-                  </Button>
-                  <Button
-                    color="primary"
-                    onClick={updateHandleSubmit(onUpdateSubmit)}
-                    disabled={isUpdateSubmitting}
-                  >
-                    {isUpdateSubmitting ? "Updating..." : "Update Course"}
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
+        <CourseModal
+          course={selectedCourse}
+          isOpen={isUpdateOpen}
+          isSubmitting={isUpdateSubmitting}
+          majors={majors}
+          mode="update"
+          onOpenChange={onUpdateOpenChange}
+          onSubmit={onUpdateSubmit}
+        />
       </div>
     </DefaultLayout>
   );

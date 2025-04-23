@@ -1,6 +1,14 @@
-import React from 'react';
-import { Table as HeroTable, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/react";
-import styles from './table.module.scss';
+import React from "react";
+import {
+  Table as HeroTable,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/react";
+
+import styles from "./table.module.scss";
 
 export interface TableData {
   id: string;
@@ -18,7 +26,7 @@ interface ActivityTableProps {
 export const ActivityTable: React.FC<ActivityTableProps> = ({
   data,
   title = "Recent Activities",
-  onViewAll
+  onViewAll,
 }) => {
   return (
     <div className={styles.tableWrapper}>
@@ -26,7 +34,7 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
         <div className={styles.tableHeader}>
           <h3>{title}</h3>
           {onViewAll && (
-            <button onClick={onViewAll} className={styles.viewAllButton}>
+            <button className={styles.viewAllButton} onClick={onViewAll}>
               View All
             </button>
           )}
@@ -44,7 +52,9 @@ export const ActivityTable: React.FC<ActivityTableProps> = ({
               <TableCell>{row.activity}</TableCell>
               <TableCell>{row.date}</TableCell>
               <TableCell>
-                <span className={`${styles.status} ${styles[row.status.toLowerCase()]}`}>
+                <span
+                  className={`${styles.status} ${styles[row.status.toLowerCase()]}`}
+                >
                   {row.status}
                 </span>
               </TableCell>
@@ -68,7 +78,7 @@ interface TableProps<T> {
   columns: Column<T>[];
   isLoading?: boolean;
   sortKey?: string;
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
   onSort?: (key: string) => void;
 }
 
@@ -76,14 +86,12 @@ export function DataTable<T>({
   data,
   columns,
   isLoading,
-  sortKey,
-  sortDirection,
-  onSort
+  onSort,
 }: TableProps<T>) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -92,7 +100,7 @@ export function DataTable<T>({
     <HeroTable>
       <TableHeader>
         {columns.map((column) => (
-          <TableColumn 
+          <TableColumn
             key={column.key}
             allowsSorting={column.sortable}
             onClick={() => column.sortable && onSort?.(column.key)}

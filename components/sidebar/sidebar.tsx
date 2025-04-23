@@ -16,13 +16,14 @@ import {
   FileText,
   User,
   Share2,
-  LucideIcon,
 } from "lucide-react";
+import { useRouter } from "next/router";
+
 import "./sidebar.scss";
 import { MenuItem } from "../menuItem/menuItem";
-import { ISidebarProps, IMenuItem } from "./type";
-import { useRouter } from "next/router";
 import { Logo } from "../icons/icons";
+
+import { ISidebarProps, IMenuItem } from "./type";
 
 const Sidebar: React.FC<ISidebarProps> = ({
   defaultCollapsed = false,
@@ -88,42 +89,43 @@ const Sidebar: React.FC<ISidebarProps> = ({
     });
     router.push(`${key}`);
   };
+
   return (
     <Card
       className={`sidebar-container h-screen rounded-none shadow-lg ${collapsed ? "w-18" : "w-64"} transition-all duration-300 ${className}`}
     >
       <CardBody className="p-0 flex flex-col h-full sidebar-content">
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 ${!collapsed ? "pl-8 p-4": ""}"`}>
-          {!collapsed?<Logo/>:null}
-          
-          
+        <div
+          className={`flex items-center justify-between p-4 ${!collapsed ? "pl-8 p-4" : ""}"`}
+        >
+          {!collapsed ? <Logo /> : null}
+
           <Button
             isIconOnly
+            className={collapsed ? "mx-auto" : "ml-auto"}
             size="sm"
             variant="light"
             onClick={handleToggle}
-            className={collapsed ? "mx-auto" : "ml-auto"}
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </Button>
-          
         </div>
 
         <div className="p-4 menu-item">
           {mainMenuItems.map((item) => (
             <MenuItem
               key={item.key}
-              item={item}
-              collapsed={collapsed}
               active={activeKey === item.key}
+              collapsed={collapsed}
+              item={item}
               onClick={() => handleItemClick(item.key)}
             />
           ))}
         </div>
         <div className="p-3 mt-auto">
           {bottomMenuItems.map((item) => (
-            <MenuItem key={item.key} item={item} collapsed={collapsed} />
+            <MenuItem key={item.key} collapsed={collapsed} item={item} />
           ))}
         </div>
       </CardBody>

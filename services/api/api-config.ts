@@ -1,0 +1,26 @@
+/**
+ * API configuration constants
+ */
+
+// Base API URLs for different services
+export const API_URLS = {
+  COURSE: "https://localhost:6001/api",
+  AUTH: "https://localhost:5001/api",
+  MAJOR: "https://localhost:7001/api",
+};
+
+// Default request timeout (in milliseconds)
+export const REQUEST_TIMEOUT = 30000;
+
+// API endpoints
+export const API_ENDPOINTS = {
+  COURSES: "/c/Courses",
+  AUTH: "/u/Auth",
+  MAJORS: "/m/Major",
+};
+
+// Common headers
+export const COMMON_HEADERS = {
+  Accept: "application/json",
+  "Content-Type": "application/json",
+};

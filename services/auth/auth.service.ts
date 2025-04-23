@@ -1,16 +1,11 @@
-import axios from 'axios';
-import { LoginFormData } from "./auth.schema";
+import { authClient } from "../api/http-client";
+import { API_ENDPOINTS } from "../api/api-config";
 
-const API_URL = 'https://localhost:5001/api';
+import { LoginFormData } from "./auth.schema";
+import { LoginResponse } from "./auth.dto";
 
 export const authService = {
-  login: async (data: LoginFormData) => {
-    const response = await axios.post(`${API_URL}/u/Auth/login`, data, {
-      headers: { 
-        'Content-Type': 'application/json' 
-      }
-    });
-
-    return response.data;
-  }
-}; 
+  login: async (data: LoginFormData): Promise<LoginResponse> => {
+    return authClient.post(`${API_ENDPOINTS.AUTH}/login`, data);
+  },
+};

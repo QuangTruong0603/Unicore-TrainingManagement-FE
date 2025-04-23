@@ -1,36 +1,36 @@
-'use client'
-import React, { FormEvent, useState } from "react";
-import { Input, Button, Card, Spacer, Image, Form } from "@heroui/react";
+"use client";
+import React from "react";
+import { Button, Card, Form, Image, Input, Spacer } from "@heroui/react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router";
+import { useForm } from "react-hook-form";
+
 import { Logo } from "@/components/icons/icons";
 import { useLogin } from "@/services/auth/auth.hooks";
 import { loginSchema } from "@/services/auth/auth.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useRouter } from "next/router";
+
 import "./index.scss";
 
 export default function StudentLogin() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const login = useLogin();
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: any) => {
     try {
-      setError(null);
       const response = await login.mutateAsync(data);
-      localStorage.setItem('token', response.token);
-      router.push('/');
-    } catch (error: any) {
-      setError(error.message || 'Login failed. Please try again.');
+
+      localStorage.setItem("token", response.token);
+      router.push("/");
+    } catch (_error) {
+      // Error handling as needed
     }
   };
 
@@ -41,9 +41,9 @@ export default function StudentLogin() {
           <div className="w-full md:w-1/2 left-side p-6 flex items-center justify-center rounded-l-lg">
             <div className="relative">
               <Image
-                src="/images/graduation.png"
                 alt="School"
                 className="object-cover"
+                src="/images/graduation.png"
               />
             </div>
           </div>
@@ -60,31 +60,37 @@ export default function StudentLogin() {
             </div>
 
             <Form onSubmit={handleSubmit(onSubmit)}>
-              <label className="lable-text">Email</label>
+              <label className="lable-text" htmlFor="email">
+                Email
+              </label>
               <Input
-                {...register("email")}
-                errorMessage={errors.email?.message as string}
-                placeholder="Enter account"
                 fullWidth
                 required
                 className="mb-4"
+                errorMessage={errors.email?.message as string}
+                id="email"
+                placeholder="Enter account"
+                {...register("email")}
               />
 
-              <label className="lable-text mb-3">Password</label>
+              <label className="lable-text mb-3" htmlFor="password">
+                Password
+              </label>
               <Input
-                {...register("password")}
-                placeholder="Enter password"
-                errorMessage={errors.password?.message as string}
                 fullWidth
-                type={isVisible ? "text" : "password"}
                 required
                 className="mb-6"
+                errorMessage={errors.password?.message as string}
+                id="password"
+                placeholder="Enter password"
+                type="password"
+                {...register("password")}
               />
 
               <Button
-                type="submit"
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white"
                 disabled={login.isPending}
+                type="submit"
               >
                 {login.isPending ? "Logging in..." : "Login"}
               </Button>
@@ -95,7 +101,7 @@ export default function StudentLogin() {
 
             <Spacer y={1} />
 
-            <div className="text-center"></div>
+            <div className="text-center" />
           </div>
         </div>
       </Card>

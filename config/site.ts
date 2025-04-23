@@ -8,7 +8,6 @@ export const siteConfig = {
       label: "Dasboard",
       href: "/",
     },
-    
   ],
   navMenuItems: [
     {

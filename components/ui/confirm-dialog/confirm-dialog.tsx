@@ -1,6 +1,14 @@
-import React from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
-import styles from './confirm-dialog.module.scss';
+import React from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
+
+import styles from "./confirm-dialog.module.scss";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -10,7 +18,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  confirmColor?: 'primary' | 'danger' | 'success' | 'warning';
+  confirmColor?: "primary" | "danger" | "success" | "warning";
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -21,7 +29,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmColor = "danger"
+  confirmColor = "danger",
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -41,4 +49,4 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       </ModalContent>
     </Modal>
   );
-}; 
+};

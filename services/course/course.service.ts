@@ -1,87 +1,86 @@
-import axios from 'axios';
-import { Course, CourseQuery } from "./course.schema";
+import { courseClient } from "../api/http-client";
+import { API_ENDPOINTS } from "../api/api-config";
 
-interface CourseResponse {
-  success: boolean;
-  data: {
-    data: Course[];
-    total: number;
-    pageSize: number;
-    pageIndex: number;
-  };
-  errors?: string[];
-}
-
-interface CreateCourseData {
-  code: string;
-  name: string;
-  description: string;
-  price: number;
-  isOpening: boolean;
-  credit: number;
-  isHavePracticeClass: boolean;
-  isUseForCalculateScore: boolean;
-  minCreditCanApply: number;
-  majorId: string;
-  compulsoryCourseId?: string;
-  parallelCourseId?: string;
-}
-
-interface UpdateCourseData {
-  name: string;
-  description: string;
-  price: number;
-  majorId: string;
-  isActive: boolean;
-}
-
-const API_URL = 'https://localhost:6001/api';
+import { CourseQuery } from "./course.schema";
+import {
+  CourseListResponse,
+  CourseResponse,
+  CreateCourseData,
+  UpdateCourseData,
+} from "./course.dto";
 
 export const courseService = {
-  getCourses: async (query: CourseQuery): Promise<CourseResponse> => {
+  getCourses: async (query: CourseQuery): Promise<CourseListResponse> => {
     const params = {
-      'Pagination.PageNumber': query.pageNumber.toString(),
-      'Pagination.ItemsPerpage': query.itemsPerpage.toString(),
-      ...(query.searchQuery && { 'Filter.SearchQuery': query.searchQuery }),
-      ...(query.isDesc && { 'Order.IsDesc': query.isDesc.toString() })
+      "Pagination.PageNumber": query.pageNumber.toString(),
+      "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
+      ...(query.searchQuery && { "Filter.SearchQuery": query.searchQuery }),
+      ...(query.orderBy && { "Order.OrderBy": query.orderBy }),
+      ...(query.isDesc !== undefined && {
+        "Order.IsDesc": query.isDesc.toString(),
+      }),
+
+      // Add the new filter parameters
+      ...(query.filters?.priceRange && {
+        "Filter.MinPrice": query.filters.priceRange[0].toString(),
+        "Filter.MaxPrice": query.filters.priceRange[1].toString(),
+      }),
+      ...(query.filters?.creditRange && {
+        "Filter.MinCredit": query.filters.creditRange[0].toString(),
+        "Filter.MaxCredit": query.filters.creditRange[1].toString(),
+      }),
+      ...(query.filters?.majorIds?.length && {
+        "Filter.MajorIds": query.filters.majorIds.join(","),
+      }),
+      ...(query.filters?.isOpening !== undefined &&
+        query.filters.isOpening !== null && {
+          "Filter.IsOpening": query.filters.isOpening.toString(),
+        }),
+      ...(query.filters?.isHavePracticeClass !== undefined &&
+        query.filters.isHavePracticeClass !== null && {
+          "Filter.IsHavePracticeClass":
+            query.filters.isHavePracticeClass.toString(),
+        }),
+      ...(query.filters?.isUseForCalculateScore !== undefined &&
+        query.filters.isUseForCalculateScore !== null && {
+          "Filter.IsUseForCalculateScore":
+            query.filters.isUseForCalculateScore.toString(),
+        }),
+      ...(query.filters?.minCreditCanApply !== undefined &&
+        query.filters.minCreditCanApply > 0 && {
+          "Filter.MinCreditCanApply":
+            query.filters.minCreditCanApply.toString(),
+        }),
     };
 
-    const response = await axios.get(`${API_URL}/c/Courses/page`, {
+    return courseClient.get(`${API_ENDPOINTS.COURSES}/page`, {
       params,
       headers: {
-        'accept': 'text/plain'
-      }
+        accept: "text/plain",
+      },
     });
-
-    return response.data;
   },
 
-  createCourse: async (data: CreateCourseData): Promise<Course> => {
-    const response = await axios.post(`${API_URL}/c/Courses`, data, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    return response.data;
+  createCourse: async (data: CreateCourseData): Promise<CourseResponse> => {
+    return courseClient.post(API_ENDPOINTS.COURSES, data);
   },
 
-  updateCourse: async (id: string, data: UpdateCourseData): Promise<Course> => {
-    const response = await axios.put(`${API_URL}/c/Courses/${id}`, data, {
+  updateCourse: async (
+    id: string,
+    data: UpdateCourseData
+  ): Promise<CourseResponse> => {
+    return courseClient.put(`${API_ENDPOINTS.COURSES}/${id}`, data, {
       headers: {
-        'accept': 'text/plain',
-        'Content-Type': 'application/json'
-      }
+        accept: "text/plain",
+      },
     });
-
-    return response.data;
   },
 
   deleteCourse: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/c/Courses/${id}`, {
+    return courseClient.delete(`${API_ENDPOINTS.COURSES}/${id}`, {
       headers: {
-        'accept': 'text/plain'
-      }
+        accept: "text/plain",
+      },
     });
-  }
-}; 
+  },
+};

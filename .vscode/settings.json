@@ -1,3 +1,5 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "prisma-smart-formatter.typescript.defaultFormatter": "vscode.typescript-language-features",
+  "prisma-smart-formatter.typescriptreact.defaultFormatter": "vscode.typescript-language-features"
 }

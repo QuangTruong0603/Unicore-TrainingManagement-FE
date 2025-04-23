@@ -1,7 +1,17 @@
-import React from 'react';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Chip } from "@heroui/react";
+import React from "react";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  Chip,
+} from "@heroui/react";
 import { Edit, Trash2, Plus } from "lucide-react";
-import styles from './schedule-table.module.scss';
+
+import styles from "./schedule-table.module.scss";
 
 export interface ScheduleData {
   id: string;
@@ -12,7 +22,7 @@ export interface ScheduleData {
   startTime: string;
   endTime: string;
   dayOfWeek: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 interface ScheduleTableProps {
@@ -26,7 +36,7 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
   data,
   onEdit,
   onDelete,
-  onAdd
+  onAdd,
 }) => {
   return (
     <div className={styles.tableWrapper}>
@@ -63,7 +73,7 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
               <TableCell>{`${schedule.startTime} - ${schedule.endTime}`}</TableCell>
               <TableCell>
                 <Chip
-                  color={schedule.status === 'active' ? 'success' : 'danger'}
+                  color={schedule.status === "active" ? "success" : "danger"}
                   variant="flat"
                 >
                   {schedule.status}
@@ -81,9 +91,9 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
                   </Button>
                   <Button
                     isIconOnly
+                    color="danger"
                     size="sm"
                     variant="light"
-                    color="danger"
                     onClick={() => onDelete(schedule.id)}
                   >
                     <Trash2 size={16} />
@@ -96,4 +106,4 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
       </Table>
     </div>
   );
-}; 
+};
