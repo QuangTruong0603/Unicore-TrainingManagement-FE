@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Filter } from "lucide-react";
 import {
   Button,
-  Checkbox,
   Input,
   Modal,
   ModalBody,
@@ -26,15 +25,15 @@ interface CourseFilterProps {
 }
 
 interface FilterState {
-  minPrice: number;
-  maxPrice: number;
+  minCost: number;
+  maxCost: number;
   minCredit: number;
   maxCredit: number;
   majorIds: string[];
-  isOpening: boolean | null;
-  isHavePracticeClass: boolean | null;
-  isUseForCalculateScore: boolean | null;
-  minCreditCanApply: number;
+  isRegistrable: boolean | null;
+  practicePeriod: number;
+  isRequired: boolean | null;
+  minCreditRequired: number;
 }
 
 interface FilterChip {
@@ -52,15 +51,15 @@ export function CourseFilter({
   // Use useDisclosure for modal control
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [filterState, setFilterState] = useState<FilterState>({
-    minPrice: 0,
-    maxPrice: 1000,
+    minCost: 0,
+    maxCost: 1000,
     minCredit: 0,
     maxCredit: 10,
     majorIds: [],
-    isOpening: null,
-    isHavePracticeClass: null,
-    isUseForCalculateScore: null,
-    minCreditCanApply: 0,
+    isRegistrable: null,
+    practicePeriod: 0,
+    isRequired: null,
+    minCreditRequired: 0,
   });
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
 
@@ -72,22 +71,22 @@ export function CourseFilter({
   // Remove a specific filter
   const removeFilter = (id: string) => {
     // Handle removing specific filters
-    if (id === "price") {
-      updateFilter("minPrice", 0);
-      updateFilter("maxPrice", 1000);
+    if (id === "cost") {
+      updateFilter("minCost", 0);
+      updateFilter("maxCost", 1000);
     } else if (id === "credit") {
       updateFilter("minCredit", 0);
       updateFilter("maxCredit", 10);
     } else if (id === "status") {
-      updateFilter("isOpening", null);
+      updateFilter("isRegistrable", null);
     } else if (id === "majorIds") {
       updateFilter("majorIds", []);
     } else if (id === "practiceClass") {
-      updateFilter("isHavePracticeClass", null);
-    } else if (id === "scoreCalculation") {
-      updateFilter("isUseForCalculateScore", null);
-    } else if (id === "minCreditApply") {
-      updateFilter("minCreditCanApply", 0);
+      updateFilter("practicePeriod", 0);
+    } else if (id === "requiredCourse") {
+      updateFilter("isRequired", null);
+    } else if (id === "minCreditRequired") {
+      updateFilter("minCreditRequired", 0);
     }
 
     // Remove chip
@@ -104,9 +103,9 @@ export function CourseFilter({
       ...query,
       pageNumber: 1, // Reset to first page when applying filters
       filters: {
-        priceRange:
-          filterState.minPrice > 0 || filterState.maxPrice < 1000
-            ? [filterState.minPrice, filterState.maxPrice]
+        costRange:
+          filterState.minCost > 0 || filterState.maxCost < 1000
+            ? [filterState.minCost, filterState.maxCost]
             : undefined,
         creditRange:
           filterState.minCredit > 0 || filterState.maxCredit < 10
@@ -114,12 +113,15 @@ export function CourseFilter({
             : undefined,
         majorIds:
           filterState.majorIds.length > 0 ? filterState.majorIds : undefined,
-        isOpening: filterState.isOpening,
-        isHavePracticeClass: filterState.isHavePracticeClass,
-        isUseForCalculateScore: filterState.isUseForCalculateScore,
-        minCreditCanApply:
-          filterState.minCreditCanApply > 0
-            ? filterState.minCreditCanApply
+        isRegistrable: filterState.isRegistrable,
+        practicePeriod:
+          filterState.practicePeriod > 0
+            ? filterState.practicePeriod
+            : undefined,
+        isRequired: filterState.isRequired,
+        minCreditRequired:
+          filterState.minCreditRequired > 0
+            ? filterState.minCreditRequired
             : undefined,
       },
     };
@@ -131,12 +133,12 @@ export function CourseFilter({
   const applyFilters = () => {
     const newChips: FilterChip[] = [];
 
-    // Add price filter chip
-    if (filterState.minPrice > 0 || filterState.maxPrice < 1000) {
+    // Add cost filter chip
+    if (filterState.minCost > 0 || filterState.maxCost < 1000) {
       newChips.push({
-        id: "price",
-        label: `Price: $${filterState.minPrice} - $${filterState.maxPrice}`,
-        onRemove: () => removeFilter("price"),
+        id: "cost",
+        label: `Cost: $${filterState.minCost} - $${filterState.maxCost}`,
+        onRemove: () => removeFilter("cost"),
       });
     }
 
@@ -164,38 +166,38 @@ export function CourseFilter({
     }
 
     // Add course status chip
-    if (filterState.isOpening !== null) {
+    if (filterState.isRegistrable !== null) {
       newChips.push({
         id: "status",
-        label: `Status: ${filterState.isOpening ? "Opening" : "Normal"}`,
+        label: `Status: ${filterState.isRegistrable ? "Registrable" : "Not Registrable"}`,
         onRemove: () => removeFilter("status"),
       });
     }
 
-    // Add practice class chip
-    if (filterState.isHavePracticeClass !== null) {
+    // Add practice period chip
+    if (filterState.practicePeriod > 0) {
       newChips.push({
         id: "practiceClass",
-        label: `Practice Class: ${filterState.isHavePracticeClass ? "Yes" : "No"}`,
+        label: `Practice Period: ${filterState.practicePeriod}`,
         onRemove: () => removeFilter("practiceClass"),
       });
     }
 
-    // Add score calculation chip
-    if (filterState.isUseForCalculateScore !== null) {
+    // Add required course chip
+    if (filterState.isRequired !== null) {
       newChips.push({
-        id: "scoreCalculation",
-        label: `Used for Score: ${filterState.isUseForCalculateScore ? "Yes" : "No"}`,
-        onRemove: () => removeFilter("scoreCalculation"),
+        id: "requiredCourse",
+        label: `Required Course: ${filterState.isRequired ? "Yes" : "No"}`,
+        onRemove: () => removeFilter("requiredCourse"),
       });
     }
 
-    // Add minimum credit chip
-    if (filterState.minCreditCanApply > 0) {
+    // Add minimum credit required chip
+    if (filterState.minCreditRequired > 0) {
       newChips.push({
-        id: "minCreditApply",
-        label: `Min Credits to Apply: ${filterState.minCreditCanApply}`,
-        onRemove: () => removeFilter("minCreditApply"),
+        id: "minCreditRequired",
+        label: `Min Credits Required: ${filterState.minCreditRequired}`,
+        onRemove: () => removeFilter("minCreditRequired"),
       });
     }
 
@@ -207,15 +209,15 @@ export function CourseFilter({
   // Clear all filters
   const clearFilters = () => {
     setFilterState({
-      minPrice: 0,
-      maxPrice: 1000,
+      minCost: 0,
+      maxCost: 1000,
       minCredit: 0,
       maxCredit: 10,
       majorIds: [],
-      isOpening: null,
-      isHavePracticeClass: null,
-      isUseForCalculateScore: null,
-      minCreditCanApply: 0,
+      isRegistrable: null,
+      practicePeriod: 0,
+      isRequired: null,
+      minCreditRequired: 0,
     });
     setFilterChips([]);
     onFilterClear();
@@ -250,64 +252,64 @@ export function CourseFilter({
             <span className="text-lg font-medium">Filter Courses</span>
           </ModalHeader>
           <ModalBody className="py-4 px-4">
-            {/* Price Range Filter */}
+            {/* Cost Range Filter */}
             <div className="mb-6">
               <label
                 className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="price-range"
+                htmlFor="cost-range"
               >
-                Price Range ($)
+                Cost Range ($)
               </label>
               <div className="flex items-center gap-2 mb-2">
                 <Input
-                  aria-label="Minimum price"
+                  aria-label="Minimum cost"
                   className="w-[120px] bg-gray-50"
-                  id="min-price"
+                  id="min-cost"
                   min={0}
                   size="sm"
                   type="number"
-                  value={filterState.minPrice.toString()}
+                  value={filterState.minCost.toString()}
                   onChange={(e) =>
-                    updateFilter("minPrice", Number(e.target.value))
+                    updateFilter("minCost", Number(e.target.value))
                   }
                 />
                 <span>to</span>
                 <Input
-                  aria-label="Maximum price"
+                  aria-label="Maximum cost"
                   className="w-[120px] bg-gray-50"
-                  id="max-price"
+                  id="max-cost"
                   min={0}
                   size="sm"
                   type="number"
-                  value={filterState.maxPrice.toString()}
+                  value={filterState.maxCost.toString()}
                   onChange={(e) =>
-                    updateFilter("maxPrice", Number(e.target.value))
+                    updateFilter("maxCost", Number(e.target.value))
                   }
                 />
               </div>
               <div className="px-1">
                 <p className="text-xs text-gray-500 flex justify-between mb-1">
-                  <span>Price</span>
+                  <span>Cost</span>
                   <span>0-1,000</span>
                 </p>
 
                 <Slider
-                  aria-label="Price range"
+                  aria-label="Cost range"
                   className="max-w-full h-1"
                   classNames={{
                     track: "!bg-gray-200 !h-1",
                     filler: "!bg-blue-500 !h-1",
                     thumb: "!bg-white !border-2 !border-blue-500 !h-3 !w-3", // Small circular thumbs
                   }}
-                  id="price-range"
+                  id="cost-range"
                   maxValue={1000}
                   minValue={0}
                   step={10}
-                  value={[filterState.minPrice, filterState.maxPrice]}
+                  value={[filterState.minCost, filterState.maxCost]}
                   onChange={(value) => {
                     if (Array.isArray(value)) {
-                      updateFilter("minPrice", value[0]);
-                      updateFilter("maxPrice", value[1]);
+                      updateFilter("minCost", value[0]);
+                      updateFilter("maxCost", value[1]);
                     }
                   }}
                 />
@@ -418,95 +420,129 @@ export function CourseFilter({
               <div className="flex gap-2" id="status-toggle" role="group">
                 <Button
                   className="flex-1"
-                  color={filterState.isOpening === true ? "primary" : "default"}
+                  color={
+                    filterState.isRegistrable === true ? "primary" : "default"
+                  }
                   size="sm"
                   variant={
-                    filterState.isOpening === true ? "solid" : "bordered"
+                    filterState.isRegistrable === true ? "solid" : "bordered"
                   }
                   onPress={() =>
                     updateFilter(
-                      "isOpening",
-                      filterState.isOpening === true ? null : true
+                      "isRegistrable",
+                      filterState.isRegistrable === true ? null : true
                     )
                   }
                 >
-                  Opening
+                  Registrable
                 </Button>
                 <Button
                   className="flex-1"
                   color={
-                    filterState.isOpening === false ? "primary" : "default"
+                    filterState.isRegistrable === false ? "primary" : "default"
                   }
                   size="sm"
                   variant={
-                    filterState.isOpening === false ? "solid" : "bordered"
+                    filterState.isRegistrable === false ? "solid" : "bordered"
                   }
                   onPress={() =>
                     updateFilter(
-                      "isOpening",
-                      filterState.isOpening === false ? null : false
+                      "isRegistrable",
+                      filterState.isRegistrable === false ? null : false
                     )
                   }
                 >
-                  Normal
+                  Not Registrable
                 </Button>
               </div>
             </div>
 
-            {/* Other Toggle Filters */}
+            {/* Required Course Toggle */}
             <div className="mb-6">
               <label
                 className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="features-group"
+                htmlFor="required-toggle"
               >
-                Course Features
+                Course Required
               </label>
-              <div className="space-y-2" id="features-group" role="group">
-                <div>
-                  <Checkbox
-                    id="practice-class"
-                    isSelected={filterState.isHavePracticeClass === true}
-                    onValueChange={(value) =>
-                      updateFilter("isHavePracticeClass", value ? true : null)
-                    }
-                  >
-                    Has Practice Class
-                  </Checkbox>
-                </div>
-                <div>
-                  <Checkbox
-                    id="score-calculation"
-                    isSelected={filterState.isUseForCalculateScore === true}
-                    onValueChange={(value) =>
-                      updateFilter(
-                        "isUseForCalculateScore",
-                        value ? true : null
-                      )
-                    }
-                  >
-                    Used for Score Calculation
-                  </Checkbox>
-                </div>
+              <div className="flex gap-2" id="required-toggle" role="group">
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isRequired === true ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isRequired === true ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isRequired",
+                      filterState.isRequired === true ? null : true
+                    )
+                  }
+                >
+                  Required
+                </Button>
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isRequired === false ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isRequired === false ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isRequired",
+                      filterState.isRequired === false ? null : false
+                    )
+                  }
+                >
+                  Not Required
+                </Button>
               </div>
             </div>
 
-            {/* Min Credit Apply Filter */}
+            {/* Practice Period Filter */}
             <div className="mb-6">
               <label
                 className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="min-credit-apply"
+                htmlFor="practice-period"
               >
-                Min Credits Required to Apply
+                Practice Period
               </label>
               <Input
                 className="w-full bg-gray-50"
-                id="min-credit-apply"
+                id="practice-period"
                 min={0}
                 size="sm"
                 type="number"
-                value={filterState.minCreditCanApply.toString()}
+                value={filterState.practicePeriod.toString()}
                 onChange={(e) =>
-                  updateFilter("minCreditCanApply", Number(e.target.value))
+                  updateFilter("practicePeriod", Number(e.target.value))
+                }
+              />
+            </div>
+
+            {/* Min Credit Required Filter */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="min-credit-required"
+              >
+                Min Credits Required
+              </label>
+              <Input
+                className="w-full bg-gray-50"
+                id="min-credit-required"
+                min={0}
+                size="sm"
+                type="number"
+                value={filterState.minCreditRequired.toString()}
+                onChange={(e) =>
+                  updateFilter("minCreditRequired", Number(e.target.value))
                 }
               />
             </div>

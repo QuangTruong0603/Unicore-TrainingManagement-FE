@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from "../api/api-config";
 import { useApiGet, useApiPost } from "../api/api-hooks";
 
 import { CourseQuery } from "./course.schema";
+import { CreateCourseData, UpdateCourseData } from "./course.dto";
 
 // React Query implementation
 export const useCourses = (query: CourseQuery) => {
@@ -46,20 +47,20 @@ export const useCoursesWithCustomHook = (query: CourseQuery) => {
 // Mutation for creating a course
 export const useCreateCourse = () => {
   return useMutation({
-    mutationFn: (courseData: any) =>
+    mutationFn: (courseData: CreateCourseData) =>
       courseClient.post(API_ENDPOINTS.COURSES, courseData),
   });
 };
 
 // Alternative using our custom hook
 export const useCreateCourseWithCustomHook = () => {
-  return useApiPost(courseClient, API_ENDPOINTS.COURSES);
+  return useApiPost<CreateCourseData>(courseClient, API_ENDPOINTS.COURSES);
 };
 
 // Mutation for updating a course
 export const useUpdateCourse = () => {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateCourseData }) =>
       courseClient.put(`${API_ENDPOINTS.COURSES}/${id}`, data),
   });
 };

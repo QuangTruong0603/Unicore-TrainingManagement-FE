@@ -17,15 +17,15 @@ export const courseSchema = z.object({
   code: z.string(),
   name: z.string(),
   description: z.string(),
-  price: z.number(),
-  isOpening: z.boolean(),
+  cost: z.number(),
+  isRegistrable: z.boolean(),
   credit: z.number(),
-  isHavePracticeClass: z.boolean(),
-  isUseForCalculateScore: z.boolean(),
-  minCreditCanApply: z.number(),
+  practicePeriod: z.number(),
+  isRequired: z.boolean(),
   majorId: z.string(),
-  compulsoryCourseId: z.string().nullable(),
-  parallelCourseId: z.string().nullable(),
+  minCreditRequired: z.number().nullable(),
+  preCourseIds: z.array(z.string()).nullable(),
+  parallelCourseId: z.array(z.string()).nullable(),
   courseCertificates: z.array(courseCertificateSchema),
   courseMaterials: z.array(courseMaterialSchema),
 });
@@ -33,13 +33,13 @@ export const courseSchema = z.object({
 export type Course = z.infer<typeof courseSchema>;
 
 export const courseFilterSchema = z.object({
-  priceRange: z.tuple([z.number(), z.number()]).optional(),
+  costRange: z.tuple([z.number(), z.number()]).optional(),
   creditRange: z.tuple([z.number(), z.number()]).optional(),
   majorIds: z.array(z.string()).optional(),
-  isOpening: z.boolean().nullable().optional(),
-  isHavePracticeClass: z.boolean().nullable().optional(),
-  isUseForCalculateScore: z.boolean().nullable().optional(),
-  minCreditCanApply: z.number().optional(),
+  isRegistrable: z.boolean().nullable().optional(),
+  practicePeriod: z.number().optional(),
+  isRequired: z.boolean().nullable().optional(),
+  minCreditRequired: z.number().optional(),
 });
 
 export type CourseFilter = z.infer<typeof courseFilterSchema>;

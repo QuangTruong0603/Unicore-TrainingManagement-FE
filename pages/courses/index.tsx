@@ -123,13 +123,13 @@ export default function CoursesPage() {
 
     const newChips: FilterChip[] = [];
 
-    // Price range filter
-    if (query.filters.priceRange) {
-      const [min, max] = query.filters.priceRange;
+    // Cost range filter
+    if (query.filters.costRange) {
+      const [min, max] = query.filters.costRange;
 
       newChips.push({
-        id: "price",
-        label: `Price: $${min} - $${max}`,
+        id: "cost",
+        label: `Cost: $${min} - $${max}`,
       });
     }
 
@@ -158,42 +158,39 @@ export default function CoursesPage() {
 
     // Status filter
     if (
-      query.filters.isOpening !== undefined &&
-      query.filters.isOpening !== null
+      query.filters.isRegistrable !== undefined &&
+      query.filters.isRegistrable !== null
     ) {
       newChips.push({
         id: "status",
-        label: `Status: ${query.filters.isOpening ? "Opening" : "Normal"}`,
+        label: `Status: ${query.filters.isRegistrable ? "Registrable" : "Not Registrable"}`,
       });
     }
 
-    // Practice class filter
-    if (
-      query.filters.isHavePracticeClass !== undefined &&
-      query.filters.isHavePracticeClass !== null
-    ) {
+    // Practice period filter
+    if (query.filters.practicePeriod) {
       newChips.push({
         id: "practiceClass",
-        label: `Practice Class: ${query.filters.isHavePracticeClass ? "Yes" : "No"}`,
+        label: `Practice Period: ${query.filters.practicePeriod}`,
       });
     }
 
-    // Score calculation filter
+    // Required course filter
     if (
-      query.filters.isUseForCalculateScore !== undefined &&
-      query.filters.isUseForCalculateScore !== null
+      query.filters.isRequired !== undefined &&
+      query.filters.isRequired !== null
     ) {
       newChips.push({
-        id: "scoreCalculation",
-        label: `Used for Score: ${query.filters.isUseForCalculateScore ? "Yes" : "No"}`,
+        id: "requiredCourse",
+        label: `Required Course: ${query.filters.isRequired ? "Yes" : "No"}`,
       });
     }
 
-    // Min credit filter
-    if (query.filters.minCreditCanApply) {
+    // Min credit required filter
+    if (query.filters.minCreditRequired) {
       newChips.push({
-        id: "minCreditApply",
-        label: `Min Credits to Apply: ${query.filters.minCreditCanApply}`,
+        id: "minCreditRequired",
+        label: `Min Credits Required: ${query.filters.minCreditRequired}`,
       });
     }
 
@@ -312,10 +309,10 @@ export default function CoursesPage() {
       render: (course: Course) => course.credit,
     },
     {
-      key: "price",
-      title: "Price",
+      key: "cost",
+      title: "Cost",
       sortable: true,
-      render: (course: Course) => `$${course.price}`,
+      render: (course: Course) => `$${course.cost}`,
     },
     {
       key: "status",
@@ -323,9 +320,9 @@ export default function CoursesPage() {
       sortable: true,
       render: (course: Course) => (
         <span
-          className={`px-2 py-1 rounded text-sm ${course.isOpening ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          className={`px-2 py-1 rounded text-sm ${course.isRegistrable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
-          {course.isOpening ? "Opening" : "Closed"}
+          {course.isRegistrable ? "Registrable" : "Not Registrable"}
         </span>
       ),
     },

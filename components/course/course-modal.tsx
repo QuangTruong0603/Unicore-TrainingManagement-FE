@@ -1,19 +1,27 @@
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import {
+  Autocomplete,
+  AutocompleteItem,
   Button,
   Checkbox,
+  Chip,
   Input,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Select,
-  SelectItem,
+  Textarea,
 } from "@heroui/react";
 
 import { Major } from "@/services/major/major.schema";
 import { Course } from "@/services/course/course.schema";
+import {
+  CreateCourseData,
+  UpdateCourseData,
+} from "@/services/course/course.dto";
+import { courseService } from "@/services/course/course.service";
 
 interface CourseModalProps {
   isOpen: boolean;
@@ -34,36 +42,121 @@ export function CourseModal({
   isSubmitting,
   mode,
 }: CourseModalProps) {
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    control,
     reset,
-  } = useForm({
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<CreateCourseData | UpdateCourseData>({
     defaultValues:
       mode === "create"
         ? {
             code: "",
             name: "",
             description: "",
-            price: 0,
+            cost: 0,
             credit: 0,
-            minCreditCanApply: 0,
+            minCreditRequired: 0,
             majorId: "",
-            isOpening: true,
-            isHavePracticeClass: false,
-            isUseForCalculateScore: true,
+            isRegistrable: true,
+            practicePeriod: 0,
+            isRequired: true,
+            preCourseIds: [],
+            parallelCourseId: [],
+            courseCertificates: [],
+            courseMaterials: [],
           }
         : {
+            code: course?.code || "",
             name: course?.name || "",
             description: course?.description || "",
-            price: course?.price || 0,
+            cost: course?.cost || 0,
+            credit: course?.credit || 0,
             majorId: course?.majorId || "",
-            isActive: course?.isOpening || true,
+            isRegistrable: course?.isRegistrable || false,
+            practicePeriod: course?.practicePeriod || 0,
+            isRequired: course?.isRequired || false,
+            minCreditRequired: course?.minCreditRequired || 0,
+            preCourseIds: course?.preCourseIds || [],
+            parallelCourseId: course?.parallelCourseId || [],
           },
   });
 
-  const handleFormSubmit = async (data: any) => {
+  const selectedPreCourseIds = watch("preCourseIds") || [];
+  const selectedParallelCourseId = watch("parallelCourseId") || [];
+
+  // Fetch all courses for the dropdowns
+  useEffect(() => {
+    const fetchAllCourses = async () => {
+      if (isOpen) {
+        setIsLoadingCourses(true);
+        try {
+          // Use a larger page size to get most courses in one request
+          const response = await courseService.getCourses({
+            pageNumber: 1,
+            itemsPerpage: 100,
+            orderBy: "name",
+            isDesc: false,
+          });
+
+          setAllCourses(response.data.data);
+        } catch (error) {
+          console.error("Failed to fetch courses", error);
+        } finally {
+          setIsLoadingCourses(false);
+        }
+      }
+    };
+
+    fetchAllCourses();
+  }, [isOpen]);
+
+  // Reset form when course or mode changes
+  useEffect(() => {
+    if (mode === "update" && course) {
+      reset({
+        code: course.code || "",
+        name: course.name || "",
+        description: course.description || "",
+        cost: course.cost || 0,
+        credit: course.credit || 0,
+        majorId: course.majorId || "",
+        isRegistrable: course.isRegistrable || false,
+        practicePeriod: course.practicePeriod || 0,
+        isRequired: course.isRequired || false,
+        minCreditRequired: course.minCreditRequired || 0,
+        preCourseIds: course.preCourseIds || [],
+        parallelCourseId: course.parallelCourseId || [],
+      });
+    } else if (mode === "create") {
+      reset({
+        code: "",
+        name: "",
+        description: "",
+        cost: 0,
+        credit: 0,
+        minCreditRequired: 0,
+        majorId: "",
+        isRegistrable: true,
+        practicePeriod: 0,
+        isRequired: true,
+        preCourseIds: [],
+        parallelCourseId: [],
+        courseCertificates: [],
+        courseMaterials: [],
+      });
+    }
+  }, [course, mode, reset]);
+
+  const handleFormSubmit = async (
+    data: CreateCourseData | UpdateCourseData
+  ) => {
     await onSubmit(data);
     reset();
   };
@@ -74,7 +167,12 @@ export function CourseModal({
   const loadingText = mode === "create" ? "Creating..." : "Updating...";
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal
+      isOpen={isOpen}
+      scrollBehavior="inside"
+      size="3xl"
+      onOpenChange={onOpenChange}
+    >
       <ModalContent>
         {(onClose) => (
           <>
@@ -89,7 +187,7 @@ export function CourseModal({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                         htmlFor="code"
                       >
                         Code
@@ -103,7 +201,7 @@ export function CourseModal({
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                         htmlFor="name"
                       >
                         Name
@@ -121,7 +219,7 @@ export function CourseModal({
                 {mode === "update" && (
                   <div>
                     <label
-                      className="block text-sm font-medium text-gray-700"
+                      className="block text-sm font-medium text-gray-700 mb-1"
                       htmlFor="name"
                     >
                       Name
@@ -137,16 +235,18 @@ export function CourseModal({
 
                 <div>
                   <label
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 mb-1"
                     htmlFor="description"
                   >
                     Description
                   </label>
-                  <Input
+                  <Textarea
                     id="description"
                     {...register("description")}
+                    className="w-full resize-vertical min-h-[100px]"
                     errorMessage={errors.description?.message}
                     placeholder="Enter course description"
+                    rows={4}
                   />
                 </div>
 
@@ -154,24 +254,25 @@ export function CourseModal({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label
-                        className="block text-sm font-medium text-gray-700"
-                        htmlFor="price"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="cost"
                       >
-                        Price
+                        Cost
                       </label>
                       <Input
-                        id="price"
+                        id="cost"
                         type="number"
-                        {...register("price", {
-                          min: { value: 0, message: "Price must be positive" },
+                        {...register("cost", {
+                          min: { value: 0, message: "Cost must be positive" },
+                          valueAsNumber: true,
                         })}
-                        errorMessage={errors.price?.message}
-                        placeholder="Enter price"
+                        errorMessage={errors.cost?.message}
+                        placeholder="Enter cost"
                       />
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                         htmlFor="credit"
                       >
                         Credit
@@ -181,6 +282,7 @@ export function CourseModal({
                         type="number"
                         {...register("credit", {
                           min: { value: 0, message: "Credit must be positive" },
+                          valueAsNumber: true,
                         })}
                         errorMessage={errors.credit?.message}
                         placeholder="Enter credits"
@@ -190,44 +292,68 @@ export function CourseModal({
                 ) : (
                   <div>
                     <label
-                      className="block text-sm font-medium text-gray-700"
-                      htmlFor="price"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                      htmlFor="cost"
                     >
-                      Price
+                      Cost
                     </label>
                     <Input
-                      id="price"
+                      id="cost"
                       type="number"
-                      {...register("price", {
-                        min: { value: 0, message: "Price must be positive" },
+                      {...register("cost", {
+                        min: { value: 0, message: "Cost must be positive" },
+                        valueAsNumber: true,
                       })}
-                      errorMessage={errors.price?.message}
-                      placeholder="Enter price"
+                      errorMessage={errors.cost?.message}
+                      placeholder="Enter cost"
                     />
                   </div>
                 )}
 
                 <div>
                   <label
-                    className="block text-sm font-medium text-gray-700"
-                    htmlFor="major"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="majorId"
                   >
                     Major
                   </label>
-                  <Select
-                    className="w-full"
-                    id="major"
-                    items={majors}
-                    placeholder="Select a major"
-                    selectionMode="single"
-                    {...register("majorId")}
-                  >
-                    {majors.map((major) => (
-                      <SelectItem key={major.id} id={major.id}>
-                        {`${major.name} (${major.code})`}
-                      </SelectItem>
-                    ))}
-                  </Select>
+                  <Controller
+                    control={control}
+                    name="majorId"
+                    render={({ field }) => (
+                      <Autocomplete
+                        allowsCustomValue={false}
+                        className="w-full"
+                        defaultItems={majors}
+                        defaultSelectedKey={field.value}
+                        id="majorId"
+                        placeholder="Search and select a major"
+                        onSelectionChange={(key) => field.onChange(key)}
+                      >
+                        {(major) => (
+                          <AutocompleteItem
+                            key={major.id}
+                            textValue={`${major.name} - ${major.code}`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold">
+                                {major.name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {major.code}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        )}
+                      </Autocomplete>
+                    )}
+                    rules={{ required: "Major is required" }}
+                  />
+                  {errors.majorId && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.majorId.message}
+                    </p>
+                  )}
                 </div>
 
                 {mode === "create" && (
@@ -235,36 +361,245 @@ export function CourseModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label
-                          className="block text-sm font-medium text-gray-700"
-                          htmlFor="minCreditCanApply"
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                          htmlFor="minCreditRequired"
                         >
-                          Min Credits to Apply
+                          Min Credits Required
                         </label>
                         <Input
-                          id="minCreditCanApply"
+                          id="minCreditRequired"
                           type="number"
-                          {...register("minCreditCanApply")}
-                          errorMessage={errors.minCreditCanApply?.message}
-                          placeholder="Enter minimum credits"
+                          {...register("minCreditRequired", {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={errors.minCreditRequired?.message}
+                          placeholder="Enter minimum credits required"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                          htmlFor="practicePeriod"
+                        >
+                          Practice Period
+                        </label>
+                        <Input
+                          id="practicePeriod"
+                          type="number"
+                          {...register("practicePeriod", {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={errors.practicePeriod?.message}
+                          placeholder="Enter practice periods"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Checkbox {...register("isOpening")}>Is Opening</Checkbox>
-                      <Checkbox {...register("isHavePracticeClass")}>
-                        Has Practice Class
-                      </Checkbox>
-                      <Checkbox {...register("isUseForCalculateScore")}>
-                        Use for Score Calculation
-                      </Checkbox>
+                    {/* Prerequisites Courses */}
+                    <div>
+                      <label
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="preCourseIds"
+                      >
+                        Prerequisite Courses
+                      </label>
+                      <Controller
+                        control={control}
+                        name="preCourseIds"
+                        render={({ field }) => (
+                          <>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {selectedPreCourseIds.map((courseId) => {
+                                const selectedCourse = allCourses.find(
+                                  (c) => c.id === courseId
+                                );
+
+                                return (
+                                  selectedCourse && (
+                                    <Chip
+                                      key={courseId}
+                                      className="bg-blue-100"
+                                      size="sm"
+                                      onClose={() => {
+                                        setValue(
+                                          "preCourseIds",
+                                          selectedPreCourseIds.filter(
+                                            (id) => id !== courseId
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      {selectedCourse.code}
+                                    </Chip>
+                                  )
+                                );
+                              })}
+                            </div>
+                            <Autocomplete
+                              allowsCustomValue={false}
+                              className="w-full"
+                              classNames={{
+                                base: "w-full",
+                                listboxWrapper: "max-h-[400px]",
+                              }}
+                              defaultItems={allCourses.filter(
+                                (c) =>
+                                  !selectedPreCourseIds.includes(c.id) &&
+                                  c.id !== course?.id
+                              )}
+                              id="preCourseIds"
+                              isLoading={isLoadingCourses}
+                              placeholder="Search and select prerequisite courses"
+                              onSelectionChange={(key) => {
+                                if (
+                                  key &&
+                                  !selectedPreCourseIds.includes(key.toString())
+                                ) {
+                                  field.onChange([
+                                    ...selectedPreCourseIds,
+                                    key.toString(),
+                                  ]);
+                                }
+                              }}
+                            >
+                              {(course) => (
+                                <AutocompleteItem
+                                  key={course.id}
+                                  textValue={`${course.code} - ${course.name}`}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">
+                                      {course.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {course.code}
+                                    </span>
+                                  </div>
+                                </AutocompleteItem>
+                              )}
+                            </Autocomplete>
+                          </>
+                        )}
+                      />
+                    </div>
+
+                    {/* Parallel Courses */}
+                    <div>
+                      <label
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                        htmlFor="parallelCourseId"
+                      >
+                        Parallel Courses
+                      </label>
+                      <Controller
+                        control={control}
+                        name="parallelCourseId"
+                        render={({ field }) => (
+                          <>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {selectedParallelCourseId.map((courseId) => {
+                                const selectedCourse = allCourses.find(
+                                  (c) => c.id === courseId
+                                );
+
+                                return (
+                                  selectedCourse && (
+                                    <Chip
+                                      key={courseId}
+                                      className="bg-green-100"
+                                      size="sm"
+                                      onClose={() => {
+                                        setValue(
+                                          "parallelCourseId",
+                                          selectedParallelCourseId.filter(
+                                            (id) => id !== courseId
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      {selectedCourse.code}
+                                    </Chip>
+                                  )
+                                );
+                              })}
+                            </div>
+                            <Autocomplete
+                              allowsCustomValue={false}
+                              className="w-full"
+                              classNames={{
+                                base: "w-full",
+                                listboxWrapper: "max-h-[400px]",
+                              }}
+                              defaultItems={allCourses.filter(
+                                (c) =>
+                                  !selectedParallelCourseId.includes(c.id) &&
+                                  c.id !== course?.id
+                              )}
+                              id="parallelCourseId"
+                              isLoading={isLoadingCourses}
+                              placeholder="Search and select parallel courses"
+                              onSelectionChange={(key) => {
+                                if (
+                                  key &&
+                                  !selectedParallelCourseId.includes(
+                                    key.toString()
+                                  )
+                                ) {
+                                  field.onChange([
+                                    ...selectedParallelCourseId,
+                                    key.toString(),
+                                  ]);
+                                }
+                              }}
+                            >
+                              {(course) => (
+                                <AutocompleteItem
+                                  key={course.id}
+                                  textValue={`${course.code} - ${course.name}`}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">
+                                      {course.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {course.code}
+                                    </span>
+                                  </div>
+                                </AutocompleteItem>
+                              )}
+                            </Autocomplete>
+                          </>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex flex-col space-y-3 mt-2">
+                      <div className="flex items-start">
+                        <Checkbox {...register("isRegistrable")}>
+                          <span className="text-sm">Is Registrable</span>
+                        </Checkbox>
+                      </div>
+                      <div className="flex items-start">
+                        <Checkbox {...register("isRequired")}>
+                          <span className="text-sm">Is Required</span>
+                        </Checkbox>
+                      </div>
                     </div>
                   </>
                 )}
 
                 {mode === "update" && (
-                  <div className="space-y-2">
-                    <Checkbox {...register("isActive")}>Is Active</Checkbox>
+                  <div className="flex flex-col space-y-3 mt-2">
+                    <div className="flex items-start">
+                      <Checkbox {...register("isRegistrable")}>
+                        <span className="text-sm">Is Registrable</span>
+                      </Checkbox>
+                    </div>
+                    <div className="flex items-start">
+                      <Checkbox {...register("isRequired")}>
+                        <span className="text-sm">Is Required</span>
+                      </Checkbox>
+                    </div>
                   </div>
                 )}
               </form>

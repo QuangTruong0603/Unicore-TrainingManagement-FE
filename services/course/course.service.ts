@@ -21,9 +21,9 @@ export const courseService = {
       }),
 
       // Add the new filter parameters
-      ...(query.filters?.priceRange && {
-        "Filter.MinPrice": query.filters.priceRange[0].toString(),
-        "Filter.MaxPrice": query.filters.priceRange[1].toString(),
+      ...(query.filters?.costRange && {
+        "Filter.MinCost": query.filters.costRange[0].toString(),
+        "Filter.MaxCost": query.filters.costRange[1].toString(),
       }),
       ...(query.filters?.creditRange && {
         "Filter.MinCredit": query.filters.creditRange[0].toString(),
@@ -32,24 +32,22 @@ export const courseService = {
       ...(query.filters?.majorIds?.length && {
         "Filter.MajorIds": query.filters.majorIds.join(","),
       }),
-      ...(query.filters?.isOpening !== undefined &&
-        query.filters.isOpening !== null && {
-          "Filter.IsOpening": query.filters.isOpening.toString(),
+      ...(query.filters?.isRegistrable !== undefined &&
+        query.filters.isRegistrable !== null && {
+          "Filter.IsRegistrable": query.filters.isRegistrable.toString(),
         }),
-      ...(query.filters?.isHavePracticeClass !== undefined &&
-        query.filters.isHavePracticeClass !== null && {
-          "Filter.IsHavePracticeClass":
-            query.filters.isHavePracticeClass.toString(),
+      ...(query.filters?.practicePeriod !== undefined &&
+        query.filters.practicePeriod > 0 && {
+          "Filter.practicePeriod": query.filters.practicePeriod.toString(),
         }),
-      ...(query.filters?.isUseForCalculateScore !== undefined &&
-        query.filters.isUseForCalculateScore !== null && {
-          "Filter.IsUseForCalculateScore":
-            query.filters.isUseForCalculateScore.toString(),
+      ...(query.filters?.isRequired !== undefined &&
+        query.filters.isRequired !== null && {
+          "Filter.IsRequired": query.filters.isRequired.toString(),
         }),
-      ...(query.filters?.minCreditCanApply !== undefined &&
-        query.filters.minCreditCanApply > 0 && {
-          "Filter.MinCreditCanApply":
-            query.filters.minCreditCanApply.toString(),
+      ...(query.filters?.minCreditRequired !== undefined &&
+        query.filters.minCreditRequired > 0 && {
+          "Filter.MinCreditRequired":
+            query.filters.minCreditRequired.toString(),
         }),
     };
 

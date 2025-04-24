@@ -4,13 +4,13 @@ import { Course, CourseQuery } from "@/services/course/course.schema";
 
 // Enhanced filter interface to support our advanced filtering
 interface CourseFilters {
-  priceRange?: [number, number];
+  costRange?: [number, number];
   creditRange?: [number, number];
   majorIds?: string[];
-  isOpening?: boolean | null;
-  isHavePracticeClass?: boolean | null;
-  isUseForCalculateScore?: boolean | null;
-  minCreditCanApply?: number;
+  isRegistrable?: boolean | null;
+  practicePeriod?: number;
+  isRequired?: boolean | null;
+  minCreditRequired?: number;
 }
 
 // Extend CourseQuery to include filters

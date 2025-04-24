@@ -1,6 +1,12 @@
+import { z } from "zod";
+
 import { BaseResponse, PaginatedResponse } from "../dto";
 
-import { Course } from "./course.schema";
+import {
+  Course,
+  courseCertificateSchema,
+  courseMaterialSchema,
+} from "./course.schema";
 
 /**
  * DTO interfaces for Course API operations
@@ -9,23 +15,34 @@ export interface CreateCourseData {
   code: string;
   name: string;
   description: string;
-  price: number;
-  isOpening: boolean;
+  cost: number;
+  isRegistrable: boolean;
   credit: number;
-  isHavePracticeClass: boolean;
-  isUseForCalculateScore: boolean;
-  minCreditCanApply: number;
+  practicePeriod: number;
+  isRequired: boolean;
   majorId: string;
-  compulsoryCourseId?: string;
-  parallelCourseId?: string;
+  minCreditRequired: number | null;
+  preCourseIds: string[] | null;
+  parallelCourseId: string[] | null;
+  courseCertificates?: z.infer<typeof courseCertificateSchema>[];
+  courseMaterials?: z.infer<typeof courseMaterialSchema>[];
 }
 
 export interface UpdateCourseData {
-  name: string;
-  description: string;
-  price: number;
-  majorId: string;
-  isActive: boolean;
+  code?: string;
+  name?: string;
+  description?: string;
+  cost?: number;
+  isRegistrable?: boolean;
+  credit?: number;
+  practicePeriod?: number;
+  isRequired?: boolean;
+  majorId?: string;
+  minCreditRequired?: number | null;
+  preCourseIds?: string[] | null;
+  parallelCourseId?: string[] | null;
+  courseCertificates?: z.infer<typeof courseCertificateSchema>[];
+  courseMaterials?: z.infer<typeof courseMaterialSchema>[];
 }
 
 export interface CourseResponse extends BaseResponse<Course> {}
