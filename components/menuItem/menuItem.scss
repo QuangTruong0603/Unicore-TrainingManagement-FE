@@ -1,7 +1,42 @@
 .menu-item-btn {
   color: #ab9e9e;
+  transition: all 0.3s ease;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  
+  &:hover {
+    color: #333;
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  // Ensure text aligns properly
+  &.justify-start {
+    justify-content: flex-start !important;
+    text-align: left;
+  }
 }
 
 .active {
   color: red;
+  background-color: rgba(255, 0, 0, 0.05);
+  font-weight: 500;
+}
+
+// Add styles to ensure menu container takes full width
+.menu-item-container {
+  width: 100%;
+  display: block;
+  
+  .border-l {
+    border-color: #e0e0e0;
+    padding-left: 0.75rem;
+    width: calc(100% - 0.75rem);
+    
+    .menu-item-btn {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      width: 100% !important;
+    }
+  }
 }

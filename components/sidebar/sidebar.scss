@@ -4,3 +4,18 @@
 .sidebar-content {
   overflow: unset;
 }
+
+.menu-item-container {
+  .border-l {
+    margin-bottom: 0.5rem;
+  }
+}
+
+// Add styles to ensure menu items take full width
+.menu-item {
+  width: 100%;
+  
+  > div {
+    width: 100%;
+  }
+}

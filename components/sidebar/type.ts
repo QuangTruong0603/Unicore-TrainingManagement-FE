@@ -8,6 +8,8 @@ export interface IMenuItem {
   icon: React.ReactNode;
   badge?: IBadgeInfo;
   className?: string;
+  children?: IMenuItem[];
+  isExpanded?: boolean;
 }
 
 export interface ISidebarProps {

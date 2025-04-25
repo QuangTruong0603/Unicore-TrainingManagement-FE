@@ -17,7 +17,7 @@ export const courseSchema = z.object({
   code: z.string(),
   name: z.string(),
   description: z.string(),
-  cost: z.number(),
+  isActive: z.boolean(),
   isRegistrable: z.boolean(),
   credit: z.number(),
   practicePeriod: z.number(),

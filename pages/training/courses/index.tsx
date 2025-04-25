@@ -203,10 +203,11 @@ export default function CoursesPage() {
   };
 
   const handleDelete = async (course: Course) => {
-    if (window.confirm(`Are you sure you want to delete ${course.name}?`)) {
+    if (window.confirm(`Are you sure you want to deactivate ${course.name}?`)) {
       try {
-        await courseService.deleteCourse(course.id);
-        // Refetch courses after deleting
+        // Instead of deleting, we're updating the course to set isActive to false
+        await courseService.updateCourse(course.id, { ...course });
+        // Refetch courses after deactivating
         const response = await courseService.getCourses(query);
 
         dispatch(setCourses(response.data.data));
@@ -309,12 +310,6 @@ export default function CoursesPage() {
       render: (course: Course) => course.credit,
     },
     {
-      key: "cost",
-      title: "Cost",
-      sortable: true,
-      render: (course: Course) => `$${course.cost}`,
-    },
-    {
       key: "status",
       title: "Status",
       sortable: true,
@@ -323,6 +318,18 @@ export default function CoursesPage() {
           className={`px-2 py-1 rounded text-sm ${course.isRegistrable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
           {course.isRegistrable ? "Registrable" : "Not Registrable"}
+        </span>
+      ),
+    },
+    {
+      key: "activeStatus",
+      title: "Active Status",
+      sortable: true,
+      render: (course: Course) => (
+        <span
+          className={`px-2 py-1 rounded text-sm ${course.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+        >
+          {course.isActive ? "Active" : "Inactive"}
         </span>
       ),
     },
@@ -340,11 +347,12 @@ export default function CoursesPage() {
           </Button>
           <Button
             color="danger"
+            disabled={!course.isActive}
             size="sm"
             variant="flat"
             onPress={() => handleDelete(course)}
           >
-            Delete
+            Deactivate
           </Button>
         </div>
       ),

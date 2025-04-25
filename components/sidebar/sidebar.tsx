@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, Button } from "@heroui/react";
 import {
   Home,
@@ -15,7 +15,9 @@ import {
   CalendarRange,
   FileText,
   User,
-  Share2,
+  GraduationCap,
+  Book,
+  GitFork,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -33,6 +35,12 @@ const Sidebar: React.FC<ISidebarProps> = ({
   const router = useRouter();
   const [collapsed, setCollapsed] = useState<boolean>(defaultCollapsed);
   const [activeKey, setActiveKey] = useState<string>(router.pathname);
+
+  // Update active key when route changes
+  useEffect(() => {
+    setActiveKey(router.pathname);
+  }, [router.pathname]);
+
   const handleToggle = (): void => {
     setCollapsed(!collapsed);
     if (onToggle) onToggle(!collapsed);
@@ -45,30 +53,47 @@ const Sidebar: React.FC<ISidebarProps> = ({
     { key: "/analytics", title: "Analytics", icon: <BarChart size={20} /> },
     { key: "/lectures", title: "Lectures", icon: <User size={20} /> },
     {
-      key: "/class-schedule",
-      title: "Class schedule",
-      icon: <Calendar size={20} />,
-    },
-    {
-      key: "/exam-schedule",
-      title: "Exam schedule",
-      icon: <CalendarRange size={20} />,
-    },
-    { key: "/documents", title: "Documents", icon: <FileText size={20} /> },
-    {
-      key: "/program-specification",
-      title: "Program specification",
-      icon: <Share2 size={20} />,
+      key: "/training",
+      title: "Training",
+      icon: <Book size={20} />,
+      isExpanded: true,
+      children: [
+        {
+          key: "/training/courses",
+          title: "Courses",
+          icon: <BookOpen size={20} />,
+        },
+        {
+          key: "/training/class-schedule",
+          title: "Class schedule",
+          icon: <Calendar size={20} />,
+        },
+        {
+          key: "/training/exam-schedule",
+          title: "Exam schedule",
+          icon: <CalendarRange size={20} />,
+        },
+        {
+          key: "/training/documents",
+          title: "Documents",
+          icon: <FileText size={20} />,
+        },
+        {
+          key: "/training/program-specification",
+          title: "Program specification",
+          icon: <GitFork size={20} />,
+        },
+        {
+          key: "/training/majors",
+          title: "Majors",
+          icon: <GraduationCap size={20} />,
+        },
+      ],
     },
     {
       key: "/messages",
       title: "Messages",
       icon: <Mail size={20} />,
-    },
-    {
-      key: "/courses",
-      title: "Courses",
-      icon: <BookOpen size={20} />,
     },
   ];
 
@@ -84,10 +109,8 @@ const Sidebar: React.FC<ISidebarProps> = ({
   ];
 
   const handleItemClick = (key: string) => {
-    setActiveKey(() => {
-      return key;
-    });
-    router.push(`${key}`);
+    setActiveKey(key);
+    router.push(key);
   };
 
   return (
@@ -117,15 +140,23 @@ const Sidebar: React.FC<ISidebarProps> = ({
             <MenuItem
               key={item.key}
               active={activeKey === item.key}
+              activeKey={activeKey}
               collapsed={collapsed}
               item={item}
-              onClick={() => handleItemClick(item.key)}
+              onChildClick={(key) => handleItemClick(key)}
+              onClick={() => !item.children && handleItemClick(item.key)}
             />
           ))}
         </div>
         <div className="p-3 mt-auto">
           {bottomMenuItems.map((item) => (
-            <MenuItem key={item.key} collapsed={collapsed} item={item} />
+            <MenuItem
+              key={item.key}
+              activeKey={activeKey}
+              collapsed={collapsed}
+              item={item}
+              onClick={() => item.key !== "logout" && handleItemClick(item.key)}
+            />
           ))}
         </div>
       </CardBody>

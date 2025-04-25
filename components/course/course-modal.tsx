@@ -60,7 +60,6 @@ export function CourseModal({
             code: "",
             name: "",
             description: "",
-            cost: 0,
             credit: 0,
             minCreditRequired: 0,
             majorId: "",
@@ -76,7 +75,6 @@ export function CourseModal({
             code: course?.code || "",
             name: course?.name || "",
             description: course?.description || "",
-            cost: course?.cost || 0,
             credit: course?.credit || 0,
             majorId: course?.majorId || "",
             isRegistrable: course?.isRegistrable || false,
@@ -124,7 +122,6 @@ export function CourseModal({
         code: course.code || "",
         name: course.name || "",
         description: course.description || "",
-        cost: course.cost || 0,
         credit: course.credit || 0,
         majorId: course.majorId || "",
         isRegistrable: course.isRegistrable || false,
@@ -139,7 +136,6 @@ export function CourseModal({
         code: "",
         name: "",
         description: "",
-        cost: 0,
         credit: 0,
         minCreditRequired: 0,
         majorId: "",
@@ -233,7 +229,7 @@ export function CourseModal({
                   </div>
                 )}
 
-                <div>
+                <div className="mb-0">
                   <label
                     className="block text-sm font-medium text-gray-700 mb-1"
                     htmlFor="description"
@@ -249,66 +245,6 @@ export function CourseModal({
                     rows={4}
                   />
                 </div>
-
-                {mode === "create" ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                        htmlFor="cost"
-                      >
-                        Cost
-                      </label>
-                      <Input
-                        id="cost"
-                        type="number"
-                        {...register("cost", {
-                          min: { value: 0, message: "Cost must be positive" },
-                          valueAsNumber: true,
-                        })}
-                        errorMessage={errors.cost?.message}
-                        placeholder="Enter cost"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                        htmlFor="credit"
-                      >
-                        Credit
-                      </label>
-                      <Input
-                        id="credit"
-                        type="number"
-                        {...register("credit", {
-                          min: { value: 0, message: "Credit must be positive" },
-                          valueAsNumber: true,
-                        })}
-                        errorMessage={errors.credit?.message}
-                        placeholder="Enter credits"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="cost"
-                    >
-                      Cost
-                    </label>
-                    <Input
-                      id="cost"
-                      type="number"
-                      {...register("cost", {
-                        min: { value: 0, message: "Cost must be positive" },
-                        valueAsNumber: true,
-                      })}
-                      errorMessage={errors.cost?.message}
-                      placeholder="Enter cost"
-                    />
-                  </div>
-                )}
 
                 <div>
                   <label
@@ -418,7 +354,7 @@ export function CourseModal({
                                   selectedCourse && (
                                     <Chip
                                       key={courseId}
-                                      className="bg-blue-100"
+                                      className="bg-primary-100 text-primary-700"
                                       size="sm"
                                       onClose={() => {
                                         setValue(
@@ -506,7 +442,7 @@ export function CourseModal({
                                   selectedCourse && (
                                     <Chip
                                       key={courseId}
-                                      className="bg-green-100"
+                                      className="bg-primary-100 text-primary-700"
                                       size="sm"
                                       onClose={() => {
                                         setValue(
