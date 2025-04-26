@@ -1,5 +1,5 @@
-import DasboardPage from "./dashboard";
+import StudentsPage from "./students";
 
 export default function IndexPage() {
-  return <DasboardPage />;
+  return <StudentsPage />;
 }

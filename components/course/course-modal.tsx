@@ -82,7 +82,7 @@ export function CourseModal({
             isRequired: course?.isRequired || false,
             minCreditRequired: course?.minCreditRequired || 0,
             preCourseIds: course?.preCourseIds || [],
-            parallelCourseId: course?.parallelCourseId || [],
+            parallelCourseId: course?.parallelCourseIds || [],
           },
   });
 
@@ -105,6 +105,7 @@ export function CourseModal({
 
           setAllCourses(response.data.data);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("Failed to fetch courses", error);
         } finally {
           setIsLoadingCourses(false);
@@ -129,7 +130,7 @@ export function CourseModal({
         isRequired: course.isRequired || false,
         minCreditRequired: course.minCreditRequired || 0,
         preCourseIds: course.preCourseIds || [],
-        parallelCourseId: course.parallelCourseId || [],
+        parallelCourseId: course.parallelCourseIds || [],
       });
     } else if (mode === "create") {
       reset({

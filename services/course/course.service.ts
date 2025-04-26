@@ -20,11 +20,6 @@ export const courseService = {
         "Order.IsDesc": query.isDesc.toString(),
       }),
 
-      // Add the new filter parameters
-      ...(query.filters?.costRange && {
-        "Filter.MinCost": query.filters.costRange[0].toString(),
-        "Filter.MaxCost": query.filters.costRange[1].toString(),
-      }),
       ...(query.filters?.creditRange && {
         "Filter.MinCredit": query.filters.creditRange[0].toString(),
         "Filter.MaxCredit": query.filters.creditRange[1].toString(),

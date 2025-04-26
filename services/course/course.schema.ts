@@ -12,6 +12,13 @@ export const courseMaterialSchema = z.object({
   fileUrl: z.string(),
 });
 
+export const majorSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  code: z.string(),
+  costPerCredit: z.number(),
+});
+
 export const courseSchema = z.object({
   id: z.string(),
   code: z.string(),
@@ -23,9 +30,10 @@ export const courseSchema = z.object({
   practicePeriod: z.number(),
   isRequired: z.boolean(),
   majorId: z.string(),
+  major: majorSchema,
   minCreditRequired: z.number().nullable(),
   preCourseIds: z.array(z.string()).nullable(),
-  parallelCourseId: z.array(z.string()).nullable(),
+  parallelCourseIds: z.array(z.string()).nullable(),
   courseCertificates: z.array(courseCertificateSchema),
   courseMaterials: z.array(courseMaterialSchema),
 });
@@ -33,13 +41,15 @@ export const courseSchema = z.object({
 export type Course = z.infer<typeof courseSchema>;
 
 export const courseFilterSchema = z.object({
-  costRange: z.tuple([z.number(), z.number()]).optional(),
   creditRange: z.tuple([z.number(), z.number()]).optional(),
   majorIds: z.array(z.string()).optional(),
   isRegistrable: z.boolean().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
   practicePeriod: z.number().optional(),
   isRequired: z.boolean().nullable().optional(),
   minCreditRequired: z.number().optional(),
+  preCourseIds: z.array(z.string()).optional(),
+  parallelCourseIds: z.array(z.string()).optional(),
 });
 
 export type CourseFilter = z.infer<typeof courseFilterSchema>;

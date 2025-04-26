@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardBody, Button } from "@heroui/react";
 import {
-  Home,
   Users,
   Settings,
   BarChart,
@@ -48,7 +47,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
 
   // Menu items data
   const mainMenuItems: IMenuItem[] = [
-    { key: "/dashboard", title: "Dashboard", icon: <Home size={20} /> },
     { key: "/students", title: "Students", icon: <Users size={20} /> },
     { key: "/analytics", title: "Analytics", icon: <BarChart size={20} /> },
     { key: "/lectures", title: "Lectures", icon: <User size={20} /> },

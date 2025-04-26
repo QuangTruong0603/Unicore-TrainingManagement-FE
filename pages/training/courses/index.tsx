@@ -4,7 +4,7 @@ import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
 import { CourseFilter } from "@/components/course/course-filter";
 import { CourseModal } from "@/components/course/course-modal";
-import { DataTable } from "@/components/ui/table/table";
+import { CourseTable } from "@/components/course/course-table";
 import DefaultLayout from "@/layouts/default";
 import { Course } from "@/services/course/course.schema";
 import { courseService } from "@/services/course/course.service";
@@ -55,6 +55,8 @@ export default function CoursesPage() {
     query.searchQuery || ""
   );
   const debouncedSearchValue = useDebounce<string>(searchInputValue, 600);
+  // Add state to track expanded rows
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Create modal
   const {
@@ -197,24 +199,39 @@ export default function CoursesPage() {
     setFilterChips(newChips);
   };
 
-  const handleEdit = (course: Course) => {
-    setSelectedCourse(course);
-    onUpdateOpen();
+  const handleRegistrationToggle = async (course: Course) => {
+    try {
+      const updatedCourse = {
+        ...course,
+        isRegistrable: !course.isRegistrable,
+      };
+
+      await courseService.updateCourse(course.id, updatedCourse);
+      // Refetch courses after toggling registration status
+      const response = await courseService.getCourses(query);
+
+      dispatch(setCourses(response.data.data));
+      dispatch(setTotal(response.data.total));
+    } catch (_error) {
+      // Error handling without console.error
+    }
   };
 
-  const handleDelete = async (course: Course) => {
-    if (window.confirm(`Are you sure you want to deactivate ${course.name}?`)) {
-      try {
-        // Instead of deleting, we're updating the course to set isActive to false
-        await courseService.updateCourse(course.id, { ...course });
-        // Refetch courses after deactivating
-        const response = await courseService.getCourses(query);
+  const handleActiveToggle = async (course: Course) => {
+    try {
+      const updatedCourse = {
+        ...course,
+        isActive: !course.isActive,
+      };
 
-        dispatch(setCourses(response.data.data));
-        dispatch(setTotal(response.data.total));
-      } catch (_error) {
-        // Error handling without console.error
-      }
+      await courseService.updateCourse(course.id, updatedCourse);
+      // Refetch courses after toggling active status
+      const response = await courseService.getCourses(query);
+
+      dispatch(setCourses(response.data.data));
+      dispatch(setTotal(response.data.total));
+    } catch (_error) {
+      // Error handling without console.error
     }
   };
 
@@ -255,10 +272,6 @@ export default function CoursesPage() {
     }
   };
 
-  const handleSearch = (value: string) => {
-    dispatch(setQuery({ ...query, searchQuery: value, pageNumber: 1 }));
-  };
-
   const handleSort = (key: string) => {
     dispatch(
       setQuery({
@@ -290,74 +303,12 @@ export default function CoursesPage() {
     );
   };
 
-  const columns = [
-    {
-      key: "code",
-      title: "Code",
-      sortable: true,
-      render: (course: Course) => course.code,
-    },
-    {
-      key: "name",
-      title: "Name",
-      sortable: true,
-      render: (course: Course) => course.name,
-    },
-    {
-      key: "credit",
-      title: "Credit",
-      sortable: true,
-      render: (course: Course) => course.credit,
-    },
-    {
-      key: "status",
-      title: "Status",
-      sortable: true,
-      render: (course: Course) => (
-        <span
-          className={`px-2 py-1 rounded text-sm ${course.isRegistrable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-        >
-          {course.isRegistrable ? "Registrable" : "Not Registrable"}
-        </span>
-      ),
-    },
-    {
-      key: "activeStatus",
-      title: "Active Status",
-      sortable: true,
-      render: (course: Course) => (
-        <span
-          className={`px-2 py-1 rounded text-sm ${course.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
-        >
-          {course.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      title: "Actions",
-      render: (course: Course) => (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="bordered"
-            onPress={() => handleEdit(course)}
-          >
-            Edit
-          </Button>
-          <Button
-            color="danger"
-            disabled={!course.isActive}
-            size="sm"
-            variant="flat"
-            onPress={() => handleDelete(course)}
-          >
-            Deactivate
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const handleRowToggle = (courseId: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [courseId]: !prev[courseId],
+    }));
+  };
 
   return (
     <DefaultLayout>
@@ -413,12 +364,15 @@ export default function CoursesPage() {
         </div>
 
         <div className="bg-white rounded-lg shadow">
-          <DataTable
-            columns={columns}
-            data={courses}
+          <CourseTable
+            courses={courses}
+            expandedRows={expandedRows}
             isLoading={isLoading}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
+            onActiveToggle={handleActiveToggle}
+            onRegistrationToggle={handleRegistrationToggle}
+            onRowToggle={handleRowToggle}
             onSort={handleSort}
           />
         </div>
