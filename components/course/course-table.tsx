@@ -7,7 +7,6 @@ import {
   Power,
   PowerOff,
   X,
-  ChevronsUpDown,
 } from "lucide-react";
 import {
   Table as HeroTable,
@@ -298,21 +297,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
               className={column.sortable ? styles.sortableHeader : undefined}
               onClick={() => column.sortable && onSort?.(column.key)}
             >
-              <div className="flex items-center gap-1">
-                {column.title}
-                {column.sortable && sortKey === column.key && (
-                  <span className="text-gray-600">
-                    {sortDirection === "asc" ? (
-                      <ChevronUp size={14} />
-                    ) : (
-                      <ChevronDown size={14} />
-                    )}
-                  </span>
-                )}
-                {column.sortable && sortKey !== column.key && (
-                  <ChevronsUpDown className="text-gray-300" size={14} />
-                )}
-              </div>
+              {column.title}
             </TableColumn>
           ))}
         </TableHeader>

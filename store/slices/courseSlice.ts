@@ -8,9 +8,12 @@ interface CourseFilters {
   creditRange?: [number, number];
   majorIds?: string[];
   isRegistrable?: boolean | null;
+  isActive?: boolean | null;
   practicePeriod?: number;
   isRequired?: boolean | null;
   minCreditRequired?: number;
+  preCourseIds?: string[];
+  parallelCourseIds?: string[];
 }
 
 // Extend CourseQuery to include filters
@@ -32,7 +35,7 @@ const initialState: CourseState = {
     pageNumber: 1,
     itemsPerpage: 10,
     searchQuery: "",
-    orderBy: "name",
+    orderBy: undefined,
     isDesc: false,
   },
   total: 0,

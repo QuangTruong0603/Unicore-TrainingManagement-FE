@@ -35,9 +35,7 @@ interface FilterState {
   majorIds: string[];
   isRegistrable: boolean | null;
   isActive: boolean | null;
-  practicePeriod: number;
   isRequired: boolean | null;
-  minCreditRequired: number;
   preCourseIds: string[];
   parallelCourseIds: string[];
 }
@@ -62,21 +60,17 @@ export function CourseFilter({
     majorIds: [],
     isRegistrable: null,
     isActive: null,
-    practicePeriod: 0,
     isRequired: null,
-    minCreditRequired: 0,
     preCourseIds: [],
     parallelCourseIds: [],
   });
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
 
   // Fetch all courses for the dropdowns
   useEffect(() => {
     const fetchAllCourses = async () => {
       if (isOpen) {
-        setIsLoadingCourses(true);
         try {
           // Use a larger page size to get most courses in one request
           const response = await courseService.getCourses({
@@ -88,9 +82,9 @@ export function CourseFilter({
 
           setCourses(response.data.data);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("Failed to fetch courses", error);
         } finally {
-          setIsLoadingCourses(false);
         }
       }
     };
@@ -115,12 +109,8 @@ export function CourseFilter({
       updateFilter("isActive", null);
     } else if (id === "majorIds") {
       updateFilter("majorIds", []);
-    } else if (id === "practiceClass") {
-      updateFilter("practicePeriod", 0);
     } else if (id === "requiredCourse") {
       updateFilter("isRequired", null);
-    } else if (id === "minCreditRequired") {
-      updateFilter("minCreditRequired", 0);
     } else if (id === "preCourseIds") {
       updateFilter("preCourseIds", []);
     } else if (id === "parallelCourseIds") {
@@ -149,15 +139,7 @@ export function CourseFilter({
           filterState.majorIds.length > 0 ? filterState.majorIds : undefined,
         isRegistrable: filterState.isRegistrable,
         isActive: filterState.isActive,
-        practicePeriod:
-          filterState.practicePeriod > 0
-            ? filterState.practicePeriod
-            : undefined,
         isRequired: filterState.isRequired,
-        minCreditRequired:
-          filterState.minCreditRequired > 0
-            ? filterState.minCreditRequired
-            : undefined,
         preCourseIds:
           filterState.preCourseIds.length > 0
             ? filterState.preCourseIds
@@ -217,30 +199,12 @@ export function CourseFilter({
       });
     }
 
-    // Add practice period chip
-    if (filterState.practicePeriod > 0) {
-      newChips.push({
-        id: "practiceClass",
-        label: `Practice Period: ${filterState.practicePeriod}`,
-        onRemove: () => removeFilter("practiceClass"),
-      });
-    }
-
     // Add required course chip
     if (filterState.isRequired !== null) {
       newChips.push({
         id: "requiredCourse",
         label: `Required Course: ${filterState.isRequired ? "Yes" : "No"}`,
         onRemove: () => removeFilter("requiredCourse"),
-      });
-    }
-
-    // Add minimum credit required chip
-    if (filterState.minCreditRequired > 0) {
-      newChips.push({
-        id: "minCreditRequired",
-        label: `Min Credits Required: ${filterState.minCreditRequired}`,
-        onRemove: () => removeFilter("minCreditRequired"),
       });
     }
 
@@ -275,9 +239,7 @@ export function CourseFilter({
       majorIds: [],
       isRegistrable: null,
       isActive: null,
-      practicePeriod: 0,
       isRequired: null,
-      minCreditRequired: 0,
       preCourseIds: [],
       parallelCourseIds: [],
     });
@@ -386,22 +348,27 @@ export function CourseFilter({
                 Major
               </label>
               <Select
+                disableSelectorIconRotation
                 aria-label="Select major"
                 className="w-full bg-gray-50"
                 id="major-select"
                 items={majors}
                 placeholder="Select a major"
-                selectedKeys={filterState.majorIds.length > 0 ? new Set([filterState.majorIds[0]]) : new Set()}
-                disableSelectorIconRotation
+                selectedKeys={
+                  filterState.majorIds.length > 0
+                    ? new Set([filterState.majorIds[0]])
+                    : new Set()
+                }
                 onSelectionChange={(keys) => {
                   if (keys instanceof Set) {
                     const selectedKey = Array.from(keys)[0];
+
                     updateFilter("majorIds", selectedKey ? [selectedKey] : []);
                   }
                 }}
               >
                 {(major) => (
-                  <SelectItem key={major.id} value={major.id}>
+                  <SelectItem key={major.id}>
                     {`${major.name} (${major.code})`}
                   </SelectItem>
                 )}
@@ -544,48 +511,6 @@ export function CourseFilter({
                   Not Required
                 </Button>
               </div>
-            </div>
-
-            {/* Practice Period Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="practice-period"
-              >
-                Practice Period
-              </label>
-              <Input
-                className="w-full bg-gray-50"
-                id="practice-period"
-                min={0}
-                size="sm"
-                type="number"
-                value={filterState.practicePeriod.toString()}
-                onChange={(e) =>
-                  updateFilter("practicePeriod", Number(e.target.value))
-                }
-              />
-            </div>
-
-            {/* Min Credit Required Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="min-credit-required"
-              >
-                Min Credits Required
-              </label>
-              <Input
-                className="w-full bg-gray-50"
-                id="min-credit-required"
-                min={0}
-                size="sm"
-                type="number"
-                value={filterState.minCreditRequired.toString()}
-                onChange={(e) =>
-                  updateFilter("minCreditRequired", Number(e.target.value))
-                }
-              />
             </div>
 
             {/* Pre-course IDs Filter */}

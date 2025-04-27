@@ -169,11 +169,14 @@ export default function CoursesPage() {
       });
     }
 
-    // Practice period filter
-    if (query.filters.practicePeriod) {
+    // Active status filter
+    if (
+      query.filters.isActive !== undefined &&
+      query.filters.isActive !== null
+    ) {
       newChips.push({
-        id: "practiceClass",
-        label: `Practice Period: ${query.filters.practicePeriod}`,
+        id: "active",
+        label: `Active: ${query.filters.isActive ? "Yes" : "No"}`,
       });
     }
 
@@ -188,11 +191,19 @@ export default function CoursesPage() {
       });
     }
 
-    // Min credit required filter
-    if (query.filters.minCreditRequired) {
+    // Pre-course IDs filter
+    if (query.filters.preCourseIds?.length) {
       newChips.push({
-        id: "minCreditRequired",
-        label: `Min Credits Required: ${query.filters.minCreditRequired}`,
+        id: "preCourseIds",
+        label: `Pre-Courses: ${query.filters.preCourseIds.length}`,
+      });
+    }
+
+    // Parallel course IDs filter
+    if (query.filters.parallelCourseIds?.length) {
+      newChips.push({
+        id: "parallelCourseIds",
+        label: `Parallel Courses: ${query.filters.parallelCourseIds.length}`,
       });
     }
 
@@ -273,11 +284,20 @@ export default function CoursesPage() {
   };
 
   const handleSort = (key: string) => {
+    // Map UI column keys to backend field names for sorting
+    const fieldMap: Record<string, string> = {
+      status: "isRegistrable",
+      activeStatus: "isActive",
+    };
+
+    // Use the mapped field name if it exists, otherwise use the original key
+    const orderBy = fieldMap[key] || key;
+
     dispatch(
       setQuery({
         ...query,
-        orderBy: key,
-        isDesc: query.orderBy === key ? !query.isDesc : false,
+        orderBy,
+        isDesc: query.orderBy === orderBy ? !query.isDesc : false,
       })
     );
   };
@@ -296,7 +316,7 @@ export default function CoursesPage() {
         pageNumber: 1,
         itemsPerpage: query.itemsPerpage,
         searchQuery: query.searchQuery,
-        orderBy: "name",
+        orderBy: undefined,
         isDesc: false,
         filters: {},
       })
