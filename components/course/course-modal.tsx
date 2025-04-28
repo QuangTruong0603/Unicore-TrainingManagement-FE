@@ -213,23 +213,6 @@ export function CourseModal({
                   </div>
                 )}
 
-                {mode === "update" && (
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="name"
-                    >
-                      Name
-                    </label>
-                    <Input
-                      id="name"
-                      {...register("name", { required: "Name is required" })}
-                      errorMessage={errors.name?.message}
-                      placeholder="Enter course name"
-                    />
-                  </div>
-                )}
-
                 <div className="mb-0">
                   <label
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -523,21 +506,6 @@ export function CourseModal({
                       </div>
                     </div>
                   </>
-                )}
-
-                {mode === "update" && (
-                  <div className="flex flex-col space-y-3 mt-2">
-                    <div className="flex items-start">
-                      <Checkbox {...register("isRegistrable")}>
-                        <span className="text-sm">Is Registrable</span>
-                      </Checkbox>
-                    </div>
-                    <div className="flex items-start">
-                      <Checkbox {...register("isRequired")}>
-                        <span className="text-sm">Is Required</span>
-                      </Checkbox>
-                    </div>
-                  </div>
                 )}
               </form>
             </ModalBody>

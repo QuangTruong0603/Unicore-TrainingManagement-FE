@@ -16,7 +16,7 @@ import {
   User,
   GraduationCap,
   Book,
-  GitFork,
+  Map,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -77,9 +77,9 @@ const Sidebar: React.FC<ISidebarProps> = ({
           icon: <FileText size={20} />,
         },
         {
-          key: "/training/program-specification",
-          title: "Program specification",
-          icon: <GitFork size={20} />,
+          key: "/training/training-roadmap",
+          title: "Training Roadmaps",
+          icon: <Map size={20} />,
         },
         {
           key: "/training/majors",
