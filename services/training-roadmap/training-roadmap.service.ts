@@ -7,10 +7,13 @@ import {
   TrainingRoadmapResponse,
   CreateTrainingRoadmapData,
   UpdateTrainingRoadmapData,
+  AddComponentsToTrainingRoadmapData,
 } from "./training-roadmap.dto";
 
 export const trainingRoadmapService = {
-  getTrainingRoadmaps: async (query: TrainingRoadmapQuery): Promise<TrainingRoadmapListResponse> => {
+  getTrainingRoadmaps: async (
+    query: TrainingRoadmapQuery
+  ): Promise<TrainingRoadmapListResponse> => {
     // Start with the basic params
     let params: Record<string, string> = {
       "Pagination.PageNumber": query.pageNumber.toString(),
@@ -39,8 +42,10 @@ export const trainingRoadmapService = {
 
     // Add start year range if provided
     if (query.filters?.startYearRange) {
-      params["Filter.MinStartYear"] = query.filters.startYearRange[0].toString();
-      params["Filter.MaxStartYear"] = query.filters.startYearRange[1].toString();
+      params["Filter.MinStartYear"] =
+        query.filters.startYearRange[0].toString();
+      params["Filter.MaxStartYear"] =
+        query.filters.startYearRange[1].toString();
     }
 
     // Add code filter if provided
@@ -65,7 +70,9 @@ export const trainingRoadmapService = {
     });
   },
 
-  getTrainingRoadmapById: async (id: string): Promise<TrainingRoadmapResponse> => {
+  getTrainingRoadmapById: async (
+    id: string
+  ): Promise<TrainingRoadmapResponse> => {
     return courseClient.get(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`, {
       headers: {
         accept: "text/plain",
@@ -73,7 +80,9 @@ export const trainingRoadmapService = {
     });
   },
 
-  createTrainingRoadmap: async (data: CreateTrainingRoadmapData): Promise<TrainingRoadmapResponse> => {
+  createTrainingRoadmap: async (
+    data: CreateTrainingRoadmapData
+  ): Promise<TrainingRoadmapResponse> => {
     return courseClient.post(API_ENDPOINTS.TRAINING_ROADMAPS, data, {
       headers: {
         accept: "text/plain",
@@ -86,6 +95,42 @@ export const trainingRoadmapService = {
     data: UpdateTrainingRoadmapData
   ): Promise<TrainingRoadmapResponse> => {
     return courseClient.put(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+
+  addComponentsToTrainingRoadmap: async (
+    data: AddComponentsToTrainingRoadmapData
+  ): Promise<TrainingRoadmapResponse> => {
+    return courseClient.post(
+      `${API_ENDPOINTS.TRAINING_ROADMAPS}/components`,
+      data,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  createMultipleCourseGroups: async (
+    courseGroups: { groupName: string; courseIds: string[]; majorId: string }[]
+  ): Promise<any> => {
+    return courseClient.post(
+      `${API_ENDPOINTS.COURSES_GROUP}/multiple`,
+      courseGroups,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  getCourseGroupsByMajorId: async (majorId: string): Promise<any> => {
+    return courseClient.get(`${API_ENDPOINTS.COURSES_GROUP}/major/${majorId}`, {
       headers: {
         accept: "text/plain",
       },

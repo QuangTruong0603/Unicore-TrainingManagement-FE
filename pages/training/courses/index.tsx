@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
 import { CourseFilter } from "@/components/course/course-filter";
@@ -47,9 +47,7 @@ export default function CoursesPage() {
     (state) => state.course
   );
   const [majors, setMajors] = useState<Major[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
-  const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [searchInputValue, setSearchInputValue] = useState<string>(
     query.searchQuery || ""
@@ -63,12 +61,6 @@ export default function CoursesPage() {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
     onOpenChange: onCreateOpenChange,
-  } = useDisclosure();
-  // Update modal
-  const {
-    isOpen: isUpdateOpen,
-    onOpen: onUpdateOpen,
-    onOpenChange: onUpdateOpenChange,
   } = useDisclosure();
 
   useEffect(() => {
@@ -263,26 +255,6 @@ export default function CoursesPage() {
     }
   };
 
-  const onUpdateSubmit = async (data: any) => {
-    try {
-      if (selectedCourse) {
-        setIsUpdateSubmitting(true);
-        await courseService.updateCourse(selectedCourse.id, data);
-        onUpdateOpenChange();
-        setSelectedCourse(null);
-        // Refetch courses after updating
-        const response = await courseService.getCourses(query);
-
-        dispatch(setCourses(response.data.data));
-        dispatch(setTotal(response.data.total));
-      }
-    } catch (_error) {
-      // Error handling without console.error
-    } finally {
-      setIsUpdateSubmitting(false);
-    }
-  };
-
   const handleSort = (key: string) => {
     // Map UI column keys to backend field names for sorting
     const fieldMap: Record<string, string> = {
@@ -335,8 +307,13 @@ export default function CoursesPage() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Courses</h1>
-          <Button color="primary" variant="solid" onPress={onCreateOpen}>
-            Add Course
+          <Button
+            color="primary"
+            startContent={<Plus size={20} />}
+            variant="solid"
+            onPress={onCreateOpen}
+          >
+            Create Course
           </Button>
         </div>
 
@@ -413,17 +390,6 @@ export default function CoursesPage() {
           mode="create"
           onOpenChange={onCreateOpenChange}
           onSubmit={onCreateSubmit}
-        />
-
-        {/* Update Course Modal */}
-        <CourseModal
-          course={selectedCourse}
-          isOpen={isUpdateOpen}
-          isSubmitting={isUpdateSubmitting}
-          majors={majors}
-          mode="update"
-          onOpenChange={onUpdateOpenChange}
-          onSubmit={onUpdateSubmit}
         />
       </div>
     </DefaultLayout>

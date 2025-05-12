@@ -1,11 +1,15 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 import { useApiGet, useApiPost } from "../api/api-hooks";
 
 import { TrainingRoadmapQuery } from "./training-roadmap.schema";
-import { CreateTrainingRoadmapData, UpdateTrainingRoadmapData } from "./training-roadmap.dto";
+import {
+  CreateTrainingRoadmapData,
+  UpdateTrainingRoadmapData,
+} from "./training-roadmap.dto";
+import { trainingRoadmapService } from "./training-roadmap.service";
 
 // React Query implementation
 export const useTrainingRoadmaps = (query: TrainingRoadmapQuery) => {
@@ -33,7 +37,9 @@ export const useTrainingRoadmap = (id: string) => {
 };
 
 // Using our custom hooks directly (alternative approach)
-export const useTrainingRoadmapsWithCustomHook = (query: TrainingRoadmapQuery) => {
+export const useTrainingRoadmapsWithCustomHook = (
+  query: TrainingRoadmapQuery
+) => {
   const params = {
     "Pagination.PageNumber": query.pageNumber.toString(),
     "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
@@ -47,30 +53,45 @@ export const useTrainingRoadmapsWithCustomHook = (query: TrainingRoadmapQuery) =
     { params },
     {
       // Optional callbacks
-      onSuccess: (data) => console.log("Training roadmaps fetched successfully", data),
-      onError: (error) => console.error("Failed to fetch training roadmaps", error),
+      onSuccess: (data) =>
+        console.log("Training roadmaps fetched successfully", data),
+      onError: (error) =>
+        console.error("Failed to fetch training roadmaps", error),
     }
   );
 };
 
 // Mutation for creating a training roadmap
 export const useCreateTrainingRoadmap = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (data: CreateTrainingRoadmapData) =>
-      courseClient.post(API_ENDPOINTS.TRAINING_ROADMAPS, data),
+      trainingRoadmapService.createTrainingRoadmap(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trainingRoadmaps"] });
+    },
   });
 };
 
 // Alternative using our custom hook
 export const useCreateTrainingRoadmapWithCustomHook = () => {
-  return useApiPost<CreateTrainingRoadmapData>(courseClient, API_ENDPOINTS.TRAINING_ROADMAPS);
+  return useApiPost<CreateTrainingRoadmapData>(
+    courseClient,
+    API_ENDPOINTS.TRAINING_ROADMAPS
+  );
 };
 
 // Mutation for updating a training roadmap
 export const useUpdateTrainingRoadmap = () => {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateTrainingRoadmapData }) =>
-      courseClient.put(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateTrainingRoadmapData;
+    }) => courseClient.put(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`, data),
   });
 };
 
@@ -79,5 +100,34 @@ export const useDeleteTrainingRoadmap = () => {
   return useMutation({
     mutationFn: (id: string) =>
       courseClient.delete(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`),
+  });
+};
+
+// Fetch course groups by major ID
+export const useCourseGroupsByMajorId = (majorId: string) => {
+  return useQuery({
+    queryKey: ["courseGroups", majorId],
+    queryFn: () => trainingRoadmapService.getCourseGroupsByMajorId(majorId),
+    enabled: !!majorId,
+  });
+};
+
+// Mutation for adding components to a training roadmap
+export const useAddComponentsToTrainingRoadmap = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) =>
+      trainingRoadmapService.addComponentsToTrainingRoadmap(data),
+    onSuccess: (_, variables) => {
+      // Invalidate the cache for the training roadmap list
+      queryClient.invalidateQueries({ queryKey: ["trainingRoadmaps"] });
+      // Also invalidate specific roadmap cache
+      if (variables.trainingRoadmapId) {
+        queryClient.invalidateQueries({
+          queryKey: ["trainingRoadmap", variables.trainingRoadmapId],
+        });
+      }
+    },
   });
 };

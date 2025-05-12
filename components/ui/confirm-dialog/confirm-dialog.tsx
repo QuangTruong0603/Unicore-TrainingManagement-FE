@@ -8,41 +8,51 @@ import {
   Button,
 } from "@heroui/react";
 
-import styles from "./confirm-dialog.module.scss";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { closeConfirmDialog } from "@/store/slices/confirmDialogSlice";
 
-interface ConfirmDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title?: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  confirmColor?: "primary" | "danger" | "success" | "warning";
-}
+const ConfirmDialog: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const {
+    isOpen,
+    title,
+    message,
+    confirmText,
+    cancelText,
+    onConfirm,
+    onCancel,
+  } = useAppSelector((state) => state.confirmDialog);
 
-export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title = "Confirm Action",
-  message,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  confirmColor = "danger",
-}) => {
+  const handleClose = () => {
+    dispatch(closeConfirmDialog());
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    }
+    handleClose();
+  };
+
+  const handleConfirm = () => {
+    if (onConfirm) {
+      onConfirm();
+    }
+    handleClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={handleClose}>
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody>
-          <p className={styles.message}>{message}</p>
+          <p>{message}</p>
         </ModalBody>
         <ModalFooter>
-          <Button color="default" variant="light" onPress={onClose}>
+          <Button variant="flat" onPress={handleCancel}>
             {cancelText}
           </Button>
-          <Button color={confirmColor} onPress={onConfirm}>
+          <Button color="primary" onPress={handleConfirm}>
             {confirmText}
           </Button>
         </ModalFooter>
@@ -50,3 +60,5 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     </Modal>
   );
 };
+
+export default ConfirmDialog;

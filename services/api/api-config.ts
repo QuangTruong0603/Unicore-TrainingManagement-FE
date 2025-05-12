@@ -16,6 +16,7 @@ export const REQUEST_TIMEOUT = 30000;
 export const API_ENDPOINTS = {
   COURSES: "/c/Courses",
   TRAINING_ROADMAPS: "/c/TrainingRoadmaps", // Added training roadmap endpoint
+  COURSES_GROUP: "/c/CoursesGroup",
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
 };

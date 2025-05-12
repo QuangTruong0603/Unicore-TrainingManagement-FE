@@ -1,12 +1,8 @@
-import { z } from "zod";
-
 import { BaseResponse, PaginatedResponse } from "../dto";
-import { Major } from "../major/major.schema";
 
 import {
   TrainingRoadmap,
-  coursesGroupSchema,
-  trainingRoadmapCourseSchema
+  TrainingRoadmapAddComponentsDto,
 } from "./training-roadmap.schema";
 
 /**
@@ -27,11 +23,13 @@ export interface CreateTrainingRoadmapData {
   majorId: string;
   name: string;
   description: string;
-  code: string;
   startYear: number;
-  trainingRoadmapCourses?: {
-    courseId: string;
+  coursesGroups?: {
+    groupName: string;
+  }[];
+  coursesGroupSemesters?: {
     semesterNumber: number;
+    coursesGroupId?: string;
   }[];
 }
 
@@ -45,8 +43,22 @@ export interface UpdateTrainingRoadmapData {
     courseId: string;
     semesterNumber: number;
   }[];
+  coursesGroups?: {
+    id?: string;
+    groupName: string;
+  }[];
+  coursesGroupSemesters?: {
+    id?: string;
+    semesterNumber: number;
+    coursesGroupId: string;
+  }[];
 }
 
-export interface TrainingRoadmapResponse extends BaseResponse<TrainingRoadmap> {}
+export interface AddComponentsToTrainingRoadmapData
+  extends TrainingRoadmapAddComponentsDto {}
 
-export interface TrainingRoadmapListResponse extends PaginatedResponse<TrainingRoadmap> {}
+export interface TrainingRoadmapResponse
+  extends BaseResponse<TrainingRoadmap> {}
+
+export interface TrainingRoadmapListResponse
+  extends PaginatedResponse<TrainingRoadmap> {}
