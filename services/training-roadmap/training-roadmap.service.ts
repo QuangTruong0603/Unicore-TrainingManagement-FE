@@ -144,4 +144,32 @@ export const trainingRoadmapService = {
       },
     });
   },
+
+  activateTrainingRoadmap: async (
+    id: string
+  ): Promise<TrainingRoadmapResponse> => {
+    return courseClient.post(
+      `${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deactivateTrainingRoadmap: async (
+    id: string
+  ): Promise<TrainingRoadmapResponse> => {
+    return courseClient.post(
+      `${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
 };

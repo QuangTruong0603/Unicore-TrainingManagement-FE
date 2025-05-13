@@ -73,6 +73,7 @@ export const trainingRoadmapSchema = z.object({
   startYear: z.number(),
   coursesGroupSemesters: z.array(coursesGroupSemesterSchema),
   trainingRoadmapCourses: z.array(trainingRoadmapCourseSchema),
+  isActive: z.boolean().default(true),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
   createdBy: z.string().nullable(),

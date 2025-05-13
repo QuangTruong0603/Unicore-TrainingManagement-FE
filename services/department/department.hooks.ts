@@ -80,6 +80,35 @@ export const useDepartments = () => {
     },
     [dispatch, fetchDepartments]
   );
+  const activateDepartment = useCallback(
+    async (id: string) => {
+      try {
+        await departmentService.activateDepartment(id);
+
+        return await fetchDepartments();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchDepartments]
+  );
+
+  const deactivateDepartment = useCallback(
+    async (id: string) => {
+      try {
+        await departmentService.deactivateDepartment(id);
+
+        return await fetchDepartments();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchDepartments]
+  );
 
   return {
     departments,
@@ -91,5 +120,7 @@ export const useDepartments = () => {
     updateDepartment,
     createDepartment,
     deleteDepartment,
+    activateDepartment,
+    deactivateDepartment,
   };
 };

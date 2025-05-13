@@ -1,6 +1,8 @@
 import React from "react";
 import { Button } from "@heroui/react";
 import {
+  ArrowDown,
+  ArrowUp,
   Check,
   ChevronDown,
   ChevronUp,
@@ -51,6 +53,16 @@ export const CourseTable: React.FC<CourseTableProps> = ({
   onRegistrationToggle,
   onActiveToggle,
 }) => {
+  const renderSortIcon = (key: string) => {
+    if (sortKey !== key) return null;
+
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-4 h-4 ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 ml-1" />
+    );
+  };
+
   const columns: Column[] = [
     {
       key: "code",
@@ -102,7 +114,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       sortable: true,
       render: (course: Course) => (
         <span
-          className={`px-2 py-1 rounded text-sm ${course.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+          className={`px-2 py-1 rounded text-sm ${course.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
           {course.isActive ? "Active" : "Inactive"}
         </span>
@@ -288,16 +300,18 @@ export const CourseTable: React.FC<CourseTableProps> = ({
 
   return (
     <div className={styles.tableWrapper}>
+      {" "}
       <HeroTable aria-label="Courses Table">
         <TableHeader>
           {columns.map((column) => (
             <TableColumn
               key={column.key}
-              allowsSorting={column.sortable}
-              className={column.sortable ? styles.sortableHeader : undefined}
+              className={`${column.sortable ? styles.sortableHeader : ""} ${column.sortable && sortKey === column.key ? "cursor-pointer text-primary" : "cursor-pointer"}`}
               onClick={() => column.sortable && onSort?.(column.key)}
             >
-              {column.title}
+              <div className="flex items-center">
+                {column.title} {column.sortable && renderSortIcon(column.key)}
+              </div>
             </TableColumn>
           ))}
         </TableHeader>

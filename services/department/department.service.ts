@@ -96,12 +96,35 @@ export const departmentService = {
       },
     });
   },
-
   deleteDepartment: async (id: string) => {
     return majorClient.delete(`${API_ENDPOINTS.DEPARTMENTS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
+  },
+
+  activateDepartment: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.DEPARTMENTS}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deactivateDepartment: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.DEPARTMENTS}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
 };

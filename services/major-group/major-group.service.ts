@@ -102,12 +102,35 @@ export const majorGroupService = {
       },
     });
   },
-
   deleteMajorGroup: async (id: string) => {
     return majorClient.delete(`${API_ENDPOINTS.MAJOR_GROUPS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
+  },
+
+  activateMajorGroup: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.MAJOR_GROUPS}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deactivateMajorGroup: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.MAJOR_GROUPS}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
 };
