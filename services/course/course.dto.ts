@@ -13,7 +13,6 @@ import {
  * DTO interfaces for Course API operations
  */
 export interface CreateCourseData {
-  code: string;
   name: string;
   description: string;
   cost: number;

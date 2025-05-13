@@ -44,7 +44,14 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function CoursesPage() {
   const dispatch = useAppDispatch();
   const { courses, query, total, isLoading } = useAppSelector(
-    (state) => state.course
+    (state: {
+      course: {
+        courses: Course[];
+        query: any;
+        total: number;
+        isLoading: boolean;
+      };
+    }) => state.course
   );
   const [majors, setMajors] = useState<Major[]>([]);
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
