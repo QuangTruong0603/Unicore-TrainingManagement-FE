@@ -403,6 +403,17 @@ const trainingRoadmapSlice = createSlice({
         });
       });
     },
+    updateRoadmapStatus: (
+      state,
+      action: PayloadAction<{ id: string; isActive: boolean }>
+    ) => {
+      const { id, isActive } = action.payload;
+      const roadmap = state.roadmaps.find((r) => r.id === id);
+
+      if (roadmap) {
+        roadmap.isActive = isActive;
+      }
+    },
   },
 });
 
@@ -429,6 +440,7 @@ export const {
   addApiCourseToDraft,
   addApiCourseGroupToDraft,
   initializeFromApiData,
+  updateRoadmapStatus,
 } = trainingRoadmapSlice.actions;
 
 export default trainingRoadmapSlice.reducer;

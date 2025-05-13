@@ -81,6 +81,36 @@ export const useMajors = () => {
     [dispatch, fetchMajors]
   );
 
+  const activateMajor = useCallback(
+    async (id: string) => {
+      try {
+        await majorService.activateMajor(id);
+
+        return await fetchMajors();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchMajors]
+  );
+
+  const deactivateMajor = useCallback(
+    async (id: string) => {
+      try {
+        await majorService.deactivateMajor(id);
+
+        return await fetchMajors();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchMajors]
+  );
+
   return {
     majors,
     query,
@@ -91,5 +121,7 @@ export const useMajors = () => {
     updateMajor,
     createMajor,
     deleteMajor,
+    activateMajor,
+    deactivateMajor,
   };
 };

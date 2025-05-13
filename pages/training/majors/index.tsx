@@ -96,8 +96,7 @@ export default function MajorPage() {
         onDepartmentModalOpen();
         break;
     }
-  };
-  // Major state and hooks
+  }; // Major state and hooks
   const {
     majors,
     query: majorQuery,
@@ -105,13 +104,15 @@ export default function MajorPage() {
     isLoading: isMajorLoading,
     fetchMajors,
     createMajor,
+    activateMajor,
+    deactivateMajor,
+    updateMajor,
   } = useMajors();
 
   const [majorSearchInput, setMajorSearchInput] = useState(
     () => majorQuery.searchQuery || ""
   );
-  const debouncedMajorSearch = useDebounce<string>(majorSearchInput, 600);
-  // MajorGroup state and hooks
+  const debouncedMajorSearch = useDebounce<string>(majorSearchInput, 600); // MajorGroup state and hooks
   const {
     majorGroups,
     query: majorGroupQuery,
@@ -119,6 +120,9 @@ export default function MajorPage() {
     isLoading: isMajorGroupLoading,
     fetchMajorGroups,
     createMajorGroup,
+    activateMajorGroup,
+    deactivateMajorGroup,
+    updateMajorGroup,
   } = useMajorGroups();
 
   const [majorGroupSearchInput, setMajorGroupSearchInput] = useState(
@@ -137,6 +141,8 @@ export default function MajorPage() {
     fetchDepartments,
     createDepartment,
     updateDepartment,
+    activateDepartment,
+    deactivateDepartment,
   } = useDepartments();
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState(
@@ -317,11 +323,17 @@ export default function MajorPage() {
               </div>
             </div>
             <div className="bg-white rounded-lg shadow">
+              {" "}
               <MajorTable
                 isLoading={isMajorLoading}
                 majors={majors}
                 sortDirection={majorQuery.isDesc ? "desc" : "asc"}
                 sortKey={majorQuery.orderBy}
+                onActiveToggle={(major) =>
+                  major.isActive
+                    ? deactivateMajor(major.id)
+                    : activateMajor(major.id)
+                }
                 onSort={handleMajorSort}
               />
             </div>
@@ -357,11 +369,17 @@ export default function MajorPage() {
               </div>
             </div>
             <div className="bg-white rounded-lg shadow">
+              {" "}
               <MajorGroupTable
                 isLoading={isMajorGroupLoading}
                 majorGroups={majorGroups}
                 sortDirection={majorGroupQuery.isDesc ? "desc" : "asc"}
                 sortKey={majorGroupQuery.orderBy}
+                onActiveToggle={(majorGroup) =>
+                  majorGroup.isActive
+                    ? deactivateMajorGroup(majorGroup.id)
+                    : activateMajorGroup(majorGroup.id)
+                }
                 onSort={handleMajorGroupSort}
               />
             </div>
@@ -406,9 +424,9 @@ export default function MajorPage() {
                 sortDirection={departmentQuery.isDesc ? "desc" : "asc"}
                 sortKey={departmentQuery.orderBy}
                 onActiveToggle={(department) =>
-                  updateDepartment(department.id, {
-                    isActive: !department.isActive,
-                  })
+                  department.isActive
+                    ? deactivateDepartment(department.id)
+                    : activateDepartment(department.id)
                 }
                 onCreateDepartment={createDepartment}
                 onSort={handleDepartmentSort}

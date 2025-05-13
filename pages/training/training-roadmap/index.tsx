@@ -19,6 +19,7 @@ import { TrainingRoadmapTable } from "@/components/training-roadmap/training-roa
 import { TrainingRoadmapModal } from "@/components/training-roadmap/training-roadmap-modal";
 import { majorService } from "@/services/major/major.service";
 import { Major } from "@/services/major/major.schema";
+import { TrainingRoadmap } from "@/services/training-roadmap/training-roadmap.schema";
 import { TrainingRoadmapFormData } from "@/components/training-roadmap/training-roadmap-form";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -31,6 +32,7 @@ import {
   setTotal,
   setLoading,
   setError,
+  updateRoadmapStatus,
 } from "@/store/slices/trainingRoadmapSlice";
 import { trainingRoadmapService } from "@/services/training-roadmap/training-roadmap.service";
 
@@ -266,6 +268,38 @@ const TrainingRoadmapPage: React.FC = () => {
     }));
   };
 
+  // Handle active status toggle
+  const handleActiveToggle = async (roadmap: TrainingRoadmap) => {
+    try {
+      dispatch(setLoading(true));
+
+      if (roadmap.isActive) {
+        // Deactivate
+        await trainingRoadmapService.deactivateTrainingRoadmap(roadmap.id);
+      } else {
+        // Activate
+        await trainingRoadmapService.activateTrainingRoadmap(roadmap.id);
+      }
+
+      // Update the roadmap status in the Redux store
+      dispatch(
+        updateRoadmapStatus({ id: roadmap.id, isActive: !roadmap.isActive })
+      );
+    } catch (error) {
+      console.error(
+        `Failed to ${roadmap.isActive ? "deactivate" : "activate"} roadmap:`,
+        error
+      );
+      dispatch(
+        setError(
+          `Failed to ${roadmap.isActive ? "deactivate" : "activate"} roadmap`
+        )
+      );
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
   // Handle sort
   const handleSort = (key: string) => {
     dispatch(
@@ -365,12 +399,14 @@ const TrainingRoadmapPage: React.FC = () => {
           )}
         </div>{" "}
         <div className="bg-white rounded-lg shadow">
+          {" "}
           <TrainingRoadmapTable
             expandedRows={expandedRows}
             isLoading={isLoading}
             roadmaps={Array.isArray(roadmaps) ? roadmaps : []}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
+            onActiveToggle={handleActiveToggle}
             onEdit={() => {}} // Empty function as we're removing edit functionality
             onRowToggle={handleRowToggle}
             onSort={handleSort}

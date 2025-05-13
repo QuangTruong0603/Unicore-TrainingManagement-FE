@@ -79,6 +79,36 @@ export const useMajorGroups = () => {
     [dispatch, fetchMajorGroups]
   );
 
+  const activateMajorGroup = useCallback(
+    async (id: string) => {
+      try {
+        await majorGroupService.activateMajorGroup(id);
+
+        return await fetchMajorGroups();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchMajorGroups]
+  );
+
+  const deactivateMajorGroup = useCallback(
+    async (id: string) => {
+      try {
+        await majorGroupService.deactivateMajorGroup(id);
+
+        return await fetchMajorGroups();
+      } catch (error) {
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
+      }
+    },
+    [dispatch, fetchMajorGroups]
+  );
+
   return {
     majorGroups,
     query,
@@ -89,5 +119,7 @@ export const useMajorGroups = () => {
     updateMajorGroup,
     createMajorGroup,
     deleteMajorGroup,
+    activateMajorGroup,
+    deactivateMajorGroup,
   };
 };

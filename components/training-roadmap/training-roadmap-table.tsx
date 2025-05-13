@@ -1,6 +1,13 @@
 import React from "react";
 import { Button } from "@heroui/react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  Power,
+  PowerOff,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Table as HeroTable,
@@ -24,6 +31,7 @@ interface TrainingRoadmapTableProps {
   onSort?: (key: string) => void;
   onRowToggle: (roadmapId: string) => void;
   onEdit: (roadmap: TrainingRoadmap) => void; // Kept for interface compatibility, not used
+  onActiveToggle: (roadmap: TrainingRoadmap) => void;
 }
 
 interface Column {
@@ -41,7 +49,17 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
   sortDirection,
   onSort,
   onRowToggle,
+  onActiveToggle,
 }) => {
+  const renderSortIcon = (key: string) => {
+    if (sortKey !== key) return null;
+
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-4 h-4 ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 ml-1" />
+    );
+  };
   const columns: Column[] = [
     {
       key: "code",
@@ -86,6 +104,38 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
           ) : (
             roadmap.majorId
           )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      sortable: true,
+      render: (roadmap: TrainingRoadmap) => (
+        <span
+          className={`px-2 py-1 rounded text-sm ${roadmap.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+        >
+          {roadmap.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (roadmap: TrainingRoadmap) => (
+        <div className="flex gap-2">
+          <Button
+            className="flex items-center gap-1 h-8 px-3 font-medium"
+            color={roadmap.isActive ? "danger" : "success"}
+            size="sm"
+            startContent={
+              roadmap.isActive ? <PowerOff size={16} /> : <Power size={16} />
+            }
+            variant="flat"
+            onPress={() => onActiveToggle(roadmap)}
+          >
+            {roadmap.isActive ? "Deactivate" : "Activate"}
+          </Button>
         </div>
       ),
     },
@@ -182,16 +232,12 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
           {columns.map((column) => (
             <TableColumn
               key={column.key}
-              allowsSorting={column.sortable}
-              className={column.sortable ? styles.sortableHeader : undefined}
+              className={`${column.sortable ? styles.sortableHeader : ""} ${column.sortable && sortKey === column.key ? "cursor-pointer text-primary" : "cursor-pointer"}`}
               onClick={() => column.sortable && onSort?.(column.key)}
             >
-              {column.title}
-              {sortKey === column.key && (
-                <span className="ml-1">
-                  {sortDirection === "asc" ? "↑" : "↓"}
-                </span>
-              )}
+              <div className="flex items-center">
+                {column.title} {column.sortable && renderSortIcon(column.key)}
+              </div>
             </TableColumn>
           ))}
         </TableHeader>

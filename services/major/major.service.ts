@@ -97,12 +97,35 @@ export const majorService = {
       },
     });
   },
-
   deleteMajor: async (id: string) => {
     return majorClient.delete(`${API_ENDPOINTS.MAJORS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
+  },
+
+  activateMajor: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.MAJORS}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deactivateMajor: async (id: string) => {
+    return majorClient.post(
+      `${API_ENDPOINTS.MAJORS}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
 };
