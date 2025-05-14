@@ -44,6 +44,9 @@ export const studentService = {
   createStudent: async (data: Partial<any>): Promise<any> => {
     return studentClient.post(`${API_ENDPOINTS.STUDENTS}`, data);
   },
+  deleteStudent: async (studentId: string): Promise<any> => {
+    return studentClient.delete(`${API_ENDPOINTS.STUDENTS}/${studentId}`);
+  },
   importStudents: async (file: File, batchId: string, majorId: string): Promise<void> => {
     const formData = new FormData();
     formData.append("ExcelFile", file);

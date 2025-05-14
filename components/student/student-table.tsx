@@ -9,7 +9,7 @@ import {
   Button,
   Spinner,
 } from "@heroui/react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash, Pencil } from "lucide-react";
 import { Student } from "@/services/student/student.schema";
 import styles from "./student-table.module.scss";
 
@@ -28,16 +28,20 @@ interface StudentTableProps {
   sortDirection: "asc" | "desc";
   onSort: (key: string) => void;
   onRowToggle: (studentId: string) => void;
+  onDelete: (studentId: string) => void;
+  onEdit: (student: Student) => void;
 }
 
 export const StudentTable: React.FC<StudentTableProps> = ({
   students,
   isLoading,
   expandedRows,
+  onDelete,
   sortKey,
   sortDirection,
   onSort,
   onRowToggle,
+  onEdit,
 }) => {
   const renderSortIcon = (columnKey: string) => {
     if (sortKey !== columnKey) return null;
@@ -46,6 +50,10 @@ export const StudentTable: React.FC<StudentTableProps> = ({
     ) : (
       <ChevronDown className="w-4 h-4" />
     );
+  };
+
+  const handleDelete = (studentId: string) => {
+    onDelete(studentId);
   };
 
   if (isLoading) {
@@ -107,17 +115,19 @@ export const StudentTable: React.FC<StudentTableProps> = ({
             {renderSortIcon("phoneNumber")}
           </div>
         </TableColumn>
+
+        <TableColumn>Date of Birth</TableColumn>
         <TableColumn
           key="status"
           onClick={() => onSort("status")}
-          className="cursor-pointer"
+          className="cursor-pointer text-center"
         >
           <div className="flex items-center gap-2">
             Status
             {renderSortIcon("status")}
           </div>
         </TableColumn>
-        <TableColumn>Actions</TableColumn>
+        <TableColumn className="text-center">Action</TableColumn>
       </TableHeader>
       <TableBody>
         {students.data.data.map((student) => (
@@ -127,57 +137,27 @@ export const StudentTable: React.FC<StudentTableProps> = ({
               <TableCell>{`${student.applicationUser.firstName} ${student.applicationUser.lastName}`}</TableCell>
               <TableCell>{student.applicationUser.email}</TableCell>
               <TableCell>{student.applicationUser.phoneNumber}</TableCell>
-              <TableCell>
-                <span
-                  className={`px-2 py-1 rounded text-sm ${
-                    student.applicationUser.status === 1
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {student.applicationUser.status === 1 ? "Active" : "Inactive"}
-                </span>
-              </TableCell>
-              <TableCell>
+              <TableCell>{student.applicationUser.dob}</TableCell>
+              <TableCell className="text-center">{student.applicationUser.status}</TableCell>
+              <TableCell className="text-center">
                 <Button
                   size="sm"
                   variant="light"
-                  onPress={() => onRowToggle(student.studentCode)}
+                  onPress={() => onEdit(student)}
+                  className="ml-1"
                 >
-                  {expandedRows[student.studentCode] ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="light"
+                  onPress={() => handleDelete(student.id)}
+                  className="ml-1"
+                >
+                  <Trash className="w-4 h-4" />
                 </Button>
               </TableCell>
             </TableRow>
-            {expandedRows[student.studentCode] && (
-              <TableRow>
-                <TableCell colSpan={6}>
-                  <div className="p-4 bg-gray-50">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="font-semibold">Person ID</p>
-                        <p>{student.applicationUser.personId}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Date of Birth</p>
-                        <p>{new Date(student.applicationUser.dob).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Major ID</p>
-                        <p>{student.majorId}</p>
-                      </div>
-                      <div>
-                        <p className="font-semibold">Batch ID</p>
-                        <p>{student.batchId}</p>
-                      </div>
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
           </React.Fragment>
         ))}
       </TableBody>

@@ -7,7 +7,7 @@ export const API_URLS = {
   COURSE: "https://localhost:6001/api",
   AUTH: "https://localhost:5001/api",
   MAJOR: "https://localhost:7001/api",
-  BATCH: "https://localhost:8001/api",
+  BATCH: "https://localhost:5001/api",
 };
 
 // Default request timeout (in milliseconds)
@@ -20,7 +20,7 @@ export const API_ENDPOINTS = {
   COURSES_GROUP: "/c/CoursesGroup",
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
-  BATCHES: "/u/Batch",
+  BATCHES: "/s/Batch",
   STUDENTS: "/u/Student",
   MAJOR_GROUPS: "/m/MajorGroup",
   DEPARTMENTS: "/m/Department",

@@ -12,29 +12,20 @@ import {
   AutocompleteItem,
 } from "@heroui/react";
 import { studentImportSchema, StudentImport } from "@/services/student/student.schema";
-
+import { Major } from "@/services/major/major.schema";
+import { Batch } from "@/services/batch/batch.schema";
 interface StudentImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (file: File, batchId: string, majorId: string) => Promise<void>;
+  majors: Major[];
+  batches: Batch[];
 }
 
-// Mock data for majors and batches
-const mockMajors = [
-  { id: "f2a118c7-7ed3-476b-a171-6d7bb3d94798", name: "Computer Science", code: "CS" },
-  { id: "2", name: "Information Technology", code: "IT" },
-  { id: "3", name: "Software Engineering", code: "SE" },
-  { id: "4", name: "Data Science", code: "DS" },
-];
-
-const mockBatches = [
-  { id: "f2a118c7-7ed3-476b-a171-6d7bb3d94798", name: "Batch 2024", code: "B2024" },
-  { id: "2", name: "Batch 2023", code: "B2023" },
-  { id: "3", name: "Batch 2022", code: "B2022" },
-  { id: "4", name: "Batch 2021", code: "B2021" },
-];
 
 export const StudentImportModal: React.FC<StudentImportModalProps> = ({
+  majors,
+  batches,
   isOpen,
   onClose,
   onSubmit,
@@ -55,6 +46,8 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
     },
     mode: "onChange",
   });
+
+  console.log(majors);
 
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -166,7 +159,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                     <Autocomplete
                       allowsCustomValue={false}
                       className="w-full"
-                      defaultItems={mockBatches}
+                      defaultItems={batches}
                       defaultSelectedKey={field.value}
                       placeholder="Search and select a batch"
                       onSelectionChange={(key) => field.onChange(key?.toString() || "")}
@@ -174,14 +167,14 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                       {(batch) => (
                         <AutocompleteItem
                           key={batch.id}
-                          textValue={`${batch.name} - ${batch.code}`}
+                          textValue={`${batch.title} - ${batch.startYear}`}
                         >
                           <div className="flex flex-col">
                             <span className="text-sm font-semibold">
-                              {batch.name}
+                              {batch.title}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {batch.code}
+                              {batch.startYear}
                             </span>
                           </div>
                         </AutocompleteItem>
@@ -205,7 +198,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                     <Autocomplete
                       allowsCustomValue={false}
                       className="w-full"
-                      defaultItems={mockMajors}
+                      defaultItems={majors}
                       defaultSelectedKey={field.value}
                       placeholder="Search and select a major"
                       onSelectionChange={(key) => field.onChange(key?.toString() || "")}

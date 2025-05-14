@@ -12,6 +12,10 @@ export const applicationUserSchema = z.object({
 });
 
 export const studentSchema = z.object({
+  id: z.string(),
+  accumulateCredits: z.number().min(0).default(0),
+  accumulateScore: z.number().min(0).default(0),
+  accumulateActivityScore: z.number().min(0).default(0),
   studentCode: z.string().min(1, "Student code is required"),
   majorId: z.string().min(1, "Major is required"),
   batchId: z.string().min(1, "Batch is required"),
