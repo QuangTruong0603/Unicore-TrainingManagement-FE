@@ -106,7 +106,6 @@ export default function MajorPage() {
     createMajor,
     activateMajor,
     deactivateMajor,
-    updateMajor,
   } = useMajors();
 
   const [majorSearchInput, setMajorSearchInput] = useState(
@@ -122,7 +121,6 @@ export default function MajorPage() {
     createMajorGroup,
     activateMajorGroup,
     deactivateMajorGroup,
-    updateMajorGroup,
   } = useMajorGroups();
 
   const [majorGroupSearchInput, setMajorGroupSearchInput] = useState(
@@ -140,7 +138,6 @@ export default function MajorPage() {
     isLoading: isDepartmentLoading,
     fetchDepartments,
     createDepartment,
-    updateDepartment,
     activateDepartment,
     deactivateDepartment,
   } = useDepartments();

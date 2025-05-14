@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import courseReducer from "./slices/courseSlice";
+import studentReducer from "./slices/studentSlice";
 import trainingRoadmapReducer from "./slices/trainingRoadmapSlice";
 import confirmDialogReducer from "./slices/confirmDialogSlice";
 import majorReducer from "./slices/majorSlice";
@@ -15,6 +16,7 @@ export const store = configureStore({
     major: majorReducer,
     majorGroup: majorGroupReducer,
     department: departmentReducer,
+    student: studentReducer,
   },
 });
 

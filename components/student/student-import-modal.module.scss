@@ -1,0 +1,186 @@
+.modal {
+  &Content {
+    max-width: 600px;
+    width: 100%;
+  }
+
+  &Header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  &Body {
+    padding: 1.5rem;
+  }
+
+  &Footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    .button {
+        &Group {
+          display: flex;
+          gap: 0.5rem;
+        }
+      
+        &Primary {
+          background-color: var(--primary-color);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          transition: background-color 0.2s;
+      
+          &:hover:not(:disabled) {
+            background-color: var(--primary-color-dark);
+          }
+      
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      
+        &Secondary {
+          background-color: transparent;
+          color: var(--text-color);
+          padding: 0.5rem 1rem;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          transition: background-color 0.2s;
+      
+          &:hover {
+            background-color: var(--hover-color);
+          }
+        }
+      }
+      
+  }
+}
+
+.form {
+  &Group {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &Label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  &Error {
+    font-size: 0.75rem;
+    color: var(--error-color);
+    margin-top: 0.25rem;
+  }
+}
+
+.fileInput {
+  &Wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  &Input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &::-webkit-file-upload-button {
+      padding: 0.5rem 1rem;
+      margin-right: 1rem;
+      border: none;
+      border-radius: 0.25rem;
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--primary-color-dark);
+      }
+    }
+  }
+}
+
+.autocomplete {
+  &Wrapper {
+    width: 100%;
+  }
+
+  &Input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.875rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-color-light);
+    }
+  }
+
+  &Item {
+    padding: 0.5rem;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--hover-color);
+    }
+
+    &Selected {
+      background-color: var(--primary-color-light);
+    }
+  }
+}
+
+
+// Loading state
+.loading {
+  &Overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  &Spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 
