@@ -97,6 +97,19 @@ const TrainingPage = () => {
                 View Majors
               </Button>
             </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <h2 className="text-xl font-semibold mb-4">Students</h2>
+              <p className="text-gray-600 mb-4">
+                Explore academic majors and specializations.
+              </p>
+              <Button
+                color="primary"
+                onPress={() => router.push("/training/students")}
+              >
+                View Students
+              </Button>
+            </div>
           </div>
         </div>
       </DefaultLayout>

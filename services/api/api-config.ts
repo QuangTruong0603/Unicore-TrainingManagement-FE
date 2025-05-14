@@ -7,6 +7,7 @@ export const API_URLS = {
   COURSE: "https://localhost:6001/api",
   AUTH: "https://localhost:5001/api",
   MAJOR: "https://localhost:7001/api",
+  BATCH: "https://localhost:8001/api",
 };
 
 // Default request timeout (in milliseconds)
@@ -17,6 +18,8 @@ export const API_ENDPOINTS = {
   COURSES: "/c/Courses",
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
+  BATCHES: "/u/Batch",
+  STUDENTS: "/u/Student",
 };
 
 // Common headers

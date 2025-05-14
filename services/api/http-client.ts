@@ -320,3 +320,5 @@ class HttpClient {
 export const courseClient = new HttpClient(API_URLS.COURSE);
 export const authClient = new HttpClient(API_URLS.AUTH);
 export const majorClient = new HttpClient(API_URLS.MAJOR);
+export const batchClient = new HttpClient(API_URLS.BATCH);
+export const studentClient = new HttpClient(API_URLS.AUTH);
