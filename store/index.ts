@@ -16,7 +16,7 @@ export const store = configureStore({
     major: majorReducer,
     majorGroup: majorGroupReducer,
     department: departmentReducer,
-    student: studentReducer
+    student: studentReducer,
   },
 });
 

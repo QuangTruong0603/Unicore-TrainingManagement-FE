@@ -10,6 +10,7 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
+
 import { Student } from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
 import { Batch } from "@/services/batch/batch.schema";
@@ -101,8 +102,10 @@ export const StudentModal: React.FC<StudentModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
     if (name.startsWith("applicationUser.")) {
       const field = name.split(".")[1];
+
       setFormData((prev) => ({
         ...prev,
         applicationUser: {
@@ -113,16 +116,19 @@ export const StudentModal: React.FC<StudentModalProps> = ({
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]:
-          ["accumulateCredits", "accumulateScore", "accumulateActivityScore"].includes(name)
-            ? Number(value)
-            : value,
+        [name]: [
+          "accumulateCredits",
+          "accumulateScore",
+          "accumulateActivityScore",
+        ].includes(name)
+          ? Number(value)
+          : value,
       }));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl">
+    <Modal isOpen={isOpen} size="3xl" onClose={onClose}>
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader>
@@ -131,119 +137,115 @@ export const StudentModal: React.FC<StudentModalProps> = ({
           <ModalBody>
             <div className="grid grid-cols-2 gap-4">
               <Input
+                required
+                disabled={isEdit}
                 label="Student Code"
                 name="studentCode"
                 value={formData.studentCode}
                 onChange={handleChange}
-                required
-                disabled={isEdit}
               />
               <Input
+                required
                 label="First Name"
                 name="applicationUser.firstName"
                 value={formData.applicationUser?.firstName}
                 onChange={handleChange}
-                required
               />
               <Input
+                required
                 label="Last Name"
                 name="applicationUser.lastName"
                 value={formData.applicationUser?.lastName}
                 onChange={handleChange}
-                required
               />
               <Input
+                required
                 label="Email"
                 name="applicationUser.email"
                 type="email"
                 value={formData.applicationUser?.email}
                 onChange={handleChange}
-                required
               />
               <Input
+                required
                 label="Phone Number"
                 name="applicationUser.phoneNumber"
                 value={formData.applicationUser?.phoneNumber}
                 onChange={handleChange}
-                required
               />
               <Input
+                required
                 label="Date of Birth"
                 name="applicationUser.dob"
                 type="date"
                 value={formData.applicationUser?.dob}
                 onChange={handleChange}
-                required
               />
               <Input
+                required
                 label="Person ID"
                 name="applicationUser.personId"
                 value={formData.applicationUser?.personId}
                 onChange={handleChange}
-                required
               />
               <Select
-                label="Major"
+                required
                 defaultSelectedKeys={formData.majorId}
+                label="Major"
                 name="majorId"
                 value={formData.majorId}
                 onChange={handleChange}
-                required
               >
                 {majors.map((major) => (
-                  <SelectItem key={major.id}>
-                    {major.name}
-                  </SelectItem>
+                  <SelectItem key={major.id}>{major.name}</SelectItem>
                 ))}
               </Select>
               <Select
-                label="Batch"
+                required
                 defaultSelectedKeys={formData.batchId}
+                label="Batch"
                 name="batchId"
                 value={formData.batchId}
                 onChange={handleChange}
-                required
               >
                 {batches.map((batch) => (
-                  <SelectItem key={batch.id}>
-                    {batch.title}
-                  </SelectItem>
+                  <SelectItem key={batch.id}>{batch.title}</SelectItem>
                 ))}
               </Select>
               <Input
+                required
                 label="Accumulate Credits"
+                min={0}
                 name="accumulateCredits"
                 type="number"
                 value={formData.accumulateCredits?.toString() || ""}
                 onChange={handleChange}
-                min={0}
-                required
               />
               <Input
+                required
                 label="Accumulate Score"
+                min={0}
                 name="accumulateScore"
                 type="number"
                 value={formData.accumulateScore?.toString() || ""}
                 onChange={handleChange}
-                min={0}
-                required
               />
               <Input
+                required
                 label="Accumulate Activity Score"
+                min={0}
                 name="accumulateActivityScore"
                 type="number"
                 value={formData.accumulateActivityScore?.toString() || ""}
                 onChange={handleChange}
-                min={0}
-                required
               />
               <Select
+                required
+                defaultSelectedKeys={formData.applicationUser?.status?.toString()}
                 label="Status"
                 name="applicationUser.status"
-                defaultSelectedKeys={formData.applicationUser?.status?.toString()}
                 value={formData.applicationUser?.status?.toString()}
                 onChange={handleChange}
-                required
               >
                 <SelectItem key="1">Active</SelectItem>
                 <SelectItem key="0">Inactive</SelectItem>
@@ -262,4 +264,4 @@ export const StudentModal: React.FC<StudentModalProps> = ({
       </ModalContent>
     </Modal>
   );
-}; 
+};

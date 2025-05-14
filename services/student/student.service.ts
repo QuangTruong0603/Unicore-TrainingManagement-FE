@@ -38,7 +38,10 @@ export const studentService = {
       },
     });
   },
-  updateStudent: async (studentCode: string, data: Partial<any>): Promise<any> => {
+  updateStudent: async (
+    studentCode: string,
+    data: Partial<any>
+  ): Promise<any> => {
     return studentClient.put(`${API_ENDPOINTS.STUDENTS}/${studentCode}`, data);
   },
   createStudent: async (data: Partial<any>): Promise<any> => {
@@ -47,8 +50,13 @@ export const studentService = {
   deleteStudent: async (studentId: string): Promise<any> => {
     return studentClient.delete(`${API_ENDPOINTS.STUDENTS}/${studentId}`);
   },
-  importStudents: async (file: File, batchId: string, majorId: string): Promise<void> => {
+  importStudents: async (
+    file: File,
+    batchId: string,
+    majorId: string
+  ): Promise<void> => {
     const formData = new FormData();
+
     formData.append("ExcelFile", file);
 
     return studentClient.post(
@@ -62,4 +70,4 @@ export const studentService = {
       }
     );
   },
-}; 
+};

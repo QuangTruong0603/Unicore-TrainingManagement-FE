@@ -11,7 +11,11 @@ import {
   Autocomplete,
   AutocompleteItem,
 } from "@heroui/react";
-import { studentImportSchema, StudentImport } from "@/services/student/student.schema";
+
+import {
+  studentImportSchema,
+  StudentImport,
+} from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
 import { Batch } from "@/services/batch/batch.schema";
 interface StudentImportModalProps {
@@ -21,7 +25,6 @@ interface StudentImportModalProps {
   majors: Major[];
   batches: Batch[];
 }
-
 
 export const StudentImportModal: React.FC<StudentImportModalProps> = ({
   majors,
@@ -47,8 +50,6 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
     mode: "onChange",
   });
 
-  console.log(majors);
-
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,7 +58,11 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
   const file = fileList && fileList.length > 0 ? fileList[0] : null;
 
   // Simulate upload progress
-  const simulateUpload = async (file: File, batchId: string, majorId: string) => {
+  const simulateUpload = async (
+    file: File,
+    batchId: string,
+    majorId: string
+  ) => {
     setUploadProgress(0);
     // Simulate progress
     for (let i = 1; i <= 100; i += 10) {
@@ -107,36 +112,49 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
           <ModalBody>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="excel-file"
+                >
                   Excel File
                 </label>
                 <div
                   className={`w-full p-6 border-2 border-dashed rounded-md cursor-pointer transition-colors
                     ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"}
                   `}
+                  role="button"
+                  tabIndex={0}
                   onClick={handleClickDropArea}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                 >
                   <div className="text-center text-gray-500">
-                    {file ? "File selected: " + file.name : "Drag & drop file here or click to select"}
+                    {file
+                      ? "File selected: " + file.name
+                      : "Drag & drop file here or click to select"}
                   </div>
                   <input
-                    type="file"
-                    accept=".xlsx,.xls"
                     ref={fileInputRef}
+                    accept=".xlsx,.xls"
                     style={{ display: "none" }}
+                    type="file"
                     onChange={(e) => {
-                      setValue("file", e.target.files as any, { shouldValidate: true });
+                      setValue("file", e.target.files as any, {
+                        shouldValidate: true,
+                      });
                     }}
                   />
                 </div>
                 {errors.file && (
-                  <p className="text-xs text-red-500 mt-1">{errors.file.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.file.message}
+                  </p>
                 )}
                 {file && (
-                  <div className="mt-2 text-sm text-green-600 font-medium">{file.name}</div>
+                  <div className="mt-2 text-sm text-green-600 font-medium">
+                    {file.name}
+                  </div>
                 )}
                 {uploadProgress !== null && (
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
@@ -149,7 +167,10 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="batch-label"
+                >
                   Batch
                 </label>
                 <Controller
@@ -162,7 +183,9 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                       defaultItems={batches}
                       defaultSelectedKey={field.value}
                       placeholder="Search and select a batch"
-                      onSelectionChange={(key) => field.onChange(key?.toString() || "")}
+                      onSelectionChange={(key) =>
+                        field.onChange(key?.toString() || "")
+                      }
                     >
                       {(batch) => (
                         <AutocompleteItem
@@ -183,12 +206,17 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                   )}
                 />
                 {errors.batchId && (
-                  <p className="text-xs text-red-500 mt-1">{errors.batchId.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.batchId.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="major-label"
+                >
                   Major
                 </label>
                 <Controller
@@ -201,7 +229,9 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                       defaultItems={majors}
                       defaultSelectedKey={field.value}
                       placeholder="Search and select a major"
-                      onSelectionChange={(key) => field.onChange(key?.toString() || "")}
+                      onSelectionChange={(key) =>
+                        field.onChange(key?.toString() || "")
+                      }
                     >
                       {(major) => (
                         <AutocompleteItem
@@ -222,7 +252,9 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                   )}
                 />
                 {errors.majorId && (
-                  <p className="text-xs text-red-500 mt-1">{errors.majorId.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.majorId.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -233,9 +265,9 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
             </Button>
             <Button
               color="primary"
-              type="submit"
               isDisabled={!isFormValid}
               isLoading={isSubmitting}
+              type="submit"
             >
               {isSubmitting ? "Importing..." : "Import"}
             </Button>
@@ -244,4 +276,4 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
       </ModalContent>
     </Modal>
   );
-}; 
+};

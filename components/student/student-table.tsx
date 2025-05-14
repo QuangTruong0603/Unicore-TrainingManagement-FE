@@ -10,9 +10,8 @@ import {
   Spinner,
 } from "@heroui/react";
 import { ChevronDown, ChevronUp, Trash, Pencil } from "lucide-react";
-import { Student } from "@/services/student/student.schema";
-import styles from "./student-table.module.scss";
 
+import { Student } from "@/services/student/student.schema";
 interface StudentTableProps {
   students: {
     success: boolean;
@@ -35,16 +34,15 @@ interface StudentTableProps {
 export const StudentTable: React.FC<StudentTableProps> = ({
   students,
   isLoading,
-  expandedRows,
   onDelete,
   sortKey,
   sortDirection,
   onSort,
-  onRowToggle,
   onEdit,
 }) => {
   const renderSortIcon = (columnKey: string) => {
     if (sortKey !== columnKey) return null;
+
     return sortDirection === "asc" ? (
       <ChevronUp className="w-4 h-4" />
     ) : (
@@ -66,9 +64,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
 
   if (!students?.data.data.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No students found
-      </div>
+      <div className="text-center py-8 text-gray-500">No students found</div>
     );
   }
 
@@ -77,8 +73,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       <TableHeader>
         <TableColumn
           key="studentCode"
-          onClick={() => onSort("studentCode")}
           className="cursor-pointer"
+          onClick={() => onSort("studentCode")}
         >
           <div className="flex items-center gap-2">
             Student Code
@@ -87,8 +83,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="name"
-          onClick={() => onSort("firstName")}
           className="cursor-pointer"
+          onClick={() => onSort("firstName")}
         >
           <div className="flex items-center gap-2">
             Name
@@ -97,8 +93,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="email"
-          onClick={() => onSort("email")}
           className="cursor-pointer"
+          onClick={() => onSort("email")}
         >
           <div className="flex items-center gap-2">
             Email
@@ -107,8 +103,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="phoneNumber"
-          onClick={() => onSort("phoneNumber")}
           className="cursor-pointer"
+          onClick={() => onSort("phoneNumber")}
         >
           <div className="flex items-center gap-2">
             Phone
@@ -119,8 +115,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         <TableColumn>Date of Birth</TableColumn>
         <TableColumn
           key="status"
-          onClick={() => onSort("status")}
           className="cursor-pointer text-center"
+          onClick={() => onSort("status")}
         >
           <div className="flex items-center gap-2">
             Status
@@ -138,21 +134,23 @@ export const StudentTable: React.FC<StudentTableProps> = ({
               <TableCell>{student.applicationUser.email}</TableCell>
               <TableCell>{student.applicationUser.phoneNumber}</TableCell>
               <TableCell>{student.applicationUser.dob}</TableCell>
-              <TableCell className="text-center">{student.applicationUser.status}</TableCell>
+              <TableCell className="text-center">
+                {student.applicationUser.status}
+              </TableCell>
               <TableCell className="text-center">
                 <Button
+                  className="ml-1"
                   size="sm"
                   variant="light"
                   onPress={() => onEdit(student)}
-                  className="ml-1"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
                 <Button
+                  className="ml-1"
                   size="sm"
                   variant="light"
                   onPress={() => handleDelete(student.id)}
-                  className="ml-1"
                 >
                   <Trash className="w-4 h-4" />
                 </Button>
@@ -163,4 +161,4 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       </TableBody>
     </Table>
   );
-}; 
+};

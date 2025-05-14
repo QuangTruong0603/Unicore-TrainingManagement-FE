@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+
 import { Student } from "./student.schema";
 
 export const useCreateStudent = () => {
@@ -20,8 +21,13 @@ export const useUpdateStudent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ studentCode, data }: { studentCode: string; data: Partial<Student> }) =>
-      studentClient.put(`${API_ENDPOINTS.STUDENTS}/${studentCode}`, data),
+    mutationFn: ({
+      studentCode,
+      data,
+    }: {
+      studentCode: string;
+      data: Partial<Student>;
+    }) => studentClient.put(`${API_ENDPOINTS.STUDENTS}/${studentCode}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
     },
@@ -38,4 +44,4 @@ export const useDeleteStudent = () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
     },
   });
-}; 
+};

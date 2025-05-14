@@ -50,4 +50,4 @@ export const studentImportSchema = z.object({
 export type ApplicationUser = z.infer<typeof applicationUserSchema>;
 export type Student = z.infer<typeof studentSchema>;
 export type StudentQuery = z.infer<typeof studentQuerySchema>;
-export type StudentImport = z.infer<typeof studentImportSchema>; 
+export type StudentImport = z.infer<typeof studentImportSchema>;

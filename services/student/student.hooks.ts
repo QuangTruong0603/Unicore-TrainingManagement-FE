@@ -36,4 +36,4 @@ export const useStudents = (query: StudentQuery) => {
     queryFn: () =>
       studentClient.get(`${API_ENDPOINTS.STUDENTS}/all`, { params }),
   });
-}; 
+};

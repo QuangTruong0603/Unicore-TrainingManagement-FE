@@ -1,5 +1,11 @@
+/* eslint-disable padding-line-between-statements */
 import React, { useEffect } from "react";
-import { Button, Pagination, Autocomplete, AutocompleteItem } from "@heroui/react";
+import {
+  Button,
+  Pagination,
+  Autocomplete,
+  AutocompleteItem,
+} from "@heroui/react";
 import { Plus, Upload } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -7,7 +13,7 @@ import { StudentTable } from "@/components/student/student-table";
 import { StudentFilter } from "@/components/student/student-filter";
 import { StudentModal } from "@/components/student/student-modal";
 import { StudentImportModal } from "@/components/student/student-import-modal";
-import { Student, StudentQuery } from "@/services/student/student.schema";
+import { Student } from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
 import { Batch } from "@/services/batch/batch.schema";
 import { batchService } from "@/services/batch/batch.service";
@@ -18,7 +24,6 @@ import { RootState, AppDispatch } from "@/store/store";
 import {
   setStudents,
   setQuery,
-  setTotal,
   setLoading,
   setError,
 } from "@/store/slices/studentSlice";
@@ -26,24 +31,27 @@ import { studentService } from "@/services/student/student.service";
 
 export default function StudentsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    students,
-    query,
-    total,
-    isLoading,
-  } = useSelector((state: RootState) => state.student);
+  const { students, query, total, isLoading } = useSelector(
+    (state: RootState) => state.student
+  );
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
-  const [selectedStudent, setSelectedStudent] = React.useState<Student | undefined>();
-  const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
+  const [selectedStudent, setSelectedStudent] = React.useState<
+    Student | undefined
+  >();
+  const [expandedRows, setExpandedRows] = React.useState<
+    Record<string, boolean>
+  >({});
   const [majors, setMajors] = React.useState<Major[]>([]);
   const [batches, setBatches] = React.useState<Batch[]>([]);
 
   const fetchStudents = React.useCallback(async () => {
     try {
       dispatch(setLoading(true));
-      const response = await studentService.getStudents(query) as unknown as PaginatedResponse;
+      const response = (await studentService.getStudents(
+        query
+      )) as unknown as PaginatedResponse;
       dispatch(setStudents(response));
     } catch (error: any) {
       dispatch(setError(error.message || "Failed to fetch students"));
@@ -57,19 +65,23 @@ export default function StudentsPage() {
   }, [fetchStudents]);
 
   const handleSearch = (searchQuery: string) => {
-    dispatch(setQuery({
-      ...query,
-      searchQuery,
-      pageNumber: 1, // Reset to first page when searching
-    }));
+    dispatch(
+      setQuery({
+        ...query,
+        searchQuery,
+        pageNumber: 1, // Reset to first page when searching
+      })
+    );
   };
 
   useEffect(() => {
     const fetchMajors = async () => {
       try {
         const response = await majorService.getMajors();
+
         setMajors(response.data);
-      } catch (_error) {
+      } catch (error) {
+        console.error("Error fetching majors:", error);
       }
     };
 
@@ -81,7 +93,8 @@ export default function StudentsPage() {
       try {
         const response = await batchService.getBatches();
         setBatches(response.data);
-      } catch (_error) { 
+      } catch (error) {
+        console.error("Error fetching batches:", error);
       }
     };
 
@@ -89,18 +102,22 @@ export default function StudentsPage() {
   }, []);
 
   const handleSort = (key: string) => {
-    dispatch(setQuery({
-      ...query,
-      by: key,
-      isDesc: query.by === key ? !query.isDesc : false,
-    }));
+    dispatch(
+      setQuery({
+        ...query,
+        by: key,
+        isDesc: query.by === key ? !query.isDesc : false,
+      })
+    );
   };
 
   const handlePageChange = (page: number) => {
-    dispatch(setQuery({
-      ...query,
-      pageNumber: page,
-    }));
+    dispatch(
+      setQuery({
+        ...query,
+        pageNumber: page,
+      })
+    );
   };
 
   const handleRowToggle = (studentId: string) => {
@@ -186,8 +203,8 @@ export default function StudentsPage() {
           <div className="flex gap-2">
             <Button
               color="primary"
-              variant="bordered"
               startContent={<Upload className="w-4 h-4" />}
+              variant="bordered"
               onPress={() => setIsImportModalOpen(true)}
             >
               Import
@@ -204,26 +221,37 @@ export default function StudentsPage() {
 
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="md:w-1/4 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="batch-input"
+            >
+              Batch
+            </label>
             <Autocomplete
-              variant="bordered"
               allowsCustomValue={false}
               className="w-full"
               defaultItems={batches}
-              selectedKey={query.batchId || ""}
               placeholder="Search and select a batch"
+              selectedKey={query.batchId || ""}
+              variant="bordered"
               onSelectionChange={(key) => {
-                dispatch(setQuery({
-                  ...query,
-                  batchId: key?.toString() || undefined,
-                  pageNumber: 1,
-                }));
+                dispatch(
+                  setQuery({
+                    ...query,
+                    batchId: key?.toString() || undefined,
+                    pageNumber: 1,
+                  })
+                );
               }}
             >
               {(batch) => (
                 <AutocompleteItem
                   key={batch.id}
-                  textValue={batch.title ? `${batch.title} - ${batch.startYear}` : batch.title}
+                  textValue={
+                    batch.title
+                      ? `${batch.title} - ${batch.startYear}`
+                      : batch.title
+                  }
                 >
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">
@@ -238,20 +266,27 @@ export default function StudentsPage() {
             </Autocomplete>
           </div>
           <div className="md:w-1/4 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Major</label>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="major-input"
+            >
+              Major
+            </label>
             <Autocomplete
-              variant="bordered"
               allowsCustomValue={false}
               className="w-full"
               defaultItems={majors}
-              selectedKey={query.majorId || ""}
               placeholder="Search and select a major"
+              selectedKey={query.majorId || ""}
+              variant="bordered"
               onSelectionChange={(key) => {
-                dispatch(setQuery({
-                  ...query,
-                  majorId: key?.toString() || undefined,
-                  pageNumber: 1,
-                }));
+                dispatch(
+                  setQuery({
+                    ...query,
+                    majorId: key?.toString() || undefined,
+                    pageNumber: 1,
+                  })
+                );
               }}
             >
               {(major) => (
@@ -260,19 +295,20 @@ export default function StudentsPage() {
                   textValue={`${major.name} - ${major.code}`}
                 >
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold">
-                      {major.name}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {major.code}
-                    </span>
+                    <span className="text-sm font-semibold">{major.name}</span>
+                    <span className="text-xs text-gray-500">{major.code}</span>
                   </div>
                 </AutocompleteItem>
               )}
             </Autocomplete>
           </div>
           <div className="md:w-2/4 w-full flex flex-col justify-end">
-            <label className="block text-sm font-medium text-gray-700 mb-1 invisible">Search</label>
+            <label
+              className="block text-sm font-medium text-gray-700 mb-1 invisible"
+              htmlFor="search-input"
+            >
+              Search
+            </label>
             <StudentFilter
               searchQuery={query.searchQuery || ""}
               onSearchChange={handleSearch}
@@ -281,22 +317,24 @@ export default function StudentsPage() {
         </div>
 
         <StudentTable
-          students={students || {
-            success: true,
-            data: {
-              data: [],
-              total: 0
-            },
-            errors: []
-          }}
-          isLoading={isLoading}
           expandedRows={expandedRows}
-          sortKey={query.by || ""}
+          isLoading={isLoading}
           sortDirection={query.isDesc ? "desc" : "asc"}
-          onSort={handleSort}
-          onRowToggle={handleRowToggle}
+          sortKey={query.by || ""}
+          students={
+            students || {
+              success: true,
+              data: {
+                data: [],
+                total: 0,
+              },
+              errors: [],
+            }
+          }
           onDelete={handleDelete}
           onEdit={handleEdit}
+          onRowToggle={handleRowToggle}
+          onSort={handleSort}
         />
 
         <div className="mt-4 flex justify-center">
@@ -308,23 +346,23 @@ export default function StudentsPage() {
         </div>
 
         <StudentModal
+          batches={batches}
+          isEdit={!!selectedStudent}
           isOpen={isModalOpen}
+          majors={majors}
+          student={selectedStudent}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
-          student={selectedStudent}
-          isEdit={!!selectedStudent}
-          majors={majors}
-          batches={batches}
         />
 
         <StudentImportModal
+          batches={batches}
           isOpen={isImportModalOpen}
+          majors={majors}
           onClose={() => setIsImportModalOpen(false)}
           onSubmit={handleImport}
-          majors={majors}
-          batches={batches}
         />
       </div>
     </DefaultLayout>
   );
-} 
+}

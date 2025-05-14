@@ -14,13 +14,13 @@ export const StudentFilter: React.FC<StudentFilterProps> = ({
   return (
     <div className="flex gap-4">
       <Input
-        type="text"
+        className="max-w-xs"
         placeholder="Search students..."
+        startContent={<Search className="w-4 h-4 text-gray-400" />}
+        type="text"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        startContent={<Search className="w-4 h-4 text-gray-400" />}
-        className="max-w-xs"
       />
     </div>
   );
-}; 
+};

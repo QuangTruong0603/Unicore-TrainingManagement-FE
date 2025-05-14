@@ -8,4 +8,4 @@ export const useBatches = () => {
     queryKey: ["batches"],
     queryFn: () => batchClient.get(API_ENDPOINTS.BATCHES),
   });
-}; 
+};
