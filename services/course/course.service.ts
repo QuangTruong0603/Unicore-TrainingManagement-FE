@@ -118,4 +118,28 @@ export const courseService = {
       },
     });
   },
+
+  activateCourse: async (id: string) => {
+    return courseClient.post(
+      `${API_ENDPOINTS.COURSES}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deactivateCourse: async (id: string) => {
+    return courseClient.post(
+      `${API_ENDPOINTS.COURSES}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
 };

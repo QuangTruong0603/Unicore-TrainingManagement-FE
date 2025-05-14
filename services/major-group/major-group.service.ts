@@ -1,12 +1,18 @@
 import { majorClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
-import { GetMajorsParams } from "./major.dto";
-import { MajorResponse, MajorListResponse, MajorQuery } from "./major.schema";
+import {
+  CreateMajorGroupData,
+  GetMajorGroupsParams,
+  MajorGroupListResponse,
+} from "./major-group.dto";
+import { MajorGroupResponse, MajorGroupQuery } from "./major-group.schema";
 
-export const majorService = {
-  getMajors: async (params?: GetMajorsParams): Promise<MajorResponse> => {
-    return majorClient.get(API_ENDPOINTS.MAJORS, {
+export const majorGroupService = {
+  getMajorGroups: async (
+    params?: GetMajorGroupsParams
+  ): Promise<MajorGroupResponse> => {
+    return majorClient.get(API_ENDPOINTS.MAJOR_GROUPS, {
       params,
       headers: {
         accept: "text/plain",
@@ -14,9 +20,9 @@ export const majorService = {
     });
   },
 
-  getMajorsPagination: async (
-    query: MajorQuery
-  ): Promise<MajorListResponse> => {
+  getMajorGroupsPagination: async (
+    query: MajorGroupQuery
+  ): Promise<MajorGroupListResponse> => {
     // Start with the basic params
     let params: Record<string, string> = {
       "Pagination.PageNumber": query.pageNumber.toString(),
@@ -40,20 +46,20 @@ export const majorService = {
 
     // Add filters if provided
     if (query.filters) {
-      if (query.filters.name) {
-        params["Filter.Name"] = query.filters.name;
-      }
-
       if (query.filters.code) {
         params["Filter.Code"] = query.filters.code;
+      }
+
+      if (query.filters.name) {
+        params["Filter.Name"] = query.filters.name;
       }
 
       if (query.filters.isActive !== undefined) {
         params["Filter.IsActive"] = query.filters.isActive.toString();
       }
 
-      if (query.filters.majorGroupId) {
-        params["Filter.MajorGroupId"] = query.filters.majorGroupId;
+      if (query.filters.departmentId) {
+        params["Filter.DepartmentId"] = query.filters.departmentId;
       }
     }
 
@@ -65,7 +71,7 @@ export const majorService = {
       searchParams.append(key, value);
     });
 
-    return majorClient.get(`${API_ENDPOINTS.MAJORS}/page`, {
+    return majorClient.get(`${API_ENDPOINTS.MAJOR_GROUPS}/page`, {
       params: searchParams,
       paramsSerializer: (params) => params.toString(),
       headers: {
@@ -74,40 +80,39 @@ export const majorService = {
     });
   },
 
-  getMajorById: async (id: string) => {
-    return majorClient.get(`${API_ENDPOINTS.MAJORS}/${id}`, {
+  getMajorGroupById: async (id: string) => {
+    return majorClient.get(`${API_ENDPOINTS.MAJOR_GROUPS}/${id}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+  createMajorGroup: async (data: CreateMajorGroupData) => {
+    return majorClient.post(API_ENDPOINTS.MAJOR_GROUPS, data, {
       headers: {
         accept: "text/plain",
       },
     });
   },
 
-  createMajor: async (data: any) => {
-    return majorClient.post(API_ENDPOINTS.MAJORS, data, {
+  updateMajorGroup: async (id: string, data: Partial<CreateMajorGroupData>) => {
+    return majorClient.put(`${API_ENDPOINTS.MAJOR_GROUPS}/${id}`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+  deleteMajorGroup: async (id: string) => {
+    return majorClient.delete(`${API_ENDPOINTS.MAJOR_GROUPS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
   },
 
-  updateMajor: async (id: string, data: any) => {
-    return majorClient.put(`${API_ENDPOINTS.MAJORS}/${id}`, data, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
-  },
-  deleteMajor: async (id: string) => {
-    return majorClient.delete(`${API_ENDPOINTS.MAJORS}/${id}`, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
-  },
-
-  activateMajor: async (id: string) => {
+  activateMajorGroup: async (id: string) => {
     return majorClient.post(
-      `${API_ENDPOINTS.MAJORS}/${id}/activate`,
+      `${API_ENDPOINTS.MAJOR_GROUPS}/${id}/activate`,
       {},
       {
         headers: {
@@ -117,9 +122,9 @@ export const majorService = {
     );
   },
 
-  deactivateMajor: async (id: string) => {
+  deactivateMajorGroup: async (id: string) => {
     return majorClient.post(
-      `${API_ENDPOINTS.MAJORS}/${id}/deactivate`,
+      `${API_ENDPOINTS.MAJOR_GROUPS}/${id}/deactivate`,
       {},
       {
         headers: {

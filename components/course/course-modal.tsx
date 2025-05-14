@@ -150,12 +150,16 @@ export function CourseModal({
       });
     }
   }, [course, mode, reset]);
-
   const handleFormSubmit = async (
     data: CreateCourseData | UpdateCourseData
   ) => {
-    await onSubmit(data);
-    reset();
+    try {
+      await onSubmit(data);
+      reset();
+      onOpenChange(); // Close the modal after successful submission
+    } catch {
+      // Keep modal open if there's an error
+    }
   };
 
   const title = mode === "create" ? "Add New Course" : "Edit Course";
@@ -181,21 +185,7 @@ export function CourseModal({
                 onSubmit={handleSubmit(handleFormSubmit)}
               >
                 {mode === "create" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                        htmlFor="code"
-                      >
-                        Code
-                      </label>
-                      <Input
-                        id="code"
-                        {...register("code", { required: "Code is required" })}
-                        errorMessage={errors.code?.message}
-                        placeholder="Enter course code"
-                      />
-                    </div>
+                  <div>
                     <div>
                       <label
                         className="block text-sm font-medium text-gray-700 mb-1"

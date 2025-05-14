@@ -1,12 +1,15 @@
 import { majorClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
-import { GetMajorsParams } from "./major.dto";
-import { MajorResponse, MajorListResponse, MajorQuery } from "./major.schema";
+import { GetDepartmentsParams } from "./department.dto";
+import { DepartmentResponse, DepartmentQuery } from "./department.schema";
+import { DepartmentListResponse } from "./department.dto";
 
-export const majorService = {
-  getMajors: async (params?: GetMajorsParams): Promise<MajorResponse> => {
-    return majorClient.get(API_ENDPOINTS.MAJORS, {
+export const departmentService = {
+  getDepartments: async (
+    params?: GetDepartmentsParams
+  ): Promise<DepartmentResponse> => {
+    return majorClient.get(API_ENDPOINTS.DEPARTMENTS, {
       params,
       headers: {
         accept: "text/plain",
@@ -14,9 +17,9 @@ export const majorService = {
     });
   },
 
-  getMajorsPagination: async (
-    query: MajorQuery
-  ): Promise<MajorListResponse> => {
+  getDepartmentsPagination: async (
+    query: DepartmentQuery
+  ): Promise<DepartmentListResponse> => {
     // Start with the basic params
     let params: Record<string, string> = {
       "Pagination.PageNumber": query.pageNumber.toString(),
@@ -51,10 +54,6 @@ export const majorService = {
       if (query.filters.isActive !== undefined) {
         params["Filter.IsActive"] = query.filters.isActive.toString();
       }
-
-      if (query.filters.majorGroupId) {
-        params["Filter.MajorGroupId"] = query.filters.majorGroupId;
-      }
     }
 
     // Create URLSearchParams object
@@ -65,7 +64,7 @@ export const majorService = {
       searchParams.append(key, value);
     });
 
-    return majorClient.get(`${API_ENDPOINTS.MAJORS}/page`, {
+    return majorClient.get(`${API_ENDPOINTS.DEPARTMENTS}/page`, {
       params: searchParams,
       paramsSerializer: (params) => params.toString(),
       headers: {
@@ -74,40 +73,40 @@ export const majorService = {
     });
   },
 
-  getMajorById: async (id: string) => {
-    return majorClient.get(`${API_ENDPOINTS.MAJORS}/${id}`, {
+  getDepartmentById: async (id: string) => {
+    return majorClient.get(`${API_ENDPOINTS.DEPARTMENTS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
   },
 
-  createMajor: async (data: any) => {
-    return majorClient.post(API_ENDPOINTS.MAJORS, data, {
+  createDepartment: async (data: any) => {
+    return majorClient.post(API_ENDPOINTS.DEPARTMENTS, data, {
       headers: {
         accept: "text/plain",
       },
     });
   },
 
-  updateMajor: async (id: string, data: any) => {
-    return majorClient.put(`${API_ENDPOINTS.MAJORS}/${id}`, data, {
+  updateDepartment: async (id: string, data: any) => {
+    return majorClient.put(`${API_ENDPOINTS.DEPARTMENTS}/${id}`, data, {
       headers: {
         accept: "text/plain",
       },
     });
   },
-  deleteMajor: async (id: string) => {
-    return majorClient.delete(`${API_ENDPOINTS.MAJORS}/${id}`, {
+  deleteDepartment: async (id: string) => {
+    return majorClient.delete(`${API_ENDPOINTS.DEPARTMENTS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
   },
 
-  activateMajor: async (id: string) => {
+  activateDepartment: async (id: string) => {
     return majorClient.post(
-      `${API_ENDPOINTS.MAJORS}/${id}/activate`,
+      `${API_ENDPOINTS.DEPARTMENTS}/${id}/activate`,
       {},
       {
         headers: {
@@ -117,9 +116,9 @@ export const majorService = {
     );
   },
 
-  deactivateMajor: async (id: string) => {
+  deactivateDepartment: async (id: string) => {
     return majorClient.post(
-      `${API_ENDPOINTS.MAJORS}/${id}/deactivate`,
+      `${API_ENDPOINTS.DEPARTMENTS}/${id}/deactivate`,
       {},
       {
         headers: {

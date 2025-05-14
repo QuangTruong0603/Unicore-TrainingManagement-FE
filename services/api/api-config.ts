@@ -16,10 +16,14 @@ export const REQUEST_TIMEOUT = 30000;
 // API endpoints
 export const API_ENDPOINTS = {
   COURSES: "/c/Courses",
+  TRAINING_ROADMAPS: "/c/TrainingRoadmaps", // Added training roadmap endpoint
+  COURSES_GROUP: "/c/CoursesGroup",
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
   BATCHES: "/u/Batch",
   STUDENTS: "/u/Student",
+  MAJOR_GROUPS: "/m/MajorGroup",
+  DEPARTMENTS: "/m/Department",
 };
 
 // Common headers
