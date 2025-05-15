@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Book,
   Map,
+  MapPin,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -44,12 +45,25 @@ const Sidebar: React.FC<ISidebarProps> = ({
     setCollapsed(!collapsed);
     if (onToggle) onToggle(!collapsed);
   };
-
   // Menu items data
   const mainMenuItems: IMenuItem[] = [
     { key: "/students", title: "Students", icon: <Users size={20} /> },
     { key: "/analytics", title: "Analytics", icon: <BarChart size={20} /> },
     { key: "/lectures", title: "Lectures", icon: <User size={20} /> },
+    {
+      key: "/facilities",
+      title: "Facilities",
+      icon: <MapPin size={20} />,
+      isExpanded: false,
+      children: [
+        {
+          key: "/facilities/locations",
+          title: "Locations",
+          icon: <MapPin size={20} />,
+        },
+        // More facility related items can be added here in the future
+      ],
+    },
     {
       key: "/training",
       title: "Training",
@@ -80,8 +94,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
           key: "/training/training-roadmap",
           title: "Training Roadmaps",
           icon: <Map size={20} />,
-        },
-        {
+        },        {
           key: "/training/majors",
           title: "Majors",
           icon: <GraduationCap size={20} />,
