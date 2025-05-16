@@ -1,3 +1,4 @@
+import { PaginatedResponse } from "../dto";
 import { Building } from "../building/building.schema";
 
 export interface Floor {
@@ -8,13 +9,28 @@ export interface Floor {
   totalRoom: number;
 }
 
-export interface FloorQuery {
-  pageNumber?: number;
-  itemsPerpage?: number;
-  searchQuery?: string;
-  orderBy?: string;
-  isDesc?: boolean;
+export interface FloorFilter {
+  name?: string;
   buildingId?: string;
   locationId?: string;
   isActive?: boolean;
 }
+
+export interface FloorQuery {
+  pageNumber: number;
+  itemsPerpage: number;
+  orderBy?: string;
+  isDesc?: boolean;
+  filter?: FloorFilter;
+}
+
+export interface CreateFloorDto {
+  name: string;
+  buildingId: string;
+}
+
+export interface UpdateFloorDto {
+  name: string;
+}
+
+export interface FloorListResponse extends PaginatedResponse<Floor> {}

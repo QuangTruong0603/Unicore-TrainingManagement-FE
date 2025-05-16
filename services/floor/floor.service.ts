@@ -1,48 +1,121 @@
-import { AxiosResponse } from "axios";
 import { API_ENDPOINTS } from "../api/api-config";
-import { floorClient } from "../api/http-client";
-import { PaginatedResponse } from "../dto";
-import { Floor, FloorQuery } from "./floor.schema";
+import { buildingClient } from "../api/http-client";
 
-export interface CreateFloorData {
-  name: string;
-  buildingId: string;
-}
-
-export interface UpdateFloorData {
-  name: string;
-}
+import {
+  Floor,
+  FloorListResponse,
+  FloorQuery,
+  CreateFloorDto,
+  UpdateFloorDto,
+} from "./floor.schema";
 
 class FloorService {
-  private readonly baseUrl = API_ENDPOINTS.FLOORS;
+  async getFloors(query: FloorQuery): Promise<FloorListResponse> {
+    let params: Record<string, string> = {
+      "Pagination.PageNumber": query.pageNumber.toString(),
+      "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
+    };
 
-  async getFloors(
-    query: FloorQuery
-  ): Promise<AxiosResponse<PaginatedResponse<Floor>>> {
-    return floorClient.get(this.baseUrl, { params: query });
+    // Add order parameters if provided
+    if (query.orderBy) {
+      params["Order.By"] =
+        query.orderBy.charAt(0).toUpperCase() + query.orderBy.slice(1);
+    }
+
+    if (query.isDesc !== undefined) {
+      params["Order.IsDesc"] = query.isDesc.toString();
+    } // Add filters if provided
+    if (query.filter) {
+      if (query.filter.buildingId) {
+        params["Filter.BuildingId"] = query.filter.buildingId;
+      }
+
+      if (query.filter.locationId) {
+        params["Filter.LocationId"] = query.filter.locationId;
+      }
+
+      if (query.filter.name) {
+        params["Filter.Name"] = query.filter.name;
+      }
+
+      if (query.filter.isActive !== undefined) {
+        params["Filter.IsActive"] = query.filter.isActive.toString();
+      }
+    }
+
+    // Create URLSearchParams object
+    const searchParams = new URLSearchParams();
+
+    // Add all params to searchParams
+    Object.entries(params).forEach(([key, value]) => {
+      searchParams.append(key, value);
+    });
+
+    return buildingClient.get(`${API_ENDPOINTS.FLOORS}/page`, {
+      params: searchParams,
+      paramsSerializer: (params) => params.toString(),
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
-  async getFloorById(id: string): Promise<AxiosResponse<Floor>> {
-    return floorClient.get(`${this.baseUrl}/${id}`);
+  async createFloor(data: CreateFloorDto): Promise<Floor> {
+    return buildingClient.post(API_ENDPOINTS.FLOORS, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
-  async createFloor(data: CreateFloorData): Promise<AxiosResponse<Floor>> {
-    return floorClient.post(this.baseUrl, data);
+  async updateFloor(id: string, data: UpdateFloorDto): Promise<Floor> {
+    return buildingClient.put(`${API_ENDPOINTS.FLOORS}/${id}`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
-  async updateFloor(
-    id: string,
-    data: UpdateFloorData
-  ): Promise<AxiosResponse<Floor>> {
-    return floorClient.put(`${this.baseUrl}/${id}`, data);
+  async activateFloor(id: string): Promise<Floor> {
+    return buildingClient.post(
+      `${API_ENDPOINTS.FLOORS}/${id}/activate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   }
 
-  async activateFloor(id: string): Promise<AxiosResponse<Floor>> {
-    return floorClient.patch(`${this.baseUrl}/${id}/activate`);
+  async deactivateFloor(id: string): Promise<Floor> {
+    return buildingClient.post(
+      `${API_ENDPOINTS.FLOORS}/${id}/deactivate`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   }
 
-  async deactivateFloor(id: string): Promise<AxiosResponse<Floor>> {
-    return floorClient.patch(`${this.baseUrl}/${id}/deactivate`);
+  async toggleStatus(id: string): Promise<Floor> {
+    const floor = await this.getFloorById(id);
+
+    if (floor.isActive) {
+      return this.deactivateFloor(id);
+    } else {
+      return this.activateFloor(id);
+    }
+  }
+
+  async getFloorById(id: string): Promise<Floor> {
+    return buildingClient.get(`${API_ENDPOINTS.FLOORS}/${id}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 }
 

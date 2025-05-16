@@ -20,12 +20,18 @@ import { BuildingTable } from "@/components/building/building-table";
 import { BuildingFilter } from "@/components/building/building-filter";
 import { CreateBuildingModal } from "@/components/building/create-building-modal";
 import { UpdateBuildingModal } from "@/components/building/update-building-modal";
+import { FloorTable } from "@/components/floor/floor-table";
+import { FloorFilter } from "@/components/floor/floor-filter";
+import { CreateFloorModal } from "@/components/floor/create-floor-modal";
+import { UpdateFloorModal } from "@/components/floor/update-floor-modal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { locationService } from "@/services/location/location.service";
 // Building service operations now handled by Redux actions in the modals
 import { Building, BuildingQuery } from "@/services/building/building.schema";
+import { Floor, FloorQuery } from "@/services/floor/floor.schema";
 import { Location } from "@/services/location/location.schema";
 import { buildingService } from "@/services/building/building.service";
+import { floorService } from "@/services/floor/floor.service";
 
 export default function LocationDetailPage() {
   const router = useRouter();
@@ -59,6 +65,23 @@ export default function LocationDetailPage() {
   const [buildingSearchInput, setBuildingSearchInput] = useState("");
   const debouncedBuildingSearch = useDebounce<string>(buildingSearchInput, 600);
 
+  // Floors state
+  const [floors, setFloors] = useState<Floor[]>([]);
+  const [isFloorsLoading, setIsFloorsLoading] = useState(false);
+  const [floorsError, setFloorsError] = useState<string | null>(null);
+  const [floorsTotal, setFloorsTotal] = useState(0);
+  // Floor query state
+  const [floorQuery, setFloorQuery] = useState<FloorQuery>({
+    pageNumber: 1,
+    itemsPerpage: 10,
+    orderBy: "",
+    isDesc: false,
+    filter: {
+      buildingId: "",
+      name: "",
+    },
+  });
+
   // Modal state for building
   const {
     isOpen: isBuildingModalOpen,
@@ -72,6 +95,17 @@ export default function LocationDetailPage() {
   const [buildingModalMode, setBuildingModalMode] = useState<
     "create" | "update"
   >("create");
+
+  // Modal state for floor
+  const {
+    isOpen: isFloorModalOpen,
+    onOpen: onFloorModalOpen,
+    onOpenChange: onFloorModalOpenChange,
+  } = useDisclosure();
+  const [selectedFloor, setSelectedFloor] = useState<Floor | null>(null);
+  const [floorModalMode, setFloorModalMode] = useState<"create" | "update">(
+    "create"
+  );
 
   // Fetch location data
   const fetchLocation = useCallback(async () => {
@@ -117,8 +151,38 @@ export default function LocationDetailPage() {
     } finally {
       setIsBuildingsLoading(false);
     }
-  }, [locationId, buildingQuery]);
-  // No longer need separate create/update functions as they're handled by the modals
+  }, [locationId, buildingQuery]); // Fetch floors for the location
+  const fetchFloors = useCallback(async () => {
+    if (!locationId) return;
+
+    try {
+      setIsFloorsLoading(true);
+
+      // Create a clean query object to avoid nested references
+      const currentQuery = {
+        pageNumber: floorQuery.pageNumber,
+        itemsPerpage: floorQuery.itemsPerpage,
+        orderBy: floorQuery.orderBy,
+        isDesc: floorQuery.isDesc,
+        filter: {
+          ...floorQuery.filter,
+          locationId: locationId, // Use the current locationId directly
+        },
+      };
+
+      const response = await floorService.getFloors(currentQuery);
+
+      if (response && response.data) {
+        setFloors(response.data.data || []);
+        setFloorsTotal(response.data.total || 0);
+      }
+    } catch (error) {
+      setFloorsError(
+        error instanceof Error ? error.message : "An error occurred"
+      );    } finally {
+      setIsFloorsLoading(false);
+    }
+  }, [locationId, floorQuery]); // Add floorQuery to dependency array so it gets the latest values
 
   // Handle building activation/deactivation
   const toggleBuildingActive = async (building: Building) => {
@@ -150,6 +214,36 @@ export default function LocationDetailPage() {
     onBuildingModalOpen();
   };
 
+  // Handle floor activation/deactivation
+  const toggleFloorActive = async (floor: Floor) => {
+    try {
+      if (floor.isActive) {
+        await floorService.deactivateFloor(floor.id);
+      } else {
+        await floorService.activateFloor(floor.id);
+      }
+      await fetchFloors();
+    } catch (error) {
+      setFloorsError(
+        error instanceof Error ? error.message : "An error occurred"
+      );
+    }
+  };
+
+  // Handle adding new floor
+  const handleAddFloor = () => {
+    setSelectedFloor(null);
+    setFloorModalMode("create");
+    onFloorModalOpen();
+  };
+
+  // Handle edit floor
+  const handleEditFloor = (floor: Floor) => {
+    setSelectedFloor(floor);
+    setFloorModalMode("update");
+    onFloorModalOpen();
+  };
+
   // Handle building sort
   const handleBuildingSort = (key: string) => {
     setBuildingQuery((prev) => ({
@@ -159,9 +253,23 @@ export default function LocationDetailPage() {
     }));
   };
 
+  // Handle floor sort
+  const handleFloorSort = (key: string) => {
+    setFloorQuery((prev) => ({
+      ...prev,
+      orderBy: key,
+      isDesc: prev.orderBy === key ? !prev.isDesc : false,
+    }));
+  };
+
   // Handle page change for buildings
   const handleBuildingPageChange = (page: number) => {
     setBuildingQuery((prev) => ({ ...prev, pageNumber: page }));
+  };
+
+  // Handle page change for floors
+  const handleFloorPageChange = (page: number) => {
+    setFloorQuery((prev) => ({ ...prev, pageNumber: page }));
   }; // Effect for debounced search
 
   useEffect(() => {
@@ -179,6 +287,20 @@ export default function LocationDetailPage() {
       }));
     }
   }, [debouncedBuildingSearch, buildingQuery.filter?.name]);
+  // Fetch floors when query changes
+  useEffect(() => {
+    if (locationId && activeTab === "floors") {
+      fetchFloors();
+    }
+  }, [
+    locationId,
+    activeTab,
+    floorQuery.pageNumber,
+    floorQuery.filter?.buildingId,
+    floorQuery.filter?.name,
+    floorQuery.orderBy,
+    floorQuery.isDesc,
+  ]);
 
   // Initial data fetch
   useEffect(() => {
@@ -237,9 +359,7 @@ export default function LocationDetailPage() {
             </Button>
           </Link>
         </div>
-
         <h1 className="text-3xl font-bold mb-6">{location.name}</h1>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Main information */}
           <Card className="lg:col-span-2">
@@ -310,7 +430,6 @@ export default function LocationDetailPage() {
             </CardBody>
           </Card>
         </div>
-
         {/* Tabs for Building, Floor, Room management */}
         <div className="mt-10">
           <Tabs
@@ -370,11 +489,48 @@ export default function LocationDetailPage() {
             </Tab>
             <Tab key="floors" title="Floors">
               <div className="py-4">
-                <div className="flex justify-center items-center h-64">
-                  <p className="text-gray-500">
-                    Floor management will be implemented in the future.
-                  </p>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Floors</h2>
+                  <Button
+                    color="primary"
+                    startContent={<Plus size={16} />}
+                    onPress={handleAddFloor}
+                  >
+                    Add Floor
+                  </Button>
+                </div>{" "}
+                {/* Filters */}{" "}
+                <div className="mb-6">
+                  <FloorFilter
+                    buildings={buildings}
+                    query={floorQuery}
+                    onQueryChange={setFloorQuery}
+                  />
                 </div>
+                {/* Floor table */}
+                <Card>
+                  <CardBody>
+                    <FloorTable
+                      floors={floors}
+                      isLoading={isFloorsLoading}
+                      sortDirection={floorQuery.isDesc ? "desc" : "asc"}
+                      sortKey={floorQuery.orderBy}
+                      onActiveToggle={toggleFloorActive}
+                      onEdit={handleEditFloor}
+                      onSort={handleFloorSort}
+                    />
+                  </CardBody>
+                </Card>
+                {/* Pagination */}
+                {floorsTotal > 0 && (
+                  <div className="mt-4 flex justify-end">
+                    <Pagination
+                      page={floorQuery.pageNumber}
+                      total={Math.ceil(floorsTotal / floorQuery.itemsPerpage!)}
+                      onChange={handleFloorPageChange}
+                    />
+                  </div>
+                )}
               </div>
             </Tab>
             <Tab key="rooms" title="Rooms">
@@ -387,8 +543,7 @@ export default function LocationDetailPage() {
               </div>
             </Tab>
           </Tabs>
-        </div>
-
+        </div>{" "}
         {/* Building Modals */}
         {buildingModalMode === "create" ? (
           <CreateBuildingModal
@@ -399,10 +554,27 @@ export default function LocationDetailPage() {
           />
         ) : (
           <UpdateBuildingModal
-            isOpen={isBuildingModalOpen}
             building={selectedBuilding}
+            isOpen={isBuildingModalOpen}
             onOpenChange={onBuildingModalOpenChange}
             onSuccess={fetchBuildings}
+          />
+        )}{" "}
+        {/* Floor Modals */}
+        {floorModalMode === "create" ? (
+          <CreateFloorModal
+            buildingId={floorQuery.filter?.buildingId}
+            buildings={buildings.filter((b) => b.isActive)}
+            isOpen={isFloorModalOpen}
+            onOpenChange={onFloorModalOpenChange}
+            onSuccess={fetchFloors}
+          />
+        ) : (
+          <UpdateFloorModal
+            floor={selectedFloor}
+            isOpen={isFloorModalOpen}
+            onOpenChange={onFloorModalOpenChange}
+            onSuccess={fetchFloors}
           />
         )}
       </div>
