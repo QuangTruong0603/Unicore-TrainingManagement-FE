@@ -7,8 +7,9 @@ import {
   Chip,
   Button,
 } from "@heroui/react";
-import { Power, PowerOff } from "lucide-react";
+import { Power, PowerOff, Info } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 import styles from "./location-card.module.scss";
 
@@ -28,6 +29,8 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   onActiveToggle,
   onEdit,
 }) => {
+  const router = useRouter();
+  
   const fullAddress = [
     location.addressDetail,
     location.ward,
@@ -37,6 +40,10 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   ]
     .filter(Boolean)
     .join(", ");
+
+  const handleViewDetails = () => {
+    router.push(`/facilities/locations/${location.id}`);
+  };
 
   return (
     <Card className={`shadow-md ${styles.locationCard}`}>
@@ -76,8 +83,16 @@ export const LocationCard: React.FC<LocationCardProps> = ({
             <p className="font-semibold">{location.totalRoom}</p>
           </div>
         </div>
-      </CardBody>
-      <CardFooter className="flex justify-between gap-2 px-4 py-3">
+      </CardBody>      <CardFooter className="flex justify-between gap-2 px-4 py-3">
+        <Button
+          fullWidth
+          color="secondary"
+          size="sm"
+          variant="flat"
+          onPress={handleViewDetails}
+        >
+          Details
+        </Button>
         {onEdit && (
           <Button
             fullWidth

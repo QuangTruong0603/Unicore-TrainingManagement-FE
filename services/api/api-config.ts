@@ -26,6 +26,9 @@ export const API_ENDPOINTS = {
   MAJOR_GROUPS: "/m/MajorGroup",
   DEPARTMENTS: "/m/Department",
   LOCATIONS: "/m/Location", // Added location endpoint
+  BUILDINGS: "/m/Building", // Added building endpoint
+  FLOORS: "/m/Floor", // Added floor endpoint
+  ROOMS: "/m/Room", // Added room endpoint
 };
 
 // Common headers

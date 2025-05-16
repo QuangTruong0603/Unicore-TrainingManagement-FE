@@ -323,3 +323,6 @@ export const majorClient = new HttpClient(API_URLS.MAJOR);
 export const batchClient = new HttpClient(API_URLS.BATCH);
 export const studentClient = new HttpClient(API_URLS.AUTH);
 export const locationClient = new HttpClient(API_URLS.LOCATION);
+export const buildingClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
+export const floorClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
+export const roomClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location

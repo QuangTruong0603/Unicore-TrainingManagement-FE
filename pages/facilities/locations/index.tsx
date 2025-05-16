@@ -5,11 +5,15 @@ import { Pagination, Button, useDisclosure } from "@heroui/react";
 import DefaultLayout from "@/layouts/default";
 import { LocationCard } from "@/components/location/location-card";
 import { LocationFilter } from "@/components/location/location-filter";
-import { LocationModal } from "@/components/location/location-modal";
+import { CreateLocationModal } from "@/components/location/create-location-modal";
+import { UpdateLocationModal } from "@/components/location/update-location-modal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { locationService } from "@/services/location/location.service";
 import { Location, LocationQuery } from "@/services/location/location.schema";
-import { CreateLocationData } from "@/services/location/location.dto";
+import {
+  CreateLocationData,
+  UpdateLocationData,
+} from "@/services/location/location.dto";
 
 export default function LocationsPage() {
   // Location state
@@ -69,6 +73,19 @@ export default function LocationsPage() {
       return await fetchLocations();
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
+    }
+  };
+
+  // Update location
+  const updateLocation = async (id: string, data: UpdateLocationData) => {
+    try {
+      setIsLocationSubmitting(true);
+      await locationService.updateLocation(id, data);
+      await fetchLocations();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsLocationSubmitting(false);
     }
   };
 
@@ -198,27 +215,24 @@ export default function LocationsPage() {
           </div>
         )}
 
-        {/* Location Modal */}
-        <LocationModal
-          isOpen={isLocationModalOpen}
+        {/* Create Location Modal */}
+        <CreateLocationModal
+          isOpen={isLocationModalOpen && modalMode === "create"}
           isSubmitting={isLocationSubmitting}
-          location={selectedLocation}
-          mode={modalMode}
           onOpenChange={onLocationModalChange}
-          onSubmit={async (data) => {
-            setIsLocationSubmitting(true);
-            try {
-              if (modalMode === "create") {
-                await createLocation(data);
-              } else {
-                // Implement update functionality if needed
-                // await updateLocation(selectedLocation?.id as string, data);
-              }
-            } finally {
-              setIsLocationSubmitting(false);
-            }
-          }}
+          onSubmit={createLocation}
         />
+
+        {/* Update Location Modal */}
+        {selectedLocation && (
+          <UpdateLocationModal
+            isOpen={isLocationModalOpen && modalMode === "update"}
+            isSubmitting={isLocationSubmitting}
+            location={selectedLocation} // Change initialData to location
+            onOpenChange={onLocationModalChange}
+            onSubmit={(data) => updateLocation(selectedLocation.id, data)}
+          />
+        )}
       </div>
     </DefaultLayout>
   );

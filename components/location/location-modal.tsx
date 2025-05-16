@@ -6,7 +6,7 @@ import React from "react";
 import { CreateLocationModal } from "./create-location-modal";
 import { UpdateLocationModal } from "./update-location-modal";
 
-import { CreateLocationData } from "@/services/location/location.dto";
+import { CreateLocationData, UpdateLocationData } from "@/services/location/location.dto";
 import { Location } from "@/services/location/location.schema";
 
 // Export both modal components
@@ -19,7 +19,7 @@ export { UpdateLocationModal } from "./update-location-modal";
 interface LocationModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
-  onSubmit: (data: CreateLocationData) => Promise<void>;
+  onSubmit: (data: CreateLocationData | UpdateLocationData) => Promise<void>;
   location?: Location | null;
   isSubmitting: boolean;
   mode: "create" | "update";

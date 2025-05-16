@@ -12,12 +12,12 @@ import {
 } from "@heroui/react";
 
 import { Location } from "@/services/location/location.schema";
-import { CreateLocationData } from "@/services/location/location.dto";
+import { UpdateLocationData } from "@/services/location/location.dto";
 
 interface UpdateLocationModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
-  onSubmit: (data: CreateLocationData) => Promise<void>;
+  onSubmit: (data: UpdateLocationData) => Promise<void>;
   location: Location;
   isSubmitting: boolean;
 }
@@ -28,13 +28,12 @@ export function UpdateLocationModal({
   onSubmit,
   location,
   isSubmitting,
-}: UpdateLocationModalProps) {
-  const {
+}: UpdateLocationModalProps) {  const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateLocationData>({
+  } = useForm<UpdateLocationData>({
     defaultValues: {
       name: location?.name || "",
       country: location?.country || "",
@@ -73,8 +72,7 @@ export function UpdateLocationModal({
       return () => clearTimeout(timer);
     }
   }, [isOpen, reset]);
-
-  const handleFormSubmit = async (data: CreateLocationData) => {
+  const handleFormSubmit = async (data: UpdateLocationData) => {
     try {
       await onSubmit(data);
       onOpenChange(); // Close the modal after successful submission

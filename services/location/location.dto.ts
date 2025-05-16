@@ -1,6 +1,5 @@
-import { z } from "zod";
-
 import { BaseResponse, PaginatedResponse } from "../dto";
+
 import { Location } from "./location.schema";
 
 /**
@@ -14,6 +13,16 @@ export interface CreateLocationData {
   ward: string;
   addressDetail: string;
   imageURL: string;
+}
+
+export interface UpdateLocationData {
+  name: string;
+  country: string;
+  city: string;
+  district: string;
+  ward: string;
+  addressDetail: string;
+  imageURL?: string;
 }
 
 export interface LocationResponse extends BaseResponse<Location> {}

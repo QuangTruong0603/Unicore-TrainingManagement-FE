@@ -6,6 +6,7 @@ import {
   LocationListResponse,
   LocationResponse,
   CreateLocationData,
+  UpdateLocationData,
 } from "./location.dto";
 
 export const locationService = {
@@ -44,7 +45,9 @@ export const locationService = {
     });
   },
 
-  createLocation: async (data: CreateLocationData): Promise<LocationResponse> => {
+  createLocation: async (
+    data: CreateLocationData
+  ): Promise<LocationResponse> => {
     return locationClient.post(API_ENDPOINTS.LOCATIONS, data, {
       headers: {
         accept: "text/plain",
@@ -54,6 +57,17 @@ export const locationService = {
 
   getLocationById: async (id: string): Promise<LocationResponse> => {
     return locationClient.get(`${API_ENDPOINTS.LOCATIONS}/${id}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+
+  updateLocation: async (
+    id: string,
+    data: UpdateLocationData
+  ): Promise<LocationResponse> => {
+    return locationClient.put(`${API_ENDPOINTS.LOCATIONS}/${id}`, data, {
       headers: {
         accept: "text/plain",
       },
