@@ -1,3 +1,4 @@
+import { PaginatedResponse } from "../dto";
 import { Floor } from "../floor/floor.schema";
 
 export interface Room {
@@ -8,31 +9,34 @@ export interface Room {
   floor: Floor;
 }
 
+export interface RoomFilter {
+  name?: string;
+  buildingId?: string;
+  locationId?: string;
+  floorId?: string;
+  availableSeats?: number;
+}
+
 export interface RoomQuery {
   pageNumber?: number;
   itemsPerpage?: number;
-  searchQuery?: string;
   orderBy?: string;
   isDesc?: boolean;
+  filter?: RoomFilter;
   floorId?: string;
   buildingId?: string;
   locationId?: string;
-  isActive?: boolean;
 }
 
 export interface RoomCreateDto {
   name: string;
-  code: string;
-  capacity: number;
+  availableSeats: number;
   floorId: string;
-  type: string;
-  description?: string;
 }
 
 export interface RoomUpdateDto {
   name: string;
-  code: string;
-  capacity: number;
-  type: string;
-  description?: string;
+  availableSeats: number;
 }
+
+export interface RoomListResponse extends PaginatedResponse<Room> {}

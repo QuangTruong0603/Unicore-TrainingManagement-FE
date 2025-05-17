@@ -116,6 +116,41 @@ class FloorService {
         accept: "text/plain",
       },
     });
+  }  
+  async getAllFloors(locationId?: string, buildingId?: string): Promise<Floor[]> {
+    // If locationId is provided, use the new endpoint
+    if (locationId) {
+      return buildingClient.get(`${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`, {
+        headers: {
+          accept: "text/plain",
+        },
+      });
+    }
+    
+    // If only buildingId is provided
+    if (buildingId) {
+      return buildingClient.get(`${API_ENDPOINTS.FLOORS}?buildingId=${buildingId}`, {
+        headers: {
+          accept: "text/plain",
+        },
+      });
+    }
+    
+    // Default case - get all floors
+    return buildingClient.get(`${API_ENDPOINTS.FLOORS}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  }
+
+  // New method to get floors by location
+  async getFloorsByLocation(locationId: string): Promise<Floor[]> {
+    return buildingClient.get(`${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 }
 

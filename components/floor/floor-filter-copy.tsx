@@ -44,6 +44,8 @@ export const FloorFilter = ({
   ) => {
     const buildingId = event.target.value;
 
+    console.log("Building filter changed to:", buildingId);
+
     onQueryChange({
       ...query,
       filter: {
@@ -55,9 +57,11 @@ export const FloorFilter = ({
 
   // Formatted buildings for select
   const buildingOptions = useMemo(() => {
-    return [...buildings.filter((b) => b.isActive)];
+    return [
+      { id: "", name: "All Buildings" },
+      ...buildings.filter((b) => b.isActive),
+    ];
   }, [buildings]);
-
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-4 w-full">
       <div className="relative flex-1">
@@ -67,22 +71,20 @@ export const FloorFilter = ({
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
         />
-        <Search
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+        <Search          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
           size={18}
         />
       </div>
-
+      
       <Select
-        className="w-full md:w-1/4 h-auto"
-        classNames={{
+        className="w-full md:w-1/4 h-auto"        classNames={{
           trigger: "h-[42px] rounded-xl",
         }}
+        onChange={handleBuildingChange}
         placeholder="Filter by building"
         selectedKeys={
           query.filter?.buildingId ? [query.filter.buildingId] : [""]
         }
-        onChange={handleBuildingChange}
       >
         {buildingOptions.map((building) => (
           <SelectItem key={building.id}>{building.name}</SelectItem>

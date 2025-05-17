@@ -66,31 +66,6 @@ class BuildingService {
     });
   }
 
-  // async getBuildingById(id: string): Promise<Building> {
-  //   const response = await buildingClient.get(`${API_ENDPOINTS.BUILDINGS}/${id}`);
-  //   return response.data;
-  // }
-
-  // async createBuilding(
-  //   data: CreateBuildingData
-  // ): Promise<AxiosResponse<Building>> {
-  //   return buildingClient.post(this.baseUrl, data);
-  // }
-
-  // async updateBuilding(
-  //   id: string,
-  //   data: UpdateBuildingData
-  // ): Promise<AxiosResponse<Building>> {
-  //   return buildingClient.put(`${this.baseUrl}/${id}`, data);
-  // }
-
-  // async activateBuilding(id: string): Promise<AxiosResponse<Building>> {
-  //   return buildingClient.patch(`${this.baseUrl}/${id}/activate`);
-  // }
-
-  // async deactivateBuilding(id: string): Promise<AxiosResponse<Building>> {
-  //   return buildingClient.patch(`${this.baseUrl}/${id}/deactivate`);
-  // }
   async createBuilding(data: CreateBuildingData): Promise<Building> {
     return buildingClient.post(API_ENDPOINTS.BUILDINGS, data, {
       headers: {
@@ -133,22 +108,55 @@ class BuildingService {
       }
     );
   }
-  
   async toggleStatus(id: string): Promise<Building> {
     const building = await this.getBuildingById(id);
+
     if (building.isActive) {
       return this.deactivateBuilding(id);
     } else {
       return this.activateBuilding(id);
     }
   }
-  
+
   async getBuildingById(id: string): Promise<Building> {
     return buildingClient.get(`${API_ENDPOINTS.BUILDINGS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
+  }
+
+  // async getAllBuildings(locationId?: string): Promise<Building[]> {
+  //   if (locationId) {
+  //     // Use the new endpoint for filtering by location
+  //     return buildingClient.get(
+  //       `${API_ENDPOINTS.BUILDINGS}/byLocation/${locationId}`,
+  //       {
+  //         headers: {
+  //           accept: "text/plain",
+  //         },
+  //       }
+  //     );
+  //   }
+
+  //   // Default behavior - get all buildings
+  //   return buildingClient.get(`${API_ENDPOINTS.BUILDINGS}`, {
+  //     headers: {
+  //       accept: "text/plain",
+  //     },
+  //   });
+  // }
+
+  // New method to get buildings by location
+  async getBuildingsByLocation(locationId: string): Promise<Building[]> {
+    return buildingClient.get(
+      `${API_ENDPOINTS.BUILDINGS}/byLocation/${locationId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   }
 }
 

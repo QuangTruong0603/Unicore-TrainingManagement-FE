@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { Room, RoomQuery } from "@/services/room/room.schema";
+import { Room, RoomQuery, RoomCreateDto, RoomUpdateDto } from "@/services/room/room.schema";
 import { roomService } from "@/services/room/room.service";
 
 interface RoomState {
@@ -9,6 +9,7 @@ interface RoomState {
   isLoading: boolean;
   error: string | null;
   selectedRoom: Room | null;
+  isSubmitting: boolean;
 }
 
 const initialState: RoomState = {
@@ -16,16 +17,20 @@ const initialState: RoomState = {
   query: {
     pageNumber: 1,
     itemsPerpage: 10,
-    searchQuery: "",
     orderBy: "name",
     isDesc: false,
-    floorId: "",
-    locationId: "",
+    filter: {
+      locationId: "",
+      name: "",
+      floorId: "",
+      buildingId: "",
+    },
   },
   total: 0,
   isLoading: false,
   error: null,
   selectedRoom: null,
+  isSubmitting: false,
 };
 
 const roomSlice = createSlice({
@@ -50,15 +55,18 @@ const roomSlice = createSlice({
     setSelectedRoom: (state, action: PayloadAction<Room | null>) => {
       state.selectedRoom = action.payload;
     },
+    setSubmitting: (state, action: PayloadAction<boolean>) => {
+      state.isSubmitting = action.payload;
+    },
     addRoom: (state, action: PayloadAction<Room>) => {
-      state.rooms = [...state.rooms, action.payload];
+      state.rooms = [action.payload, ...state.rooms];
       state.total += 1;
     },
-    updateRoom: (state, action: PayloadAction<Room>) => {
-      const index = state.rooms.findIndex(room => room.id === action.payload.id);
-      if (index !== -1) {
-        state.rooms[index] = action.payload;
-      }
+    updateRoomInList: (state, action: PayloadAction<Room>) => {
+      const updatedRoom = action.payload;
+      state.rooms = state.rooms.map((room) =>
+        room.id === updatedRoom.id ? updatedRoom : room
+      );
     },
     setCurrentPage: (state, action: PayloadAction<number>) => {
       state.query.pageNumber = action.payload;
@@ -67,61 +75,112 @@ const roomSlice = createSlice({
       state.query.itemsPerpage = action.payload;
     },
   },
-  extraReducers: (builder) => {
-    builder
-      // fetchRooms
-      .addCase(fetchRooms.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchRooms.fulfilled, (state, action) => {
-        if (action.payload && action.payload.data) {
-          state.rooms = action.payload.data.data || [];
-          state.total = action.payload.data.total || 0;
-        } else {
-          state.rooms = [];
-          state.total = 0;
-        }
-        state.isLoading = false;
-      })
-      .addCase(fetchRooms.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload ? String(action.payload) : "Failed to fetch rooms";
-      });
-  },
 });
 
-export const fetchRooms = createAsyncThunk(
-  'room/fetchRooms',
-  async (query: RoomQuery, { dispatch, rejectWithValue }) => {
-    try {
-      dispatch(setLoading(true));
-      const response = await roomService.getRooms(query);
-      
-      dispatch(setRooms(response.data?.data.data || []));
-      dispatch(setTotal(response.data?.data.total || 0));
-
-      return response.data;
-    } catch (error) {
-      dispatch(setError(error instanceof Error ? error.message : "Failed to fetch rooms"));
-      return rejectWithValue(error);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }
-);
-
-export const { 
-  setRooms, 
-  setQuery, 
-  setTotal, 
-  setLoading, 
+export const {
+  setRooms,
+  setQuery,
+  setTotal,
+  setLoading,
   setError,
   setSelectedRoom,
+  setSubmitting,
   addRoom,
-  updateRoom,
+  updateRoomInList,
   setCurrentPage,
-  setItemsPerPage
+  setItemsPerPage,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;
+
+// Thunk actions
+export const fetchRooms = (query: RoomQuery) => async (dispatch) => {
+  try {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+
+    const response = await roomService.getRooms(query);
+
+    dispatch(setRooms(response.data.data || []));
+    dispatch(setTotal(response.data.total || 0));
+
+    return response.data;
+  } catch (error) {
+    dispatch(
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch rooms"
+      )
+    );
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const createRoom = (data: RoomCreateDto) => async (dispatch) => {
+  try {
+    dispatch(setSubmitting(true));
+    dispatch(setError(null));
+
+    const newRoom = await roomService.createRoom(data);
+
+    dispatch(addRoom(newRoom));
+
+    return newRoom;
+  } catch (error) {
+    dispatch(
+      setError(
+        error instanceof Error ? error.message : "Failed to create room"
+      )
+    );
+    throw error;
+  } finally {
+    dispatch(setSubmitting(false));
+  }
+};
+
+export const updateRoom = (id: string, data: RoomUpdateDto) => async (dispatch) => {
+  try {
+    dispatch(setSubmitting(true));
+    dispatch(setError(null));
+
+    const updatedRoom = await roomService.updateRoom(id, data);
+
+    dispatch(updateRoomInList(updatedRoom));
+
+    return updatedRoom;
+  } catch (error) {
+    dispatch(
+      setError(
+        error instanceof Error ? error.message : "Failed to update room"
+      )
+    );
+    throw error;
+  } finally {
+    dispatch(setSubmitting(false));
+  }
+};
+
+export const toggleRoomStatus = (room: Room) => async (dispatch) => {
+  try {
+    dispatch(setSubmitting(true));
+    dispatch(setError(null));
+
+    const updatedRoom = await roomService.toggleStatus(room.id);
+
+    dispatch(updateRoomInList(updatedRoom));
+
+    return updatedRoom;
+  } catch (error) {
+    dispatch(
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle room status"
+      )
+    );
+    throw error;
+  } finally {
+    dispatch(setSubmitting(false));
+  }
+};

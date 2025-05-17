@@ -24,14 +24,20 @@ import { FloorTable } from "@/components/floor/floor-table";
 import { FloorFilter } from "@/components/floor/floor-filter";
 import { CreateFloorModal } from "@/components/floor/create-floor-modal";
 import { UpdateFloorModal } from "@/components/floor/update-floor-modal";
+import { RoomTable } from "@/components/room/room-table";
+import { RoomFilter } from "@/components/room/room-filter";
+import { CreateRoomModal } from "@/components/room/create-room-modal";
+import { UpdateRoomModal } from "@/components/room/update-room-modal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { locationService } from "@/services/location/location.service";
 // Building service operations now handled by Redux actions in the modals
 import { Building, BuildingQuery } from "@/services/building/building.schema";
 import { Floor, FloorQuery } from "@/services/floor/floor.schema";
+import { Room, RoomQuery } from "@/services/room/room.schema";
 import { Location } from "@/services/location/location.schema";
 import { buildingService } from "@/services/building/building.service";
 import { floorService } from "@/services/floor/floor.service";
+import { roomService } from "@/services/room/room.service";
 
 export default function LocationDetailPage() {
   const router = useRouter();
@@ -42,9 +48,8 @@ export default function LocationDetailPage() {
   const [location, setLocation] = useState<Location | null>(null);
   const [isLocationLoading, setIsLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
-
   // Tab state
-  const [activeTab, setActiveTab] = useState("buildings");
+  const [activeTab, setActiveTab] = useState("rooms");
 
   // Buildings state
   const [buildings, setBuildings] = useState<Building[]>([]);
@@ -82,6 +87,24 @@ export default function LocationDetailPage() {
     },
   });
 
+  // Rooms state
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isRoomsLoading, setIsRoomsLoading] = useState(false);
+  const [roomsError, setRoomsError] = useState<string | null>(null);
+  const [roomsTotal, setRoomsTotal] = useState(0); // Room query state
+  const [roomQuery, setRoomQuery] = useState<RoomQuery>({
+    pageNumber: 1,
+    itemsPerpage: 10,
+    orderBy: "",
+    isDesc: false,
+    filter: {
+      buildingId: "",
+      floorId: "",
+      name: "",
+      locationId: locationId, // Add locationId to the filter
+    },
+  });
+
   // Modal state for building
   const {
     isOpen: isBuildingModalOpen,
@@ -104,6 +127,17 @@ export default function LocationDetailPage() {
   } = useDisclosure();
   const [selectedFloor, setSelectedFloor] = useState<Floor | null>(null);
   const [floorModalMode, setFloorModalMode] = useState<"create" | "update">(
+    "create"
+  );
+
+  // Modal state for room
+  const {
+    isOpen: isRoomModalOpen,
+    onOpen: onRoomModalOpen,
+    onOpenChange: onRoomModalOpenChange,
+  } = useDisclosure();
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [roomModalMode, setRoomModalMode] = useState<"create" | "update">(
     "create"
   );
 
@@ -179,10 +213,45 @@ export default function LocationDetailPage() {
     } catch (error) {
       setFloorsError(
         error instanceof Error ? error.message : "An error occurred"
-      );    } finally {
+      );
+    } finally {
       setIsFloorsLoading(false);
     }
   }, [locationId, floorQuery]); // Add floorQuery to dependency array so it gets the latest values
+
+  // Fetch rooms for the location
+  const fetchRooms = useCallback(async () => {
+    if (!locationId) return;
+
+    try {
+      setIsRoomsLoading(true);
+
+      // Create a clean query object to avoid nested references
+      const currentQuery = {
+        pageNumber: roomQuery.pageNumber,
+        itemsPerpage: roomQuery.itemsPerpage,
+        orderBy: roomQuery.orderBy,
+        isDesc: roomQuery.isDesc,
+        filter: {
+          ...roomQuery.filter,
+          locationId: locationId, // Use the current locationId directly
+        },
+      };
+
+      const response = await roomService.getRooms(currentQuery);
+
+      if (response && response.data) {
+        setRooms(response.data.data || []);
+        setRoomsTotal(response.data.total || 0);
+      }
+    } catch (error) {
+      setRoomsError(
+        error instanceof Error ? error.message : "An error occurred"
+      );
+    } finally {
+      setIsRoomsLoading(false);
+    }
+  }, [locationId, roomQuery]); // Add roomQuery to dependency array so it gets the latest values
 
   // Handle building activation/deactivation
   const toggleBuildingActive = async (building: Building) => {
@@ -244,6 +313,36 @@ export default function LocationDetailPage() {
     onFloorModalOpen();
   };
 
+  // Handle room activation/deactivation
+  const toggleRoomActive = async (room: Room) => {
+    try {
+      if (room.isActive) {
+        await roomService.deactivateRoom(room.id);
+      } else {
+        await roomService.activateRoom(room.id);
+      }
+      await fetchRooms();
+    } catch (error) {
+      setRoomsError(
+        error instanceof Error ? error.message : "An error occurred"
+      );
+    }
+  };
+
+  // Handle adding new room
+  const handleAddRoom = () => {
+    setSelectedRoom(null);
+    setRoomModalMode("create");
+    onRoomModalOpen();
+  };
+
+  // Handle edit room
+  const handleEditRoom = (room: Room) => {
+    setSelectedRoom(room);
+    setRoomModalMode("update");
+    onRoomModalOpen();
+  };
+
   // Handle building sort
   const handleBuildingSort = (key: string) => {
     setBuildingQuery((prev) => ({
@@ -262,6 +361,15 @@ export default function LocationDetailPage() {
     }));
   };
 
+  // Handle room sort
+  const handleRoomSort = (key: string) => {
+    setRoomQuery({
+      ...roomQuery,
+      orderBy: key,
+      isDesc: roomQuery.orderBy === key ? !roomQuery.isDesc : false,
+    });
+  };
+
   // Handle page change for buildings
   const handleBuildingPageChange = (page: number) => {
     setBuildingQuery((prev) => ({ ...prev, pageNumber: page }));
@@ -270,6 +378,14 @@ export default function LocationDetailPage() {
   // Handle page change for floors
   const handleFloorPageChange = (page: number) => {
     setFloorQuery((prev) => ({ ...prev, pageNumber: page }));
+  };
+
+  // Handle page change for rooms
+  const handleRoomPageChange = (page: number) => {
+    setRoomQuery({
+      ...roomQuery,
+      pageNumber: page,
+    });
   }; // Effect for debounced search
 
   useEffect(() => {
@@ -301,6 +417,34 @@ export default function LocationDetailPage() {
     floorQuery.orderBy,
     floorQuery.isDesc,
   ]);
+  // Fetch rooms when query changes
+  useEffect(() => {
+    if (locationId && activeTab === "rooms") {
+      fetchRooms();
+    }
+  }, [
+    locationId,
+    activeTab,
+    roomQuery.pageNumber,
+    roomQuery.filter?.buildingId,
+    roomQuery.filter?.floorId,
+    roomQuery.filter?.name,
+    roomQuery.orderBy,
+    roomQuery.isDesc,
+    fetchRooms,
+  ]);
+  // Update room query with locationId when it changes
+  useEffect(() => {
+    if (locationId) {
+      setRoomQuery((prev) => ({
+        ...prev,
+        filter: {
+          ...prev.filter,
+          locationId: locationId,
+        },
+      }));
+    }
+  }, [locationId]);
 
   // Initial data fetch
   useEffect(() => {
@@ -429,59 +573,55 @@ export default function LocationDetailPage() {
               </div>
             </CardBody>
           </Card>
-        </div>
-        {/* Tabs for Building, Floor, Room management */}
+        </div>{" "}
+        {/* Tabs for Room, Floor, Building management */}
         <div className="mt-10">
           <Tabs
             aria-label="Location Management Tabs"
             selectedKey={activeTab}
             onSelectionChange={(key) => setActiveTab(key as string)}
           >
-            <Tab key="buildings" title="Buildings">
+            <Tab key="rooms" title="Rooms">
               <div className="py-4">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Buildings</h2>
+                  <h2 className="text-xl font-semibold">Rooms</h2>
                   <Button
                     color="primary"
                     startContent={<Plus size={16} />}
-                    onPress={handleAddBuilding}
+                    onPress={handleAddRoom}
                   >
-                    Add Building
-                  </Button>
+                    Add Room
+                  </Button>{" "}
                 </div>
-
                 {/* Filters */}
                 <div className="mb-6">
-                  <BuildingFilter
-                    searchQuery={buildingSearchInput}
-                    onSearchChange={setBuildingSearchInput}
+                  <RoomFilter
+                    locationId={locationId}
+                    query={roomQuery}
+                    onQueryChange={setRoomQuery}
                   />
                 </div>
-
-                {/* Building table */}
+                {/* Room table */}
                 <Card>
                   <CardBody>
-                    <BuildingTable
-                      buildings={buildings}
-                      isLoading={isBuildingsLoading}
-                      sortDirection={buildingQuery.isDesc ? "desc" : "asc"}
-                      sortKey={buildingQuery.orderBy}
-                      onActiveToggle={toggleBuildingActive}
-                      onEdit={handleEditBuilding}
-                      onSort={handleBuildingSort}
+                    <RoomTable
+                      isLoading={isRoomsLoading}
+                      rooms={rooms}
+                      sortDirection={roomQuery.isDesc ? "desc" : "asc"}
+                      sortKey={roomQuery.orderBy}
+                      onActiveToggle={toggleRoomActive}
+                      onEdit={handleEditRoom}
+                      onSort={handleRoomSort}
                     />
                   </CardBody>
                 </Card>
-
                 {/* Pagination */}
-                {buildingsTotal > 0 && (
+                {roomsTotal > 0 && (
                   <div className="mt-4 flex justify-end">
                     <Pagination
-                      page={buildingQuery.pageNumber}
-                      total={Math.ceil(
-                        buildingsTotal / buildingQuery.itemsPerpage!
-                      )}
-                      onChange={handleBuildingPageChange}
+                      page={roomQuery.pageNumber}
+                      total={Math.ceil(roomsTotal / roomQuery.itemsPerpage!)}
+                      onChange={handleRoomPageChange}
                     />
                   </div>
                 )}
@@ -533,13 +673,54 @@ export default function LocationDetailPage() {
                 )}
               </div>
             </Tab>
-            <Tab key="rooms" title="Rooms">
+            <Tab key="buildings" title="Buildings">
               <div className="py-4">
-                <div className="flex justify-center items-center h-64">
-                  <p className="text-gray-500">
-                    Room management will be implemented in the future.
-                  </p>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Buildings</h2>
+                  <Button
+                    color="primary"
+                    startContent={<Plus size={16} />}
+                    onPress={handleAddBuilding}
+                  >
+                    Add Building
+                  </Button>
                 </div>
+
+                {/* Filters */}
+                <div className="mb-6">
+                  <BuildingFilter
+                    searchQuery={buildingSearchInput}
+                    onSearchChange={setBuildingSearchInput}
+                  />
+                </div>
+
+                {/* Building table */}
+                <Card>
+                  <CardBody>
+                    <BuildingTable
+                      buildings={buildings}
+                      isLoading={isBuildingsLoading}
+                      sortDirection={buildingQuery.isDesc ? "desc" : "asc"}
+                      sortKey={buildingQuery.orderBy}
+                      onActiveToggle={toggleBuildingActive}
+                      onEdit={handleEditBuilding}
+                      onSort={handleBuildingSort}
+                    />
+                  </CardBody>
+                </Card>
+
+                {/* Pagination */}
+                {buildingsTotal > 0 && (
+                  <div className="mt-4 flex justify-end">
+                    <Pagination
+                      page={buildingQuery.pageNumber}
+                      total={Math.ceil(
+                        buildingsTotal / buildingQuery.itemsPerpage!
+                      )}
+                      onChange={handleBuildingPageChange}
+                    />
+                  </div>
+                )}
               </div>
             </Tab>
           </Tabs>
@@ -575,6 +756,22 @@ export default function LocationDetailPage() {
             isOpen={isFloorModalOpen}
             onOpenChange={onFloorModalOpenChange}
             onSuccess={fetchFloors}
+          />
+        )}
+        {roomModalMode === "create" ? (
+          <CreateRoomModal
+            floorId={roomQuery.filter?.floorId}
+            floors={floors.filter((f) => f.isActive)}
+            isOpen={isRoomModalOpen}
+            onOpenChange={onRoomModalOpenChange}
+            onSuccess={fetchRooms}
+          />
+        ) : (
+          <UpdateRoomModal
+            isOpen={isRoomModalOpen}
+            room={selectedRoom}
+            onOpenChange={onRoomModalOpenChange}
+            onSuccess={fetchRooms}
           />
         )}
       </div>
