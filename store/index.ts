@@ -7,6 +7,10 @@ import confirmDialogReducer from "./slices/confirmDialogSlice";
 import majorReducer from "./slices/majorSlice";
 import majorGroupReducer from "./slices/majorGroupSlice";
 import departmentReducer from "./slices/departmentSlice";
+import buildingReducer from "./slices/buildingSlice";
+import floorReducer from "./slices/floorSlice";
+import roomReducer from "./slices/roomSlice";
+import locationReducer from "./slices/locationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +21,10 @@ export const store = configureStore({
     majorGroup: majorGroupReducer,
     department: departmentReducer,
     student: studentReducer,
+    building: buildingReducer,
+    floor: floorReducer,
+    room: roomReducer,
+    location: locationReducer,
   },
 });
 

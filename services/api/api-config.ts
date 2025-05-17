@@ -8,6 +8,7 @@ export const API_URLS = {
   AUTH: "https://localhost:5001/api",
   MAJOR: "https://localhost:7001/api",
   BATCH: "https://localhost:5001/api",
+  LOCATION: "https://localhost:7001/api", // Added location service URL
 };
 
 // Default request timeout (in milliseconds)
@@ -24,6 +25,10 @@ export const API_ENDPOINTS = {
   STUDENTS: "/u/Student",
   MAJOR_GROUPS: "/m/MajorGroup",
   DEPARTMENTS: "/m/Department",
+  LOCATIONS: "/m/Location", // Added location endpoint
+  BUILDINGS: "/m/Building", // Added building endpoint
+  FLOORS: "/m/Floor", // Added floor endpoint
+  ROOMS: "/m/Room", // Added room endpoint
 };
 
 // Common headers
