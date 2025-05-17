@@ -6,6 +6,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { HeroUIProvider } from "@heroui/system";
 import { useRouter } from "next/router";
 import { Provider } from "react-redux";
+import { ToastProvider } from "@heroui/react";
 
 import { store } from "@/store";
 import { fontSans, fontMono } from "@/config/fonts";
@@ -30,6 +31,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <Provider store={store}>
       <HeroUIProvider navigate={router.push}>
+        <ToastProvider placement="top-right" />
         <QueryClientProvider client={queryClient}>
           {getLayout(<Component {...pageProps} />)}
         </QueryClientProvider>

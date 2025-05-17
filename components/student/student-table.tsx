@@ -134,8 +134,16 @@ export const StudentTable: React.FC<StudentTableProps> = ({
               <TableCell>{student.applicationUser.email}</TableCell>
               <TableCell>{student.applicationUser.phoneNumber}</TableCell>
               <TableCell>{student.applicationUser.dob}</TableCell>
-              <TableCell className="text-center">
-                {student.applicationUser.status}
+              <TableCell>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    student.applicationUser.status === 1
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {student.applicationUser.status === 1 ? "Active" : "Inactive"}
+                </span>
               </TableCell>
               <TableCell className="text-center">
                 <Button

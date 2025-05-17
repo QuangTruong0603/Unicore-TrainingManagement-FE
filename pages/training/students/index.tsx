@@ -5,6 +5,7 @@ import {
   Pagination,
   Autocomplete,
   AutocompleteItem,
+  addToast,
 } from "@heroui/react";
 import { Plus, Upload } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,6 +22,8 @@ import { majorService } from "@/services/major/major.service";
 import { PaginatedResponse } from "@/store/slices/studentSlice";
 import DefaultLayout from "@/layouts/default";
 import { RootState, AppDispatch } from "@/store/store";
+import ConfirmDialog from "@/components/ui/confirm-dialog/confirm-dialog";
+import { openConfirmDialog } from "@/store/slices/confirmDialogSlice";
 import {
   setStudents,
   setQuery,
@@ -28,6 +31,23 @@ import {
   setError,
 } from "@/store/slices/studentSlice";
 import { studentService } from "@/services/student/student.service";
+
+// Add useDebounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function StudentsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,6 +65,47 @@ export default function StudentsPage() {
   >({});
   const [majors, setMajors] = React.useState<Major[]>([]);
   const [batches, setBatches] = React.useState<Batch[]>([]);
+
+  // Add local states for immediate UI updates
+  const [localBatchId, setLocalBatchId] = React.useState(query.batchId || "");
+  const [localMajorId, setLocalMajorId] = React.useState(query.majorId || "");
+  const [localSearch, setLocalSearch] = React.useState(query.searchQuery || "");
+
+  // Debounce the values
+  const debouncedBatchId = useDebounce(localBatchId, 300);
+  const debouncedMajorId = useDebounce(localMajorId, 300);
+  const debouncedSearch = useDebounce(localSearch, 300);
+
+  // Update query when debounced values change
+  React.useEffect(() => {
+    dispatch(
+      setQuery({
+        ...query,
+        batchId: debouncedBatchId || undefined,
+        pageNumber: 1,
+      })
+    );
+  }, [debouncedBatchId]);
+
+  React.useEffect(() => {
+    dispatch(
+      setQuery({
+        ...query,
+        majorId: debouncedMajorId || undefined,
+        pageNumber: 1,
+      })
+    );
+  }, [debouncedMajorId]);
+
+  React.useEffect(() => {
+    dispatch(
+      setQuery({
+        ...query,
+        searchQuery: debouncedSearch,
+        pageNumber: 1,
+      })
+    );
+  }, [debouncedSearch]);
 
   const fetchStudents = React.useCallback(async () => {
     try {
@@ -65,13 +126,7 @@ export default function StudentsPage() {
   }, [fetchStudents]);
 
   const handleSearch = (searchQuery: string) => {
-    dispatch(
-      setQuery({
-        ...query,
-        searchQuery,
-        pageNumber: 1, // Reset to first page when searching
-      })
-    );
+    setLocalSearch(searchQuery);
   };
 
   useEffect(() => {
@@ -138,17 +193,35 @@ export default function StudentsPage() {
   };
 
   const handleDelete = async (studentId: string) => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      try {
-        dispatch(setLoading(true));
-        await studentService.deleteStudent(studentId);
-        await fetchStudents(); // Refresh the list after deletion
-      } catch (error: any) {
-        dispatch(setError(error.message || "Failed to delete student"));
-      } finally {
-        dispatch(setLoading(false));
-      }
-    }
+    dispatch(
+      openConfirmDialog({
+        title: "Delete Student",
+        message: "Are you sure you want to delete this student? This action cannot be undone.",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          try {
+            dispatch(setLoading(true));
+            await studentService.deleteStudent(studentId);
+            addToast({
+              title: "Success",
+              description: "Student deleted successfully",
+              color: "success",
+            });
+            await fetchStudents(); // Refresh the list after deletion
+          } catch (error: any) {
+            dispatch(setError(error.message || "Failed to delete student"));
+            addToast({
+              title: "Error",
+              description: error.message || "Failed to delete student",
+              color: "danger",
+            });
+          } finally {
+            dispatch(setLoading(false));
+          }
+        },
+      })
+    );
   };
 
   const handleSubmit = async (data: Partial<Student>) => {
@@ -170,13 +243,28 @@ export default function StudentsPage() {
           status: data.applicationUser?.status,
         };
         await studentService.updateStudent(selectedStudent.id, payload);
+        addToast({
+          title: "Success",
+          description: "Student updated successfully",
+          color: "success",
+        });
       } else {
         await studentService.createStudent(data);
+        addToast({
+          title: "Success",
+          description: "Student created successfully",
+          color: "success",
+        });
       }
       await fetchStudents(); // Refresh the list after create/update
       setIsModalOpen(false);
     } catch (error: any) {
       dispatch(setError(error.message || "Failed to save student"));
+      addToast({
+        title: "Error",
+        description: error.message || "Failed to save student",
+        color: "danger",
+      });
     } finally {
       dispatch(setLoading(false));
     }
@@ -186,10 +274,20 @@ export default function StudentsPage() {
     try {
       dispatch(setLoading(true));
       await studentService.importStudents(file, batchId, majorId);
+      addToast({
+        title: "Success",
+        description: "Students imported successfully",
+        color: "success",
+      });
       await fetchStudents(); // Refresh the list after import
       setIsImportModalOpen(false);
     } catch (error: any) {
       dispatch(setError(error.message || "Failed to import students"));
+      addToast({
+        title: "Error",
+        description: error.message || "Failed to import students",
+        color: "danger",
+      });
     } finally {
       dispatch(setLoading(false));
     }
@@ -232,16 +330,10 @@ export default function StudentsPage() {
               className="w-full"
               defaultItems={batches}
               placeholder="Search and select a batch"
-              selectedKey={query.batchId || ""}
+              selectedKey={localBatchId}
               variant="bordered"
               onSelectionChange={(key) => {
-                dispatch(
-                  setQuery({
-                    ...query,
-                    batchId: key?.toString() || undefined,
-                    pageNumber: 1,
-                  })
-                );
+                setLocalBatchId(key?.toString() || "");
               }}
             >
               {(batch) => (
@@ -277,16 +369,10 @@ export default function StudentsPage() {
               className="w-full"
               defaultItems={majors}
               placeholder="Search and select a major"
-              selectedKey={query.majorId || ""}
+              selectedKey={localMajorId}
               variant="bordered"
               onSelectionChange={(key) => {
-                dispatch(
-                  setQuery({
-                    ...query,
-                    majorId: key?.toString() || undefined,
-                    pageNumber: 1,
-                  })
-                );
+                setLocalMajorId(key?.toString() || "");
               }}
             >
               {(major) => (
@@ -310,7 +396,7 @@ export default function StudentsPage() {
               Search
             </label>
             <StudentFilter
-              searchQuery={query.searchQuery || ""}
+              searchQuery={localSearch || ""}
               onSearchChange={handleSearch}
             />
           </div>
@@ -362,6 +448,8 @@ export default function StudentsPage() {
           onClose={() => setIsImportModalOpen(false)}
           onSubmit={handleImport}
         />
+
+        <ConfirmDialog />
       </div>
     </DefaultLayout>
   );
