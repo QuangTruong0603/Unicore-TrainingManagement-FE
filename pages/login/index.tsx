@@ -72,7 +72,7 @@ export default function StudentLogin() {
                 </div>
               )}
 
-              <div className="mb-4">
+              <div className="full-width">
                 <label className="lable-text" htmlFor="email">
                   Email
                 </label>
@@ -91,7 +91,7 @@ export default function StudentLogin() {
                 )}
               </div>
 
-              <div className="mb-6">
+              <div className="full-width">
                 <label className="lable-text mb-3" htmlFor="password">
                   Password
                 </label>
