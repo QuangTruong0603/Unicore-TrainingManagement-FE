@@ -31,7 +31,7 @@ import {
   setError,
 } from "@/store/slices/studentSlice";
 import { studentService } from "@/services/student/student.service";
-
+import "./index.scss";
 // Add useDebounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
@@ -319,12 +319,6 @@ export default function StudentsPage() {
 
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="md:w-1/4 w-full">
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="batch-input"
-            >
-              Batch
-            </label>
             <Autocomplete
               allowsCustomValue={false}
               className="w-full"
@@ -358,12 +352,6 @@ export default function StudentsPage() {
             </Autocomplete>
           </div>
           <div className="md:w-1/4 w-full">
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1"
-              htmlFor="major-input"
-            >
-              Major
-            </label>
             <Autocomplete
               allowsCustomValue={false}
               className="w-full"
@@ -388,13 +376,7 @@ export default function StudentsPage() {
               )}
             </Autocomplete>
           </div>
-          <div className="md:w-2/4 w-full flex flex-col justify-end">
-            <label
-              className="block text-sm font-medium text-gray-700 mb-1 invisible"
-              htmlFor="search-input"
-            >
-              Search
-            </label>
+          <div className="md:w-2/4 w-full">
             <StudentFilter
               searchQuery={localSearch || ""}
               onSearchChange={handleSearch}

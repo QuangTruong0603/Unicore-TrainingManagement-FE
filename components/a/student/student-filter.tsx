@@ -12,9 +12,9 @@ export const StudentFilter: React.FC<StudentFilterProps> = ({
   onSearchChange,
 }) => {
   return (
-    <div className="flex gap-4">
+    <div className="w-full">
       <Input
-        className="max-w-xs"
+        className="w-full"
         placeholder="Search students..."
         startContent={<Search className="w-4 h-4 text-gray-400" />}
         type="text"
