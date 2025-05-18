@@ -1,4 +1,5 @@
 import Sidebar from "@/components/sidebar/sidebar";
+import { Navbar } from "@/components/navbar/navbar";
 import ConfirmDialog from "@/components/ui/confirm-dialog/confirm-dialog";
 
 export default function DefaultLayout({
@@ -13,8 +14,12 @@ export default function DefaultLayout({
         <Sidebar />
       </div>
 
-      <div className="flex flex-col flex-1 min-w-0">
-        <main className="flex-1 w-full overflow-y-auto">{children}</main>
+      <div className="flex flex-col flex-grow">
+        <Navbar />
+
+        <div className="flex flex-col flex-1 min-w-0">
+          <main className="flex-1 w-full overflow-y-auto">{children}</main>
+        </div>
       </div>
 
       {/* Global confirmation dialog */}

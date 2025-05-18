@@ -16,18 +16,18 @@ import {
 } from "@heroui/react";
 
 import DefaultLayout from "@/layouts/default";
-import { BuildingTable } from "@/components/building/building-table";
-import { BuildingFilter } from "@/components/building/building-filter";
-import { CreateBuildingModal } from "@/components/building/create-building-modal";
-import { UpdateBuildingModal } from "@/components/building/update-building-modal";
-import { FloorTable } from "@/components/floor/floor-table";
-import { FloorFilter } from "@/components/floor/floor-filter";
-import { CreateFloorModal } from "@/components/floor/create-floor-modal";
-import { UpdateFloorModal } from "@/components/floor/update-floor-modal";
-import { RoomTable } from "@/components/room/room-table";
-import { RoomFilter } from "@/components/room/room-filter";
-import { CreateRoomModal } from "@/components/room/create-room-modal";
-import { UpdateRoomModal } from "@/components/room/update-room-modal";
+import { BuildingTable } from "@/components/a/building/building-table";
+import { BuildingFilter } from "@/components/a/building/building-filter";
+import { CreateBuildingModal } from "@/components/a/building/create-building-modal";
+import { UpdateBuildingModal } from "@/components/a/building/update-building-modal";
+import { FloorTable } from "@/components/a/floor/floor-table";
+import { FloorFilter } from "@/components/a/floor/floor-filter";
+import { CreateFloorModal } from "@/components/a/floor/create-floor-modal";
+import { UpdateFloorModal } from "@/components/a/floor/update-floor-modal";
+import { RoomTable } from "@/components/a/room/room-table";
+import { RoomFilter } from "@/components/a/room/room-filter";
+import { CreateRoomModal } from "@/components/a/room/create-room-modal";
+import { UpdateRoomModal } from "@/components/a/room/update-room-modal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { locationService } from "@/services/location/location.service";
 // Building service operations now handled by Redux actions in the modals

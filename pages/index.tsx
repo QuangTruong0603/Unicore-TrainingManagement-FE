@@ -1,4 +1,4 @@
-import StudentsPage from "./students";
+import StudentsPage from "./a/students";
 
 export default function IndexPage() {
   return <StudentsPage />;

@@ -2,7 +2,6 @@
 import React from "react";
 import { Button, Card, Form, Image, Input, Spacer } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 
 import { Logo } from "@/components/icons/icons";
@@ -13,7 +12,6 @@ import { useAuth } from "@/hooks/useAuth";
 import "./index.scss";
 
 export default function StudentLogin() {
-  const router = useRouter();
   const login = useLogin();
   const { login: authLogin } = useAuth();
 
@@ -32,9 +30,7 @@ export default function StudentLogin() {
       const token = response.data;
 
       // Use the auth hook to handle login
-      await authLogin(token.toString());
-
-      router.push("/");
+      await authLogin(token);
     } catch (error: any) {
       // Set form error
       setError("root", {

@@ -9,12 +9,12 @@ import {
   useDisclosure,
 } from "@heroui/react";
 
-import { DepartmentTable } from "@/components/major/department-table";
-import { DepartmentModal } from "@/components/major/department-modal";
-import { MajorGroupTable } from "@/components/major/major-group-table";
-import { MajorGroupModal } from "@/components/major/major-group-modal";
-import { MajorTable } from "@/components/major/major-table";
-import { MajorModal } from "@/components/major/major-modal";
+import { DepartmentTable } from "@/components/a/major/department-table";
+import { DepartmentModal } from "@/components/a/major/department-modal";
+import { MajorGroupTable } from "@/components/a/major/major-group-table";
+import { MajorGroupModal } from "@/components/a/major/major-group-modal";
+import { MajorTable } from "@/components/a/major/major-table";
+import { MajorModal } from "@/components/a/major/major-modal";
 import DefaultLayout from "@/layouts/default";
 import { useDepartments } from "@/services/department/department.hooks";
 import { useMajorGroups } from "@/services/major-group/major-group.hooks";

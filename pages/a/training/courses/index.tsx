@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
-import { CourseFilter } from "@/components/course/course-filter";
-import { CourseModal } from "@/components/course/course-modal";
-import { CourseTable } from "@/components/course/course-table";
+import { CourseFilter } from "@/components/a/course/course-filter";
+import { CourseModal } from "@/components/a/course/course-modal";
+import { CourseTable } from "@/components/a/course/course-table";
 import DefaultLayout from "@/layouts/default";
 import { Course } from "@/services/course/course.schema";
 import { courseService } from "@/services/course/course.service";
