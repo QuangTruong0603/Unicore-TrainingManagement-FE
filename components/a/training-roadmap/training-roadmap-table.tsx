@@ -78,7 +78,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
         >
           <Link
             className="text-inherit hover:text-primary cursor-pointer"
-            href={`/training/training-roadmap/${roadmap.id}`}
+            href={`/a/training/training-roadmap/${roadmap.id}`}
           >
             {roadmap.name}
           </Link>
