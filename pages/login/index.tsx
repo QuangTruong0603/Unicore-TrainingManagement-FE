@@ -41,7 +41,7 @@ export default function StudentLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-orange-50 p-4">
+    <div className="flex items-center justify-center h-screen bg-orange-50 p-4">
       <Card className="w-full login-card max-w-4xl shadow-lg">
         <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 left-side p-6 flex items-center justify-center rounded-l-lg">
