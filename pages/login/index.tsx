@@ -2,23 +2,24 @@
 import React from "react";
 import { Button, Card, Form, Image, Input, Spacer } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 
 import { Logo } from "@/components/icons/icons";
 import { useLogin } from "@/services/auth/auth.hooks";
 import { loginSchema } from "@/services/auth/auth.schema";
+import { useAuth } from "@/hooks/useAuth";
 
 import "./index.scss";
 
 export default function StudentLogin() {
-  const router = useRouter();
   const login = useLogin();
+  const { login: authLogin } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
+    setError,
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
@@ -26,11 +27,16 @@ export default function StudentLogin() {
   const onSubmit = async (data: any) => {
     try {
       const response = await login.mutateAsync(data);
+      const token = response.data;
 
-      localStorage.setItem("token", response.token);
-      router.push("/");
-    } catch (_error) {
-      // Error handling as needed
+      // Use the auth hook to handle login
+      await authLogin(token);
+    } catch (error: any) {
+      // Set form error
+      setError("root", {
+        type: "manual",
+        message: error.message || "Invalid email or password",
+      });
     }
   };
 
@@ -60,39 +66,57 @@ export default function StudentLogin() {
             </div>
 
             <Form onSubmit={handleSubmit(onSubmit)}>
-              <label className="lable-text" htmlFor="email">
-                Email
-              </label>
-              <Input
-                fullWidth
-                required
-                className="mb-4"
-                errorMessage={errors.email?.message as string}
-                id="email"
-                placeholder="Enter account"
-                {...register("email")}
-              />
+              {errors.root && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {errors.root.message}
+                </div>
+              )}
 
-              <label className="lable-text mb-3" htmlFor="password">
-                Password
-              </label>
-              <Input
-                fullWidth
-                required
-                className="mb-6"
-                errorMessage={errors.password?.message as string}
-                id="password"
-                placeholder="Enter password"
-                type="password"
-                {...register("password")}
-              />
+              <div className="mb-4">
+                <label className="lable-text" htmlFor="email">
+                  Email
+                </label>
+                <Input
+                  fullWidth
+                  className="mb-1"
+                  id="email"
+                  isInvalid={!!errors.email}
+                  placeholder="Enter account"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.email.message as string}
+                  </p>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <label className="lable-text mb-3" htmlFor="password">
+                  Password
+                </label>
+                <Input
+                  fullWidth
+                  className="mb-1"
+                  id="password"
+                  isInvalid={!!errors.password}
+                  placeholder="Enter password"
+                  type="password"
+                  {...register("password")}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.password.message as string}
+                  </p>
+                )}
+              </div>
 
               <Button
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white"
-                disabled={login.isPending}
+                disabled={isSubmitting || login.isPending}
                 type="submit"
               >
-                {login.isPending ? "Logging in..." : "Login"}
+                {isSubmitting || login.isPending ? "Logging in..." : "Login"}
               </Button>
             </Form>
             <p className="forgot-password bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent flex justify-center pt-4">

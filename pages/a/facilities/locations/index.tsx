@@ -3,10 +3,10 @@ import { Plus } from "lucide-react";
 import { Pagination, Button, useDisclosure } from "@heroui/react";
 
 import DefaultLayout from "@/layouts/default";
-import { LocationCard } from "@/components/location/location-card";
-import { LocationFilter } from "@/components/location/location-filter";
-import { CreateLocationModal } from "@/components/location/create-location-modal";
-import { UpdateLocationModal } from "@/components/location/update-location-modal";
+import { LocationCard } from "@/components/a/location/location-card";
+import { LocationFilter } from "@/components/a/location/location-filter";
+import { CreateLocationModal } from "@/components/a/location/create-location-modal";
+import { UpdateLocationModal } from "@/components/a/location/update-location-modal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { locationService } from "@/services/location/location.service";
 import { Location, LocationQuery } from "@/services/location/location.schema";

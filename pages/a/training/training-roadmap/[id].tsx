@@ -7,8 +7,8 @@ import { Button, Card, CardBody, Spinner, Tabs, Tab } from "@heroui/react";
 import DefaultLayout from "@/layouts/default";
 import { useTrainingRoadmap } from "@/services/training-roadmap/training-roadmap.hooks";
 import { TrainingRoadmap } from "@/services/training-roadmap/training-roadmap.schema";
-import CourseAssignment from "@/components/training-roadmap/course-assignment";
-import CourseGroupAssignment from "@/components/training-roadmap/course-group-assignment";
+import CourseAssignment from "@/components/a/training-roadmap/course-assignment";
+import CourseGroupAssignment from "@/components/a/training-roadmap/course-group-assignment";
 
 const TrainingRoadmapDetailPage: React.FC = () => {
   const router = useRouter();

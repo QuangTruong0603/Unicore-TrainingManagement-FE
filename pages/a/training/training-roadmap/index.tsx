@@ -15,12 +15,12 @@ import {
 import { Search, Plus, Filter } from "lucide-react";
 
 import DefaultLayout from "@/layouts/default";
-import { TrainingRoadmapTable } from "@/components/training-roadmap/training-roadmap-table";
-import { TrainingRoadmapModal } from "@/components/training-roadmap/training-roadmap-modal";
+import { TrainingRoadmapTable } from "@/components/a/training-roadmap/training-roadmap-table";
+import { TrainingRoadmapModal } from "@/components/a/training-roadmap/training-roadmap-modal";
 import { majorService } from "@/services/major/major.service";
 import { Major } from "@/services/major/major.schema";
 import { TrainingRoadmap } from "@/services/training-roadmap/training-roadmap.schema";
-import { TrainingRoadmapFormData } from "@/components/training-roadmap/training-roadmap-form";
+import { TrainingRoadmapFormData } from "@/components/a/training-roadmap/training-roadmap-form";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setRoadmaps,

@@ -10,10 +10,10 @@ import {
 import { Plus, Upload } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { StudentTable } from "@/components/student/student-table";
-import { StudentFilter } from "@/components/student/student-filter";
-import { StudentModal } from "@/components/student/student-modal";
-import { StudentImportModal } from "@/components/student/student-import-modal";
+import { StudentTable } from "@/components/a/student/student-table";
+import { StudentFilter } from "@/components/a/student/student-filter";
+import { StudentModal } from "@/components/a/student/student-modal";
+import { StudentImportModal } from "@/components/a/student/student-import-modal";
 import { Student } from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
 import { Batch } from "@/services/batch/batch.schema";

@@ -24,6 +24,7 @@ import { useRouter } from "next/router";
 import "./sidebar.scss";
 import { MenuItem } from "../menuItem/menuItem";
 import { Logo } from "../icons/icons";
+import { useAuth } from "@/hooks/useAuth";
 
 import { ISidebarProps, IMenuItem } from "./type";
 
@@ -33,6 +34,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
   className = "",
 }) => {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState<boolean>(defaultCollapsed);
   const [activeKey, setActiveKey] = useState<string>(router.pathname);
 
@@ -45,67 +47,114 @@ const Sidebar: React.FC<ISidebarProps> = ({
     setCollapsed(!collapsed);
     if (onToggle) onToggle(!collapsed);
   };
-  // Menu items data
-  const mainMenuItems: IMenuItem[] = [
-    { key: "/students", title: "Students", icon: <Users size={20} /> },
-    { key: "/analytics", title: "Analytics", icon: <BarChart size={20} /> },
-    { key: "/lectures", title: "Lectures", icon: <User size={20} /> },
+
+  // Training Manager menu items
+  const adminMenuItems: IMenuItem[] = [
+    { key: "/a/students", title: "Students", icon: <Users size={20} /> },
+    { key: "/a/analytics", title: "Analytics", icon: <BarChart size={20} /> },
+    { key: "/a/lectures", title: "Lectures", icon: <User size={20} /> },
     {
-      key: "/facilities",
+      key: "/a/facilities",
       title: "Facilities",
       icon: <MapPin size={20} />,
       isExpanded: false,
       children: [
         {
-          key: "/facilities/locations",
+          key: "/a/facilities/locations",
           title: "Locations",
           icon: <MapPin size={20} />,
         },
-        // More facility related items can be added here in the future
       ],
     },
     {
-      key: "/training",
+      key: "/a/training",
       title: "Training",
       icon: <Book size={20} />,
       isExpanded: true,
       children: [
         {
-          key: "/training/courses",
+          key: "/a/training/courses",
           title: "Courses",
           icon: <BookOpen size={20} />,
         },
         {
-          key: "/training/class-schedule",
+          key: "/a/training/class-schedule",
           title: "Class schedule",
           icon: <Calendar size={20} />,
         },
         {
-          key: "/training/exam-schedule",
+          key: "/a/training/exam-schedule",
           title: "Exam schedule",
           icon: <CalendarRange size={20} />,
         },
         {
-          key: "/training/documents",
+          key: "/a/training/documents",
           title: "Documents",
           icon: <FileText size={20} />,
         },
         {
-          key: "/training/training-roadmap",
+          key: "/a/training/training-roadmap",
           title: "Training Roadmaps",
           icon: <Map size={20} />,
-        },        {
-          key: "/training/majors",
+        },
+        {
+          key: "/a/training/majors",
           title: "Majors",
           icon: <GraduationCap size={20} />,
         },
       ],
     },
     {
-      key: "/messages",
+      key: "/a/messages",
       title: "Messages",
       icon: <Mail size={20} />,
     },
+  ];
+
+  // Student menu items
+  const studentMenuItems: IMenuItem[] = [
+    {
+      key: "/s/training",
+      title: "Training",
+      icon: <Book size={20} />,
+      isExpanded: true,
+      children: [
+        {
+          key: "/s/training/courses",
+          title: "My Courses",
+          icon: <BookOpen size={20} />,
+        },
+        {
+          key: "/s/training/class-schedule",
+          title: "Class Schedule",
+          icon: <Calendar size={20} />,
+        },
+        {
+          key: "/s/training/exam-schedule",
+          title: "Exam Schedule",
+          icon: <CalendarRange size={20} />,
+        },
+        {
+          key: "/s/training/documents",
+          title: "Documents",
+          icon: <FileText size={20} />,
+        },
+        {
+          key: "/s/training/roadmap",
+          title: "My Roadmap",
+          icon: <Map size={20} />,
+        },
+      ],
+    },
+    {
+      key: "/s/messages",
+      title: "Messages",
+      icon: <Mail size={20} />,
+    },
+  ];
+
+  const trainingManagerMenuItems: IMenuItem[] = [
+    { key: "/t", title: "Training", icon: <Book size={20} /> },
   ];
 
   const bottomMenuItems: IMenuItem[] = [
@@ -120,9 +169,22 @@ const Sidebar: React.FC<ISidebarProps> = ({
   ];
 
   const handleItemClick = (key: string) => {
+    if (key === "logout") {
+      logout();
+      router.push("/login");
+      return;
+    }
     setActiveKey(key);
     router.push(key);
   };
+
+  // Select menu items based on user role
+  const mainMenuItems =
+    user?.role === "Admin"
+      ? adminMenuItems
+      : user?.role === "TrainingManager"
+        ? trainingManagerMenuItems
+        : studentMenuItems;
 
   return (
     <Card
@@ -166,7 +228,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
               activeKey={activeKey}
               collapsed={collapsed}
               item={item}
-              onClick={() => item.key !== "logout" && handleItemClick(item.key)}
+              onClick={() => handleItemClick(item.key)}
             />
           ))}
         </div>

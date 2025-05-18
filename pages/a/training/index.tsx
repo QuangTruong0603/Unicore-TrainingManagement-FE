@@ -1,12 +1,12 @@
 import React from "react";
 import Head from "next/head";
 import { Button } from "@heroui/react";
-import { useRouter } from "next/router";
+import { useRoutePrefix } from "@/hooks/useRoutePrefix";
 
-import DefaultLayout from "../../layouts/default";
+import DefaultLayout from "../../../layouts/default";
 
 const TrainingPage = () => {
-  const router = useRouter();
+  const { push } = useRoutePrefix();
 
   return (
     <>
@@ -23,10 +23,7 @@ const TrainingPage = () => {
               <p className="text-gray-600 mb-4">
                 Browse and manage all university courses.
               </p>
-              <Button
-                color="primary"
-                onPress={() => router.push("/training/courses")}
-              >
+              <Button color="primary" onPress={() => push("/training/courses")}>
                 View Courses
               </Button>
             </div>
@@ -38,7 +35,7 @@ const TrainingPage = () => {
               </p>
               <Button
                 color="primary"
-                onPress={() => router.push("/training/class-schedule")}
+                onPress={() => push("/training/class-schedule")}
               >
                 View Schedule
               </Button>
@@ -51,7 +48,7 @@ const TrainingPage = () => {
               </p>
               <Button
                 color="primary"
-                onPress={() => router.push("/training/exam-schedule")}
+                onPress={() => push("/training/exam-schedule")}
               >
                 View Exams
               </Button>
@@ -64,7 +61,7 @@ const TrainingPage = () => {
               </p>
               <Button
                 color="primary"
-                onPress={() => router.push("/training/documents")}
+                onPress={() => push("/training/documents")}
               >
                 View Documents
               </Button>
@@ -79,7 +76,7 @@ const TrainingPage = () => {
               </p>
               <Button
                 color="primary"
-                onPress={() => router.push("/training/program-specification")}
+                onPress={() => push("/training/program-specification")}
               >
                 View Details
               </Button>
@@ -90,10 +87,7 @@ const TrainingPage = () => {
               <p className="text-gray-600 mb-4">
                 Explore academic majors and specializations.
               </p>
-              <Button
-                color="primary"
-                onPress={() => router.push("/training/majors")}
-              >
+              <Button color="primary" onPress={() => push("/training/majors")}>
                 View Majors
               </Button>
             </div>
@@ -105,7 +99,7 @@ const TrainingPage = () => {
               </p>
               <Button
                 color="primary"
-                onPress={() => router.push("/training/students")}
+                onPress={() => push("/training/students")}
               >
                 View Students
               </Button>
