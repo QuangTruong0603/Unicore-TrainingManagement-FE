@@ -1,29 +1,37 @@
 .login-card {
-  height: auto;
-  .right-side {
-    padding-top: 70px;
-    padding-right: 40px;
-    padding-bottom: 70px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
 
-    .uni-name {
-      margin-bottom: 25px;
-    }
-
-    .lable-text {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
-
-    .forgot-password {
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-  }
   .left-side {
-    padding-left: 40px;
-    padding-top: 70px;
-    padding-bottom: 70px;
+    background: linear-gradient(to right, #f97316, #ef4444);
+  }
+
+  .right-side {
+    padding: 2rem;
+  }
+
+  .uni-name {
+    margin-bottom: 2rem;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  .lable-text {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .forgot-password {
+    cursor: pointer;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
