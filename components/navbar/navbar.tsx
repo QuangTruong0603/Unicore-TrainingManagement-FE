@@ -3,22 +3,18 @@ import {
   NavbarContent,
   NavbarMenu,
   NavbarMenuToggle,
-  NavbarBrand,
   NavbarItem,
   NavbarMenuItem,
 } from "@heroui/navbar";
 import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
 import { Input } from "@heroui/input";
-import { link as linkStyles } from "@heroui/theme";
 import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-import NextLink from "next/link";
-import clsx from "clsx";
 import { Avatar } from "@heroui/react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -52,47 +48,28 @@ export const Navbar = () => {
   );
 
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky">
-      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-        <NavbarBrand className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-1" href="/">
-            <p className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent font-bold text-2xl">
-              UNI
-            </p>
-          </NextLink>
-        </NavbarBrand>
-        <div className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
-                )}
-                color="foreground"
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-        </div>
-      </NavbarContent>
+    <HeroUINavbar
+      className="border-b border-gray-200"
+      maxWidth="xl"
+      position="sticky"
+    >
+      <NavbarContent className="basis-1/5 sm:basis-full" justify="start" />
 
       <NavbarContent
         className="hidden sm:flex basis-1/5 sm:basis-full"
         justify="end"
       >
-        <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
+        {/* <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem> */}
         <NavbarItem className="hidden md:flex">
           <Dropdown>
             <DropdownTrigger>
               <div className="flex items-center gap-2">
+                {" "}
                 <Avatar className="h-8 w-8" src="https://i.pravatar.cc/150" />
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold">
                     {user?.email || ""}
-                  </span>
+                  </span>{" "}
                   <span className="text-xs text-default-500">
                     {user?.role || ""}
                   </span>
@@ -100,13 +77,18 @@ export const Navbar = () => {
               </div>
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions">
-              <DropdownItem key="profile">View Profile</DropdownItem>
+              <DropdownItem key="profile">
+                <div>View Profile</div>
+              </DropdownItem>
               <DropdownItem
-                key="logout"
-                className="text-danger"
-                color="danger"
-                onClick={handleLogout}
+                key="change-password"
+                as={Link}
+                className="text-foreground"
+                href="/changePassword"
               >
+                Change your password
+              </DropdownItem>
+              <DropdownItem key="logout" onClick={handleLogout}>
                 Logout
               </DropdownItem>
             </DropdownMenu>

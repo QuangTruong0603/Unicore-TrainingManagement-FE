@@ -55,7 +55,7 @@ const TrainingRoadmapDetailPage: React.FC = () => {
 
       <div className="container mx-auto py-6 px-4">
         <div className="mb-6">
-          <Link passHref href="/training/training-roadmap">
+          <Link passHref href="/a/training/training-roadmap">
             <Button color="default" variant="flat">
               Back to Training Roadmaps
             </Button>

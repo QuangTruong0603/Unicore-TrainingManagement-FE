@@ -95,14 +95,6 @@ export const useUpdateTrainingRoadmap = () => {
   });
 };
 
-// Mutation for deleting a training roadmap
-export const useDeleteTrainingRoadmap = () => {
-  return useMutation({
-    mutationFn: (id: string) =>
-      courseClient.delete(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`),
-  });
-};
-
 // Fetch course groups by major ID
 export const useCourseGroupsByMajorId = (majorId: string) => {
   return useQuery({

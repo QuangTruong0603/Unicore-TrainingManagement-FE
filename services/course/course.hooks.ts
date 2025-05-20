@@ -65,10 +65,3 @@ export const useUpdateCourse = () => {
   });
 };
 
-// Mutation for deleting a course
-export const useDeleteCourse = () => {
-  return useMutation({
-    mutationFn: (id: string) =>
-      courseClient.delete(`${API_ENDPOINTS.COURSES}/${id}`),
-  });
-};
