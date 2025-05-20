@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "../dto";
+import { BaseResponse, PaginatedResponse } from "../dto";
 import { Building } from "../building/building.schema";
 
 export interface Floor {
@@ -32,5 +32,7 @@ export interface CreateFloorDto {
 export interface UpdateFloorDto {
   name: string;
 }
+
+export interface FloorResponse extends BaseResponse<Floor> {}
 
 export interface FloorListResponse extends PaginatedResponse<Floor> {}

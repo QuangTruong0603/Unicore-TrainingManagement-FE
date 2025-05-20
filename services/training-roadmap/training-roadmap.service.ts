@@ -137,14 +137,6 @@ export const trainingRoadmapService = {
     });
   },
 
-  deleteTrainingRoadmap: async (id: string): Promise<void> => {
-    return courseClient.delete(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
-  },
-
   activateTrainingRoadmap: async (
     id: string
   ): Promise<TrainingRoadmapResponse> => {

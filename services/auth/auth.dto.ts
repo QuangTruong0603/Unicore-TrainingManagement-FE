@@ -8,4 +8,12 @@ export interface LoginResponseData {
   token: string;
 }
 
-export interface LoginResponse extends BaseResponse<LoginResponseData> {}
+export interface LoginResponse extends BaseResponse<string> {}
+
+export interface ChangePasswordResponseData {
+  success: boolean;
+  message: string;
+}
+
+export interface ChangePasswordResponse
+  extends BaseResponse<ChangePasswordResponseData> {}

@@ -1,0 +1,17 @@
+/* ChangePassword page styles */
+.change-password-card {
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.change-password-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.label-text {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4b5563;
+}

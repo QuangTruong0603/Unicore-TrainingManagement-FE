@@ -7,6 +7,7 @@ import axios, {
 } from "axios";
 
 import { API_URLS, COMMON_HEADERS, REQUEST_TIMEOUT } from "./api-config";
+import { BaseResponse } from "./api-response";
 
 // API Error Response interface
 interface ApiErrorResponse {
@@ -76,17 +77,6 @@ class HttpClient {
           config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Log request (in development)
-        if (process.env.NODE_ENV !== "production") {
-          console.log(
-            `🚀 Request: ${config.method?.toUpperCase()} ${config.url}`,
-            {
-              params: config.params,
-              data: config.data,
-            }
-          );
-        }
-
         return config;
       },
       (error) => {
@@ -97,17 +87,6 @@ class HttpClient {
     // Response interceptor
     this.instance.interceptors.response.use(
       (response) => {
-        // Log response in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log(
-            `✅ Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
-            {
-              status: response.status,
-              data: response.data,
-            }
-          );
-        }
-
         return response;
       },
       async (error: AxiosError<ApiErrorResponse>) => {
@@ -119,22 +98,7 @@ class HttpClient {
           console.log("Request cancelled:", error.message);
 
           return Promise.reject(error);
-        }
-
-        // Log error in development
-        if (process.env.NODE_ENV !== "production") {
-          console.error(
-            `❌ Error: ${config?.method?.toUpperCase()} ${config?.url}`,
-            {
-              status: (error as AxiosError<ApiErrorResponse>).response?.status,
-              statusText: (error as AxiosError<ApiErrorResponse>).response
-                ?.statusText,
-              data: (error as AxiosError<ApiErrorResponse>).response?.data,
-            }
-          );
-        }
-
-        // Handle common errors and retry logic
+        } // Handle common errors and retry logic
         if ((error as AxiosError<ApiErrorResponse>).response) {
           const { status } = (error as AxiosError<ApiErrorResponse>).response!;
           const errorData: ApiErrorResponse =
@@ -167,17 +131,17 @@ class HttpClient {
             );
 
             return this.instance(config);
-          }
-
-          // Format error response
-          const apiError: ApiError = {
-            status,
-            message: errorData.message || "An error occurred",
-            errors: errorData.errors,
-            timestamp: new Date().toISOString(),
+          } // Format error response in the standardized format
+          const errorMessages = errorData.errors || [
+            errorData.message || "An error occurred",
+          ];
+          const standardErrorResponse: BaseResponse<null> = {
+            success: false,
+            data: null,
+            errors: errorMessages,
           };
 
-          return Promise.reject(apiError);
+          return Promise.reject(standardErrorResponse);
         }
 
         return Promise.reject(error);
@@ -255,23 +219,39 @@ class HttpClient {
       requestId,
       retryCount: 0, // Initialize retry count
     };
-  }
-
-  /**
+  } /**
    * Generic request method
    */
-  public async request<T = any>(config: AxiosRequestConfig): Promise<T> {
+  public async request<T = any>(
+    config: AxiosRequestConfig
+  ): Promise<BaseResponse<T>> {
     const cancelableConfig = this.getCancelableConfig(config);
-    const response: AxiosResponse<T> =
-      await this.instance.request(cancelableConfig);
+    const response: AxiosResponse<any> =
+      await this.instance.request(cancelableConfig); // Transform response to match BaseResponse format
 
-    return response.data;
-  }
+    // If response already has the expected structure, use it
+    if (
+      response.data &&
+      response.data.hasOwnProperty("success") &&
+      response.data.hasOwnProperty("data") &&
+      response.data.hasOwnProperty("errors")
+    ) {
+      return response.data as BaseResponse<T>;
+    }
 
-  /**
+    // Otherwise, transform the response to match BaseResponse format
+    return {
+      success: true,
+      data: response.data as T,
+      errors: [],
+    };
+  } /**
    * GET method
    */
-  public get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  public get<T = any>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<BaseResponse<T>> {
     return this.request<T>({ ...config, method: "get", url });
   }
 
@@ -282,7 +262,7 @@ class HttpClient {
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-  ): Promise<T> {
+  ): Promise<BaseResponse<T>> {
     return this.request<T>({ ...config, method: "post", url, data });
   }
 
@@ -293,14 +273,16 @@ class HttpClient {
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-  ): Promise<T> {
+  ): Promise<BaseResponse<T>> {
     return this.request<T>({ ...config, method: "put", url, data });
   }
-
   /**
    * DELETE method
    */
-  public delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  public delete<T = any>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<BaseResponse<T>> {
     return this.request<T>({ ...config, method: "delete", url }); // Fixed: removed duplicate config parameter
   }
 
@@ -311,7 +293,7 @@ class HttpClient {
     url: string,
     data?: any,
     config?: AxiosRequestConfig
-  ): Promise<T> {
+  ): Promise<BaseResponse<T>> {
     return this.request<T>({ ...config, method: "patch", url, data });
   }
 }

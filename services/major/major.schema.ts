@@ -29,7 +29,7 @@ export interface MajorQuery {
 
 export interface MajorResponse {
   data: Major[];
-  total: number;
+  // total: number;
 }
 
 export interface MajorListResponse extends PaginatedResponse<Major> {}

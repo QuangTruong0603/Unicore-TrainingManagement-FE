@@ -111,14 +111,6 @@ export const courseService = {
     });
   },
 
-  deleteCourse: async (id: string): Promise<void> => {
-    return courseClient.delete(`${API_ENDPOINTS.COURSES}/${id}`, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
-  },
-
   activateCourse: async (id: string) => {
     return courseClient.post(
       `${API_ENDPOINTS.COURSES}/${id}/activate`,

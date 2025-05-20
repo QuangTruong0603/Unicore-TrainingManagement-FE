@@ -11,6 +11,7 @@ import buildingReducer from "./slices/buildingSlice";
 import floorReducer from "./slices/floorSlice";
 import roomReducer from "./slices/roomSlice";
 import locationReducer from "./slices/locationSlice";
+import authReducer from "./slices/authSlice";
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ export const store = configureStore({
     floor: floorReducer,
     room: roomReducer,
     location: locationReducer,
+    auth: authReducer,
   },
 });
 
