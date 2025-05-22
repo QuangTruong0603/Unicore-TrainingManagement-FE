@@ -7,7 +7,6 @@ export const courseReferenceSchema = z.object({
   name: z.string(),
   description: z.string(),
   credit: z.number(),
-  majorId: z.string(),
 });
 
 // Major data reference schema
@@ -24,6 +23,7 @@ export const coursesGroupSchema = z.object({
   groupName: z.string(),
   majorId: z.string(),
   courses: z.array(courseReferenceSchema),
+  credit: z.number(),
   createdAt: z.string().or(z.date()),
   updatedAt: z.string().or(z.date()),
   createdBy: z.string().nullable(),

@@ -18,6 +18,7 @@ import {
   setQuery,
   setTotal,
 } from "@/store/slices/courseSlice";
+import "./index.scss";
 
 interface FilterChip {
   id: string;
@@ -57,7 +58,7 @@ export default function CoursesPage() {
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [searchInputValue, setSearchInputValue] = useState<string>(
-    query.searchQuery || ""
+    query.filters?.name || ""
   );
   const debouncedSearchValue = useDebounce<string>(searchInputValue, 600);
   // Add state to track expanded rows
@@ -82,14 +83,18 @@ export default function CoursesPage() {
     };
 
     fetchMajors();
-  }, []);
-
-  // Effect for handling debounced search
+  }, []); // Effect for handling debounced search
   useEffect(() => {
+    const currentFilters = query.filters || {};
+
     dispatch(
-      setQuery({ ...query, searchQuery: debouncedSearchValue, pageNumber: 1 })
+      setQuery({
+        ...query,
+        filters: { ...currentFilters, name: debouncedSearchValue || undefined },
+        pageNumber: 1,
+      })
     );
-  }, [debouncedSearchValue, dispatch]);
+  }, [debouncedSearchValue, dispatch]); // Removed query from dependencies
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -113,7 +118,6 @@ export default function CoursesPage() {
     // Update filter chips whenever query changes
     updateFilterChipsFromQuery();
   }, [query, dispatch]);
-
   // Update filter chips based on current query
   const updateFilterChipsFromQuery = () => {
     if (!query.filters) {
@@ -121,8 +125,15 @@ export default function CoursesPage() {
 
       return;
     }
-
     const newChips: FilterChip[] = [];
+
+    // Name search filter
+    if (query.filters.name) {
+      newChips.push({
+        id: "name",
+        label: `Name: ${query.filters.name}`,
+      });
+    }
 
     // Cost range filter
     if (query.filters.costRange) {
@@ -157,17 +168,6 @@ export default function CoursesPage() {
       });
     }
 
-    // Status filter
-    if (
-      query.filters.isRegistrable !== undefined &&
-      query.filters.isRegistrable !== null
-    ) {
-      newChips.push({
-        id: "status",
-        label: `Status: ${query.filters.isRegistrable ? "Registrable" : "Not Registrable"}`,
-      });
-    }
-
     // Active status filter
     if (
       query.filters.isActive !== undefined &&
@@ -176,6 +176,17 @@ export default function CoursesPage() {
       newChips.push({
         id: "active",
         label: `Active: ${query.filters.isActive ? "Yes" : "No"}`,
+      });
+    }
+
+    // Open for all filter
+    if (
+      query.filters.isOpenForAll !== undefined &&
+      query.filters.isOpenForAll !== null
+    ) {
+      newChips.push({
+        id: "openForAll",
+        label: `Open For All: ${query.filters.isOpenForAll ? "Yes" : "No"}`,
       });
     }
 
@@ -209,29 +220,12 @@ export default function CoursesPage() {
     setFilterChips(newChips);
   };
 
-  const handleRegistrationToggle = async (course: Course) => {
-    try {
-      const updatedCourse = {
-        ...course,
-        isRegistrable: !course.isRegistrable,
-      };
-
-      await courseService.updateCourse(course.id, updatedCourse);
-      // Refetch courses after toggling registration status
-      const response = await courseService.getCourses(query);
-
-      dispatch(setCourses(response.data.data));
-      dispatch(setTotal(response.data.total));
-    } catch (_error) {
-      // Error handling without console.error
-    }
-  };
-
   const handleActiveToggle = async (course: Course) => {
     try {
       const updatedCourse = {
         ...course,
         isActive: !course.isActive,
+        majorIds: course.majorIds ?? undefined,
       };
 
       await courseService.updateCourse(course.id, updatedCourse);
@@ -265,7 +259,7 @@ export default function CoursesPage() {
   const handleSort = (key: string) => {
     // Map UI column keys to backend field names for sorting
     const fieldMap: Record<string, string> = {
-      status: "isRegistrable",
+      status: "isOpenForAll",
       activeStatus: "isActive",
     };
 
@@ -288,13 +282,14 @@ export default function CoursesPage() {
   const handleFilterChange = (newQuery: any) => {
     dispatch(setQuery(newQuery));
   };
-
   const handleFilterClear = () => {
+    // Reset search input
+    setSearchInputValue("");
+
     dispatch(
       setQuery({
         pageNumber: 1,
         itemsPerpage: query.itemsPerpage,
-        searchQuery: query.searchQuery,
         orderBy: undefined,
         isDesc: false,
         filters: {},
@@ -311,7 +306,7 @@ export default function CoursesPage() {
 
   return (
     <DefaultLayout>
-      <div className="p-6">
+      <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Courses</h1>
           <Button
@@ -328,9 +323,10 @@ export default function CoursesPage() {
           {/* Search and filter container */}
           <div className="flex items-center gap-4 mb-2">
             <div className="relative flex-1">
+              {" "}
               <Input
                 className="pl-10 w-full rounded-xl"
-                placeholder="Search courses..."
+                placeholder="Search course names..."
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
               />
@@ -358,7 +354,7 @@ export default function CoursesPage() {
               {filterChips.map((chip) => (
                 <div
                   key={chip.id}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs"
+                  className="bg-orange-100 text-primary px-3 py-1 rounded-full text-xs"
                 >
                   {chip.label}
                 </div>
@@ -375,13 +371,12 @@ export default function CoursesPage() {
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
             onActiveToggle={handleActiveToggle}
-            onRegistrationToggle={handleRegistrationToggle}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
           />
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="flex justify-end">
           <Pagination
             page={query.pageNumber}
             total={Math.ceil(total / query.itemsPerpage)}

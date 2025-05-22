@@ -1,14 +1,12 @@
 import React from "react";
-import { Button } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import {
   ArrowDown,
   ArrowUp,
-  Check,
   ChevronDown,
   ChevronUp,
   Power,
   PowerOff,
-  X,
 } from "lucide-react";
 import {
   Table as HeroTable,
@@ -31,7 +29,6 @@ interface CourseTableProps {
   sortDirection?: "asc" | "desc";
   onSort?: (key: string) => void;
   onRowToggle: (courseId: string) => void;
-  onRegistrationToggle: (course: Course) => void;
   onActiveToggle: (course: Course) => void;
 }
 
@@ -50,7 +47,6 @@ export const CourseTable: React.FC<CourseTableProps> = ({
   sortDirection,
   onSort,
   onRowToggle,
-  onRegistrationToggle,
   onActiveToggle,
 }) => {
   const renderSortIcon = (key: string) => {
@@ -85,26 +81,37 @@ export const CourseTable: React.FC<CourseTableProps> = ({
     },
     {
       key: "major",
-      title: "Major",
-      sortable: true,
+      title: "Applicable Majors",
+      sortable: false,
       render: (course: Course) => (
-        <div
-          className="max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis text-sm"
-          title={course.major?.name || "No major assigned"}
-        >
-          {course.major?.name || "No major assigned"}
+        <div className="max-w-[250px] w-full overflow-hidden flex flex-wrap gap-1">
+          {course.isOpenForAll ? (
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+              All Majors
+            </span>
+          ) : course.majors && course.majors.length > 0 ? (
+            course.majors.map((major) => (
+              <Tooltip key={major.id} content={major.name}>
+                <span className="bg-orange-100 text-primary px-2 py-1 rounded-full text-xs cursor-help">
+                  {major.code}
+                </span>
+              </Tooltip>
+            ))
+          ) : (
+            <span className="text-gray-500 text-xs">None</span>
+          )}
         </div>
       ),
     },
     {
       key: "status",
-      title: "Status",
+      title: "Open For All",
       sortable: true,
       render: (course: Course) => (
         <span
-          className={`px-2 py-1 rounded text-sm ${course.isRegistrable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          className={`px-2 py-1 rounded text-sm ${course.isOpenForAll ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
-          {course.isRegistrable ? "Registrable" : "Not Registrable"}
+          {course.isOpenForAll ? "Open For All" : "Not Open For All"}
         </span>
       ),
     },
@@ -125,18 +132,6 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       title: "Actions",
       render: (course: Course) => (
         <div className="flex gap-2">
-          <Button
-            className="flex items-center gap-1 h-8 px-3 font-medium"
-            color={course.isRegistrable ? "danger" : "success"}
-            size="sm"
-            startContent={
-              course.isRegistrable ? <X size={16} /> : <Check size={16} />
-            }
-            variant="flat"
-            onPress={() => onRegistrationToggle(course)}
-          >
-            {course.isRegistrable ? "Unregistry" : "Registry"}
-          </Button>
           <Button
             className="flex items-center gap-1 h-8 px-3 font-medium"
             color={course.isActive ? "danger" : "success"}
@@ -184,8 +179,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             <p className="text-gray-600">
               {course.description || "No description available"}
             </p>
-          </div>
-
+          </div>{" "}
           {/* Credit info */}
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">
@@ -193,14 +187,32 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             </h4>
             <p className="text-gray-600">Credit: {course.credit}</p>
             <p className="text-gray-600">
-              Major: {course.major?.name || "No major assigned"}
+              Is Open For All: {course.isOpenForAll ? "Yes" : "No"}
             </p>
             <p className="text-gray-600">
-              Major Code: {course.major?.code || "N/A"}
+              Majors:{" "}
+              {course.isOpenForAll
+                ? "All Majors"
+                : course.majors?.map((m) => m.name).join(", ") || "None"}
             </p>
-            <p className="text-gray-600">
-              Cost per Credit: {course.major?.costPerCredit || 0}$
-            </p>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {course.isOpenForAll ? (
+                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                  All
+                </span>
+              ) : course.majors && course.majors.length > 0 ? (
+                course.majors.map((major) => (
+                  <span
+                    key={major.id}
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                  >
+                    {major.code}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-xs">None</span>
+              )}
+            </div>
             <p className="text-gray-600">
               Minimum Credit Required: {course.minCreditRequired || 0}
             </p>
@@ -208,7 +220,6 @@ export const CourseTable: React.FC<CourseTableProps> = ({
               Practice Period: {course.practicePeriod}
             </p>
           </div>
-
           {/* Course Certificates */}
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">Certificates</h4>
@@ -225,7 +236,6 @@ export const CourseTable: React.FC<CourseTableProps> = ({
               <p className="text-gray-600">No certificates available</p>
             )}
           </div>
-
           {/* Course Materials */}
           <div>
             <h4 className="font-semibold text-gray-700 mb-2">Materials</h4>

@@ -1,7 +1,7 @@
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
-import { CourseQuery } from "./course.schema";
+import { Course, CourseQuery } from "./course.schema";
 import {
   CourseListResponse,
   CourseResponse,
@@ -17,11 +17,6 @@ export const courseService = {
       "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
     };
 
-    // Add search query if provided
-    if (query.searchQuery) {
-      params["Filter.SearchQuery"] = query.searchQuery;
-    }
-
     // Add order parameters if provided
     if (query.orderBy) {
       params["Order.By"] =
@@ -32,23 +27,26 @@ export const courseService = {
       params["Order.IsDesc"] = query.isDesc.toString();
     }
 
+    if (query.filters?.name) {
+      params["Filter.Name"] = query.filters.name;
+    }
+
+    if (query.filters?.code) {
+      params["Filter.Code"] = query.filters.code;
+    }
+
     // Add credit range if provided
     if (query.filters?.creditRange) {
       params["Filter.MinCredit"] = query.filters.creditRange[0].toString();
       params["Filter.MaxCredit"] = query.filters.creditRange[1].toString();
     }
 
-    // Add major IDs if provided
-    if (query.filters?.majorIds?.length) {
-      params["Filter.MajorId"] = query.filters.majorIds.join(",");
-    }
-
     // Add boolean filters if provided
     if (
-      query.filters?.isRegistrable !== undefined &&
-      query.filters.isRegistrable !== null
+      query.filters?.isOpenForAll !== undefined &&
+      query.filters.isOpenForAll !== null
     ) {
-      params["Filter.IsRegistrable"] = query.filters.isRegistrable.toString();
+      params["Filter.IsOpenForAll"] = query.filters.isOpenForAll.toString();
     }
 
     if (
@@ -72,6 +70,12 @@ export const courseService = {
     Object.entries(params).forEach(([key, value]) => {
       searchParams.append(key, value);
     });
+
+    if (query.filters?.majorIds?.length) {
+      query.filters.majorIds.forEach((id) => {
+        searchParams.append("Filter.MajorIds", id);
+      });
+    }
 
     // Add preCourseIds as multiple parameters with the same name
     if (query.filters?.preCourseIds?.length) {
@@ -133,5 +137,12 @@ export const courseService = {
         },
       }
     );
+  },
+  getCoursesByMajorId: async (majorId: string): Promise<{ data: Course[] }> => {
+    return courseClient.get(`${API_ENDPOINTS.COURSES}/major/${majorId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   },
 };
