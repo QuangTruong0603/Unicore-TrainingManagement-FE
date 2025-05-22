@@ -98,9 +98,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
       render: (roadmap: TrainingRoadmap) => (
         <div className="max-w-[250px] overflow-hidden whitespace-nowrap text-ellipsis text-sm">
           {roadmap.majorData ? (
-            <span title={roadmap.majorData.name}>
-              {roadmap.majorData.name} ({roadmap.majorData.code})
-            </span>
+            <span title={roadmap.majorData.name}>{roadmap.majorData.name}</span>
           ) : (
             roadmap.majorId
           )}

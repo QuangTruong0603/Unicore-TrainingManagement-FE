@@ -35,6 +35,7 @@ import {
   updateRoadmapStatus,
 } from "@/store/slices/trainingRoadmapSlice";
 import { trainingRoadmapService } from "@/services/training-roadmap/training-roadmap.service";
+import "./index.scss";
 
 interface FilterChip {
   id: string;
@@ -341,7 +342,7 @@ const TrainingRoadmapPage: React.FC = () => {
 
   return (
     <DefaultLayout>
-      <div className="p-6">
+      <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Training Roadmaps</h1>
           <Button
@@ -399,7 +400,6 @@ const TrainingRoadmapPage: React.FC = () => {
           )}
         </div>{" "}
         <div className="bg-white rounded-lg shadow">
-          {" "}
           <TrainingRoadmapTable
             expandedRows={expandedRows}
             isLoading={isLoading}

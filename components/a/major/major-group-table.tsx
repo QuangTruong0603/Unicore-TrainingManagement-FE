@@ -63,11 +63,11 @@ export const MajorGroupTable = ({
           <div className="flex items-center">Name {renderSortIcon("name")}</div>
         </TableColumn>
         <TableColumn
-          className={`cursor-pointer ${sortKey === "department.name" ? "text-primary" : ""}`}
-          onClick={() => handleSort("department.name")}
+          className={`cursor-pointer ${sortKey === "department" ? "text-primary" : ""}`}
+          onClick={() => handleSort("department")}
         >
           <div className="flex items-center">
-            Department {renderSortIcon("department.name")}
+            Department {renderSortIcon("department")}
           </div>
         </TableColumn>
         <TableColumn
