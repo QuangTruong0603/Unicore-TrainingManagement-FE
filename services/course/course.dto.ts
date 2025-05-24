@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { BaseResponse, PaginatedResponse } from "../dto";
-import { Major } from "../major/major.schema";
 
 import {
   Course,
@@ -16,12 +15,11 @@ export interface CreateCourseData {
   name: string;
   description: string;
   cost: number;
-  isRegistrable: boolean;
   credit: number;
   practicePeriod: number;
   isRequired: boolean;
-  majorId: string;
-  major: Major;
+  isOpenForAll: boolean;
+  majorIds: string[];
   minCreditRequired: number | null;
   preCourseIds: string[] | null;
   parallelCourseId: string[] | null;
@@ -34,12 +32,11 @@ export interface UpdateCourseData {
   name?: string;
   description?: string;
   cost?: number;
-  isRegistrable?: boolean;
   credit?: number;
   practicePeriod?: number;
   isRequired?: boolean;
-  majorId?: string;
-  major?: Major;
+  isOpenForAll?: boolean;
+  majorIds?: string[];
   minCreditRequired?: number | null;
   preCourseIds?: string[] | null;
   parallelCourseId?: string[] | null;

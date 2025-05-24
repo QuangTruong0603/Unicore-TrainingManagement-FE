@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "../api/api-config";
 import { buildingClient } from "../api/http-client";
+import { BaseResponse } from "../dto";
 
 import {
   Floor,
@@ -7,6 +8,7 @@ import {
   FloorQuery,
   CreateFloorDto,
   UpdateFloorDto,
+  FloorResponse,
 } from "./floor.schema";
 
 class FloorService {
@@ -60,7 +62,7 @@ class FloorService {
     });
   }
 
-  async createFloor(data: CreateFloorDto): Promise<Floor> {
+  async createFloor(data: CreateFloorDto): Promise<FloorResponse> {
     return buildingClient.post(API_ENDPOINTS.FLOORS, data, {
       headers: {
         accept: "text/plain",
@@ -68,7 +70,7 @@ class FloorService {
     });
   }
 
-  async updateFloor(id: string, data: UpdateFloorDto): Promise<Floor> {
+  async updateFloor(id: string, data: UpdateFloorDto): Promise<FloorResponse> {
     return buildingClient.put(`${API_ENDPOINTS.FLOORS}/${id}`, data, {
       headers: {
         accept: "text/plain",
@@ -76,7 +78,7 @@ class FloorService {
     });
   }
 
-  async activateFloor(id: string): Promise<Floor> {
+  async activateFloor(id: string): Promise<FloorResponse> {
     return buildingClient.post(
       `${API_ENDPOINTS.FLOORS}/${id}/activate`,
       {},
@@ -88,7 +90,7 @@ class FloorService {
     );
   }
 
-  async deactivateFloor(id: string): Promise<Floor> {
+  async deactivateFloor(id: string): Promise<FloorResponse> {
     return buildingClient.post(
       `${API_ENDPOINTS.FLOORS}/${id}/deactivate`,
       {},
@@ -100,42 +102,51 @@ class FloorService {
     );
   }
 
-  async toggleStatus(id: string): Promise<Floor> {
+  async toggleStatus(id: string): Promise<FloorResponse> {
     const floor = await this.getFloorById(id);
 
-    if (floor.isActive) {
+    if (floor.data.isActive) {
       return this.deactivateFloor(id);
     } else {
       return this.activateFloor(id);
     }
   }
 
-  async getFloorById(id: string): Promise<Floor> {
+  async getFloorById(id: string): Promise<FloorResponse> {
     return buildingClient.get(`${API_ENDPOINTS.FLOORS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
-  }  
-  async getAllFloors(locationId?: string, buildingId?: string): Promise<Floor[]> {
+  }
+  async getAllFloors(
+    locationId?: string,
+    buildingId?: string
+  ): Promise<BaseResponse<Floor[]>> {
     // If locationId is provided, use the new endpoint
     if (locationId) {
-      return buildingClient.get(`${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`, {
-        headers: {
-          accept: "text/plain",
-        },
-      });
+      return buildingClient.get(
+        `${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`,
+        {
+          headers: {
+            accept: "text/plain",
+          },
+        }
+      );
     }
-    
+
     // If only buildingId is provided
     if (buildingId) {
-      return buildingClient.get(`${API_ENDPOINTS.FLOORS}?buildingId=${buildingId}`, {
-        headers: {
-          accept: "text/plain",
-        },
-      });
+      return buildingClient.get(
+        `${API_ENDPOINTS.FLOORS}?buildingId=${buildingId}`,
+        {
+          headers: {
+            accept: "text/plain",
+          },
+        }
+      );
     }
-    
+
     // Default case - get all floors
     return buildingClient.get(`${API_ENDPOINTS.FLOORS}`, {
       headers: {
@@ -145,12 +156,17 @@ class FloorService {
   }
 
   // New method to get floors by location
-  async getFloorsByLocation(locationId: string): Promise<Floor[]> {
-    return buildingClient.get(`${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
+  async getFloorsByLocation(
+    locationId: string
+  ): Promise<BaseResponse<Floor[]>> {
+    return buildingClient.get(
+      `${API_ENDPOINTS.FLOORS}/byLocation/${locationId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   }
 }
 

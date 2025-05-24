@@ -27,5 +27,5 @@ export interface MajorGroupQuery {
 
 export interface MajorGroupResponse {
   data: MajorGroup[];
-  total: number;
+  // total: number;
 }

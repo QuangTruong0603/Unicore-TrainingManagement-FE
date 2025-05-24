@@ -6,13 +6,13 @@ import { useApiGet, useApiPost } from "../api/api-hooks";
 
 import { CourseQuery } from "./course.schema";
 import { CreateCourseData, UpdateCourseData } from "./course.dto";
+import { courseService } from "./course.service";
 
 // React Query implementation
 export const useCourses = (query: CourseQuery) => {
   const params = {
     "Pagination.PageNumber": query.pageNumber.toString(),
     "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
-    ...(query.searchQuery && { "Filter.SearchQuery": query.searchQuery }),
     ...(query.isDesc && { "Order.IsDesc": query.isDesc.toString() }),
   };
 
@@ -28,7 +28,6 @@ export const useCoursesWithCustomHook = (query: CourseQuery) => {
   const params = {
     "Pagination.PageNumber": query.pageNumber.toString(),
     "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
-    ...(query.searchQuery && { "Filter.SearchQuery": query.searchQuery }),
     ...(query.isDesc && { "Order.IsDesc": query.isDesc.toString() }),
   };
 
@@ -65,10 +64,11 @@ export const useUpdateCourse = () => {
   });
 };
 
-// Mutation for deleting a course
-export const useDeleteCourse = () => {
-  return useMutation({
-    mutationFn: (id: string) =>
-      courseClient.delete(`${API_ENDPOINTS.COURSES}/${id}`),
+// Hook for getting courses by major ID
+export const useCoursesByMajorId = (majorId: string) => {
+  return useQuery({
+    queryKey: ["coursesByMajor", majorId],
+    queryFn: () => courseService.getCoursesByMajorId(majorId),
+    enabled: !!majorId,
   });
 };

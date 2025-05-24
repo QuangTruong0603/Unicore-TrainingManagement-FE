@@ -7,8 +7,8 @@ interface CourseFilters {
   costRange?: [number, number];
   creditRange?: [number, number];
   majorIds?: string[];
-  isRegistrable?: boolean | null;
   isActive?: boolean | null;
+  isOpenForAll?: boolean | null;
   practicePeriod?: number;
   isRequired?: boolean | null;
   minCreditRequired?: number;
@@ -34,7 +34,6 @@ const initialState: CourseState = {
   query: {
     pageNumber: 1,
     itemsPerpage: 10,
-    searchQuery: "",
     orderBy: undefined,
     isDesc: false,
   },

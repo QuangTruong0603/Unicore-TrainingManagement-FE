@@ -6,7 +6,10 @@ import React from "react";
 import { CreateLocationModal } from "./create-location-modal";
 import { UpdateLocationModal } from "./update-location-modal";
 
-import { CreateLocationData, UpdateLocationData } from "@/services/location/location.dto";
+import {
+  CreateLocationData,
+  UpdateLocationData,
+} from "@/services/location/location.dto";
 import { Location } from "@/services/location/location.schema";
 
 // Export both modal components

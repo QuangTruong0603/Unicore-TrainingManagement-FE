@@ -24,7 +24,7 @@ import {
   Tooltip,
 } from "@heroui/react";
 
-import { useCourses } from "@/services/course/course.hooks";
+import { useCoursesByMajorId } from "@/services/course/course.hooks";
 import { useCourseGroupsByMajorId } from "@/services/training-roadmap/training-roadmap.hooks";
 import useConfirmDialog from "@/hooks/useConfirmDialog";
 import {
@@ -68,14 +68,18 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
   } = useDisclosure();
 
   // Fetch all available courses
-  const { data: coursesData } = useCourses({
-    pageNumber: 1,
-    itemsPerpage: 100,
-    searchQuery: "",
-    isDesc: false,
-  });
+  // const { data: coursesData } = useCourses({
+  //   pageNumber: 1,
+  //   itemsPerpage: 1000,
+  //   isDesc: false,
+  //   filters: {
+  //     majorIds: [roadmap.majorId],
+  //   },
+  // });
 
-  const availableCourses = coursesData?.data?.data || [];
+  const { data: coursesData } = useCoursesByMajorId(roadmap.majorId);
+
+  const availableCourses = coursesData?.data || [];
   // Fetch course groups by major ID
   const { data: courseGroupsData, refetch: refetchCourseGroups } =
     useCourseGroupsByMajorId(roadmap?.majorId);
@@ -132,6 +136,7 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                   groupName: currentGroupName,
                   courses: selectedCourses,
                   updatedAt: new Date().toISOString(),
+                  majorId: roadmap?.majorId,
                 }
               : group
           )
@@ -146,6 +151,7 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                   groupName: currentGroupName,
                   courses: selectedCourses,
                   updatedAt: new Date().toISOString(),
+                  majorId: roadmap?.majorId,
                 }
               : group
           )
@@ -162,6 +168,7 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
         createdBy: null,
         updatedBy: null,
         majorId: roadmap?.majorId,
+        credit: selectedCourses[0]?.credit || 0,
       };
 
       setDraftCourseGroups((prevGroups) => [...prevGroups, newGroup]);
@@ -505,82 +512,87 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                       <TableColumn>CREDITS</TableColumn>
                     </TableHeader>
                     <TableBody>
-                      {getFilteredCourses().map(
-                        (course: {
-                          id: string;
-                          code: string;
-                          name: string;
-                          credit: number;
-                        }) => {
-                          const isSelected: boolean =
-                            selectedCourseIds.includes(course.id);
-                          const isUsedInOtherGroup =
-                            !isSelected && isCourseUsedInOtherGroup(course.id);
+                      <>
+                        {getFilteredCourses().map(
+                          (course: {
+                            id: string;
+                            code: string;
+                            name: string;
+                            credit: number;
+                          }) => {
+                            const isSelected: boolean =
+                              selectedCourseIds.includes(course.id);
+                            const isUsedInOtherGroup =
+                              !isSelected &&
+                              isCourseUsedInOtherGroup(course.id);
 
-                          return (
-                            <TableRow
-                              key={course.id}
-                              className={
-                                isSelected
-                                  ? "bg-primary-50"
-                                  : isUsedInOtherGroup
-                                    ? "bg-gray-100"
-                                    : ""
-                              }
-                            >
-                              <TableCell>
-                                <Button
-                                  isIconOnly
-                                  color={isSelected ? "primary" : "default"}
-                                  isDisabled={isUsedInOtherGroup}
-                                  size="sm"
-                                  variant={isSelected ? "solid" : "bordered"}
-                                  onClick={() =>
-                                    handleCourseSelection(course.id)
-                                  }
-                                >
-                                  {isSelected ? (
-                                    <Trash size={14} />
-                                  ) : (
-                                    <Plus size={14} />
-                                  )}
-                                </Button>
-                              </TableCell>
-                              <TableCell>{course.code}</TableCell>
-                              <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-                                <Tooltip
-                                  content={
-                                    isUsedInOtherGroup
-                                      ? `${course.name} (already in another group)`
-                                      : course.name
-                                  }
-                                >
-                                  <span
-                                    className={
-                                      isUsedInOtherGroup ? "text-gray-400" : ""
+                            return (
+                              <TableRow
+                                key={course.id}
+                                className={
+                                  isSelected
+                                    ? "bg-primary-50"
+                                    : isUsedInOtherGroup
+                                      ? "bg-gray-100"
+                                      : ""
+                                }
+                              >
+                                <TableCell>
+                                  <Button
+                                    isIconOnly
+                                    color={isSelected ? "primary" : "default"}
+                                    isDisabled={isUsedInOtherGroup}
+                                    size="sm"
+                                    variant={isSelected ? "solid" : "bordered"}
+                                    onClick={() =>
+                                      handleCourseSelection(course.id)
                                     }
                                   >
-                                    {course.name}
-                                    {isUsedInOtherGroup && " (assigned)"}
-                                  </span>
-                                </Tooltip>
-                              </TableCell>
-                              <TableCell>
-                                <Badge color="primary" variant="flat">
-                                  {course.credit}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        }
-                      )}
-                      {getFilteredCourses().length === 0 && (
-                        <TableRow>
-                          <TableCell className="text-center py-4" colSpan={4}>
-                            No courses found matching your search
-                          </TableCell>
-                        </TableRow>
-                      )}
+                                    {isSelected ? (
+                                      <Trash size={14} />
+                                    ) : (
+                                      <Plus size={14} />
+                                    )}
+                                  </Button>
+                                </TableCell>
+                                <TableCell>{course.code}</TableCell>
+                                <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                                  <Tooltip
+                                    content={
+                                      isUsedInOtherGroup
+                                        ? `${course.name} (already in another group)`
+                                        : course.name
+                                    }
+                                  >
+                                    <span
+                                      className={
+                                        isUsedInOtherGroup
+                                          ? "text-gray-400"
+                                          : ""
+                                      }
+                                    >
+                                      {course.name}
+                                      {isUsedInOtherGroup && " (assigned)"}
+                                    </span>
+                                  </Tooltip>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge color="primary" variant="flat">
+                                    {course.credit}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+                        )}
+                        {getFilteredCourses().length === 0 && (
+                          <TableRow>
+                            <TableCell className="text-center py-4" colSpan={4}>
+                              No courses found matching your search
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
                     </TableBody>
                   </Table>
                 </div>

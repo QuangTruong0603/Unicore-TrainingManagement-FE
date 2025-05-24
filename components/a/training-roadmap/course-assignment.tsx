@@ -30,7 +30,7 @@ import {
 } from "@heroui/react";
 
 import { useAddComponentsToTrainingRoadmap } from "@/services/training-roadmap/training-roadmap.hooks";
-import { useCourses } from "@/services/course/course.hooks";
+import { useCoursesByMajorId } from "@/services/course/course.hooks";
 import { useCourseGroupsByMajorId } from "@/services/training-roadmap/training-roadmap.hooks";
 import {
   TrainingRoadmap,
@@ -108,22 +108,16 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
     onOpen: onAddCourseGroupModalOpen,
     onClose: onAddCourseGroupModalClose,
   } = useDisclosure();
-
   // Ref for horizontal scrolling container
   const semestersContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all available courses
-  const { data: coursesData } = useCourses({
-    pageNumber: 1,
-    itemsPerpage: 100,
-    searchQuery: "",
-    isDesc: false,
-  });
+  // Fetch courses by major ID instead of all courses
+  const { data: coursesByMajorData } = useCoursesByMajorId(roadmap?.majorId);
 
   // Fetch course groups
   const { data: courseGroupsData } = useCourseGroupsByMajorId(roadmap?.majorId);
 
-  const availableCourses = coursesData?.data?.data || [];
+  const availableCourses = coursesByMajorData?.data || [];
 
   // Filter courses based on search query
   const getFilteredCourses = () => {
@@ -222,6 +216,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
       }));
 
     // Get course groups from draft assignments
+    // console.log("Draft course groups:", draftCourseGroupAssignments);
     const draftCourseGroups = draftCourseGroupAssignments
       .filter((g) => g.semesterNumber === semesterNumber)
       .map((g) => ({
@@ -239,9 +234,11 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
             (total: number, course: Course) => total + (course.credit || 0),
             0
           ) || 0,
-        credit: g.coursesGroup?.courses?.[0]?.credit || 0, // First course credit for display
+        credit:
+          g.coursesGroup?.credit || g.coursesGroup?.courses?.[0]?.credit || 0, // Use coursesGroup.credit first
         code: `Group-${g.coursesGroupId?.substring(0, 4)}`, // Generate a code for display
         name: g.coursesGroup?.groupName || "Course Group", // Use group name for display
+        coursesGroup: g.coursesGroup, // Include the full coursesGroup object
       }));
 
     return [...draftCourses, ...draftCourseGroups];
@@ -285,7 +282,6 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
           name: selectedCourse.name,
           description: selectedCourse.description,
           credit: selectedCourse.credit,
-          majorId: selectedCourse.majorId,
         },
       })
     );
@@ -367,7 +363,6 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
           name: newCourse.name,
           description: newCourse.description,
           credit: newCourse.credit,
-          majorId: newCourse.majorId,
         },
       })
     );
@@ -450,9 +445,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
       };
 
       // Call the API to add components
-      await addComponentsMutation.mutateAsync(payload);
-
-      // Wait a moment for the API update to complete
+      await addComponentsMutation.mutateAsync(payload); // Wait a moment for the API update to complete
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Clear draft assignments in Redux
@@ -460,8 +453,8 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
 
       // Refresh parent component to fetch the latest data from the server
       onUpdate();
-    } catch (_error) {
-      // Handle error silently
+    } catch {
+      // Handle error silently (no variable needed)
     } finally {
       setIsSubmitting(false);
     }
@@ -485,7 +478,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
   };
 
   return (
-    <div className="mt-10">
+    <div>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold">Course Assignment</h2>
@@ -582,7 +575,9 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                       >
                         <div className="flex justify-between items-start mb-1">
                           <h4 className="font-medium truncate pr-2">
-                            {course.name}
+                            {course.type === "courseGroup"
+                              ? course.groupName
+                              : course.name}
                           </h4>{" "}
                           <Badge
                             className="whitespace-nowrap flex-shrink-0 min-w-[65px] text-center"
@@ -597,14 +592,8 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500 mb-1 truncate">
-                          Code: {course.code}
-                        </p>{" "}
-                        {course.type === "courseGroup" && (
-                          <p className="text-xs text-purple-600 mb-2 flex items-center gap-1">
-                            <Layers size={12} />
-                            Group: {course.groupName || "Course Group"}
-                          </p>
-                        )}{" "}
+                          {course.code}
+                        </p>
                         <div className="flex justify-end gap-1">
                           <Tooltip
                             content={

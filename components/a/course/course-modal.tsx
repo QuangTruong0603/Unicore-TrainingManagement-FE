@@ -62,8 +62,8 @@ export function CourseModal({
             description: "",
             credit: 0,
             minCreditRequired: 0,
-            majorId: "",
-            isRegistrable: true,
+            majorIds: [],
+            isOpenForAll: false,
             practicePeriod: 0,
             isRequired: true,
             preCourseIds: [],
@@ -76,8 +76,8 @@ export function CourseModal({
             name: course?.name || "",
             description: course?.description || "",
             credit: course?.credit || 0,
-            majorId: course?.majorId || "",
-            isRegistrable: course?.isRegistrable || false,
+            majorIds: course?.majorIds || [],
+            isOpenForAll: course?.isOpenForAll || false,
             practicePeriod: course?.practicePeriod || 0,
             isRequired: course?.isRequired || false,
             minCreditRequired: course?.minCreditRequired || 0,
@@ -124,8 +124,8 @@ export function CourseModal({
         name: course.name || "",
         description: course.description || "",
         credit: course.credit || 0,
-        majorId: course.majorId || "",
-        isRegistrable: course.isRegistrable || false,
+        majorIds: course.majorIds || [],
+        isOpenForAll: course.isOpenForAll || false,
         practicePeriod: course.practicePeriod || 0,
         isRequired: course.isRequired || false,
         minCreditRequired: course.minCreditRequired || 0,
@@ -139,8 +139,8 @@ export function CourseModal({
         description: "",
         credit: 0,
         minCreditRequired: 0,
-        majorId: "",
-        isRegistrable: true,
+        majorIds: [],
+        isOpenForAll: false,
         practicePeriod: 0,
         isRequired: true,
         preCourseIds: [],
@@ -179,6 +179,7 @@ export function CourseModal({
           <>
             <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
             <ModalBody>
+              {" "}
               <form
                 className="space-y-4"
                 id="course-form"
@@ -202,7 +203,6 @@ export function CourseModal({
                     </div>
                   </div>
                 )}
-
                 <div className="mb-0">
                   <label
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -218,54 +218,93 @@ export function CourseModal({
                     placeholder="Enter course description"
                     rows={4}
                   />
-                </div>
-
+                </div>{" "}
                 <div>
                   <label
                     className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="majorId"
+                    htmlFor="majorIds"
                   >
-                    Major
+                    Majors
                   </label>
                   <Controller
                     control={control}
-                    name="majorId"
+                    name="majorIds"
                     render={({ field }) => (
-                      <Autocomplete
-                        allowsCustomValue={false}
-                        className="w-full"
-                        defaultItems={majors}
-                        defaultSelectedKey={field.value}
-                        id="majorId"
-                        placeholder="Search and select a major"
-                        onSelectionChange={(key) => field.onChange(key)}
-                      >
-                        {(major) => (
-                          <AutocompleteItem
-                            key={major.id}
-                            textValue={`${major.name} - ${major.code}`}
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold">
-                                {major.name}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {major.code}
-                              </span>
-                            </div>
-                          </AutocompleteItem>
-                        )}
-                      </Autocomplete>
+                      <>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {field.value &&
+                            field.value.map((majorId) => {
+                              const selectedMajor = majors.find(
+                                (m) => m.id === majorId
+                              );
+
+                              return (
+                                selectedMajor && (
+                                  <Chip
+                                    key={majorId}
+                                    className="bg-primary-100 text-primary-700"
+                                    size="sm"
+                                    onClose={() => {
+                                      setValue(
+                                        "majorIds",
+                                        field.value!.filter(
+                                          (id) => id !== majorId
+                                        )
+                                      );
+                                    }}
+                                  >
+                                    {selectedMajor.code}
+                                  </Chip>
+                                )
+                              );
+                            })}
+                        </div>
+                        <Autocomplete
+                          allowsCustomValue={false}
+                          className="w-full"
+                          defaultItems={majors.filter(
+                            (m) => !field.value || !field.value.includes(m.id)
+                          )}
+                          id="majorIds"
+                          placeholder="Search and select majors"
+                          onSelectionChange={(key) => {
+                            if (
+                              key &&
+                              (!field.value ||
+                                !field.value.includes(key.toString()))
+                            ) {
+                              field.onChange([
+                                ...(field.value || []),
+                                key.toString(),
+                              ]);
+                            }
+                          }}
+                        >
+                          {(major) => (
+                            <AutocompleteItem
+                              key={major.id}
+                              textValue={`${major.name} - ${major.code}`}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-sm font-semibold">
+                                  {major.name}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {major.code}
+                                </span>
+                              </div>
+                            </AutocompleteItem>
+                          )}
+                        </Autocomplete>
+                      </>
                     )}
-                    rules={{ required: "Major is required" }}
                   />
-                  {errors.majorId && (
+                  {errors.majorIds && (
                     <p className="text-xs text-red-500 mt-1">
-                      {errors.majorId.message}
+                      {errors.majorIds.message}
                     </p>
                   )}
                 </div>
-
                 {mode === "create" && (
                   <>
                     <div className="grid grid-cols-2 gap-4">
@@ -304,7 +343,6 @@ export function CourseModal({
                         />
                       </div>
                     </div>
-
                     {/* Prerequisites Courses */}
                     <div>
                       <label
@@ -392,7 +430,6 @@ export function CourseModal({
                         )}
                       />
                     </div>
-
                     {/* Parallel Courses */}
                     <div>
                       <label
@@ -481,17 +518,18 @@ export function CourseModal({
                           </>
                         )}
                       />
-                    </div>
-
+                    </div>{" "}
                     <div className="flex flex-col space-y-3 mt-2">
-                      <div className="flex items-start">
-                        <Checkbox {...register("isRegistrable")}>
-                          <span className="text-sm">Is Registrable</span>
-                        </Checkbox>
-                      </div>
                       <div className="flex items-start">
                         <Checkbox {...register("isRequired")}>
                           <span className="text-sm">Is Required</span>
+                        </Checkbox>
+                      </div>
+                      <div className="flex items-start">
+                        <Checkbox {...register("isOpenForAll")}>
+                          <span className="text-sm">
+                            Is Open For All Majors
+                          </span>
                         </Checkbox>
                       </div>
                     </div>

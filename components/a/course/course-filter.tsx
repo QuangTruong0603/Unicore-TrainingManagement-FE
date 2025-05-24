@@ -33,9 +33,9 @@ interface FilterState {
   minCredit: number;
   maxCredit: number;
   majorIds: string[];
-  isRegistrable: boolean | null;
   isActive: boolean | null;
   isRequired: boolean | null;
+  isOpenForAll: boolean | null;
   preCourseIds: string[];
   parallelCourseIds: string[];
 }
@@ -58,9 +58,9 @@ export function CourseFilter({
     minCredit: 0,
     maxCredit: 10,
     majorIds: [],
-    isRegistrable: null,
     isActive: null,
     isRequired: null,
+    isOpenForAll: null,
     preCourseIds: [],
     parallelCourseIds: [],
   });
@@ -96,7 +96,6 @@ export function CourseFilter({
   const updateFilter = (key: keyof FilterState, value: any) => {
     setFilterState((prev) => ({ ...prev, [key]: value }));
   };
-
   // Remove a specific filter
   const removeFilter = (id: string) => {
     // Handle removing specific filters
@@ -104,7 +103,7 @@ export function CourseFilter({
       updateFilter("minCredit", 0);
       updateFilter("maxCredit", 10);
     } else if (id === "status") {
-      updateFilter("isRegistrable", null);
+      updateFilter("isOpenForAll", null);
     } else if (id === "active") {
       updateFilter("isActive", null);
     } else if (id === "majorIds") {
@@ -115,6 +114,8 @@ export function CourseFilter({
       updateFilter("preCourseIds", []);
     } else if (id === "parallelCourseIds") {
       updateFilter("parallelCourseIds", []);
+    } else if (id === "openForAll") {
+      updateFilter("isOpenForAll", null);
     }
 
     // Remove chip
@@ -137,9 +138,9 @@ export function CourseFilter({
             : undefined,
         majorIds:
           filterState.majorIds.length > 0 ? filterState.majorIds : undefined,
-        isRegistrable: filterState.isRegistrable,
         isActive: filterState.isActive,
         isRequired: filterState.isRequired,
+        isOpenForAll: filterState.isOpenForAll,
         preCourseIds:
           filterState.preCourseIds.length > 0
             ? filterState.preCourseIds
@@ -181,15 +182,6 @@ export function CourseFilter({
       });
     }
 
-    // Add course status chip
-    if (filterState.isRegistrable !== null) {
-      newChips.push({
-        id: "status",
-        label: `Status: ${filterState.isRegistrable ? "Registrable" : "Not Registrable"}`,
-        onRemove: () => removeFilter("status"),
-      });
-    }
-
     // Add active status chip
     if (filterState.isActive !== null) {
       newChips.push({
@@ -226,6 +218,15 @@ export function CourseFilter({
       });
     }
 
+    // Add open for all toggle chip
+    if (filterState.isOpenForAll !== null) {
+      newChips.push({
+        id: "openForAll",
+        label: `Open For All: ${filterState.isOpenForAll ? "Yes" : "No"}`,
+        onRemove: () => removeFilter("openForAll"),
+      });
+    }
+
     setFilterChips(newChips);
     applyFiltersToQuery();
     onClose();
@@ -237,9 +238,9 @@ export function CourseFilter({
       minCredit: 0,
       maxCredit: 10,
       majorIds: [],
-      isRegistrable: null,
       isActive: null,
       isRequired: null,
+      isOpenForAll: null,
       preCourseIds: [],
       parallelCourseIds: [],
     });
@@ -375,54 +376,6 @@ export function CourseFilter({
               </Select>
             </div>
 
-            {/* Status Toggle */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="status-toggle"
-              >
-                Course Status
-              </label>
-              <div className="flex gap-2" id="status-toggle" role="group">
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isRegistrable === true ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isRegistrable === true ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isRegistrable",
-                      filterState.isRegistrable === true ? null : true
-                    )
-                  }
-                >
-                  Registrable
-                </Button>
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isRegistrable === false ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isRegistrable === false ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isRegistrable",
-                      filterState.isRegistrable === false ? null : false
-                    )
-                  }
-                >
-                  Not Registrable
-                </Button>
-              </div>
-            </div>
-
             {/* Active Toggle */}
             <div className="mb-6">
               <label
@@ -509,6 +462,54 @@ export function CourseFilter({
                   }
                 >
                   Not Required
+                </Button>
+              </div>
+            </div>
+
+            {/* Open For All Toggle */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="open-for-all-toggle"
+              >
+                Open For All Majors
+              </label>
+              <div className="flex gap-2" id="open-for-all-toggle" role="group">
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isOpenForAll === true ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isOpenForAll === true ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isOpenForAll",
+                      filterState.isOpenForAll === true ? null : true
+                    )
+                  }
+                >
+                  Open For All
+                </Button>
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isOpenForAll === false ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isOpenForAll === false ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isOpenForAll",
+                      filterState.isOpenForAll === false ? null : false
+                    )
+                  }
+                >
+                  Major Specific
                 </Button>
               </div>
             </div>

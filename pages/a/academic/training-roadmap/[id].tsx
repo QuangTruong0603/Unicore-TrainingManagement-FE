@@ -9,6 +9,7 @@ import { useTrainingRoadmap } from "@/services/training-roadmap/training-roadmap
 import { TrainingRoadmap } from "@/services/training-roadmap/training-roadmap.schema";
 import CourseAssignment from "@/components/a/training-roadmap/course-assignment";
 import CourseGroupAssignment from "@/components/a/training-roadmap/course-group-assignment";
+import "./index.scss";
 
 const TrainingRoadmapDetailPage: React.FC = () => {
   const router = useRouter();
@@ -55,7 +56,7 @@ const TrainingRoadmapDetailPage: React.FC = () => {
 
       <div className="container mx-auto py-6 px-4">
         <div className="mb-6">
-          <Link passHref href="/training/training-roadmap">
+          <Link passHref href="/a/training/training-roadmap">
             <Button color="default" variant="flat">
               Back to Training Roadmaps
             </Button>
@@ -157,7 +158,7 @@ const TrainingRoadmapDetailPage: React.FC = () => {
         </div>
 
         {/* Tabs for Course Assignment and Course Group Assignment */}
-        <div className="mt-10">
+        <div className="mt-5">
           <Tabs aria-label="Training Roadmap Management">
             <Tab key="courses" title="Course Assignment">
               <CourseAssignment roadmap={roadmap} onUpdate={refetch} />

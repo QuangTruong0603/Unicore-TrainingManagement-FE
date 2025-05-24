@@ -54,7 +54,7 @@ export function CreateLocationModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+    <Modal isOpen={isOpen} size="2xl" onOpenChange={onOpenChange}>
       <ModalContent>
         {(onClose) => (
           <>

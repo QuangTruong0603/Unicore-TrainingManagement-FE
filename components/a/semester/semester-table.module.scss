@@ -1,0 +1,26 @@
+.expandableRow {
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.expandedContent {
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.status {
+  &.active {
+    color: green;
+  }
+
+  &.inactive {
+    color: red;
+  }
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+}

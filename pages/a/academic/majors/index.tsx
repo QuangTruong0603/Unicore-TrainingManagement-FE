@@ -23,6 +23,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { setQuery as setDepartmentQuery } from "@/store/slices/departmentSlice";
 import { setQuery as setMajorGroupQuery } from "@/store/slices/majorGroupSlice";
 import { setQuery as setMajorQuery } from "@/store/slices/majorSlice";
+import "./index.scss";
 
 // Custom hook for debounced values
 function useDebounce<T>(value: T, delay: number): T {
@@ -282,7 +283,7 @@ export default function MajorPage() {
 
   return (
     <DefaultLayout>
-      <div className="p-6">
+      <div className="container p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Majors Management</h1>
           <Button
