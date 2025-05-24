@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * A hook that provides a debounced value of the input.
- * Useful for delaying API calls or other operations until 
+ * Useful for delaying API calls or other operations until
  * a certain period of inactivity has passed.
- * 
+ *
  * @param value The value to be debounced
  * @param delay The delay in milliseconds (default: 500ms)
  * @returns The debounced value

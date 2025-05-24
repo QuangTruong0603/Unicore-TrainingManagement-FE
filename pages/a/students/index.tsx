@@ -196,7 +196,8 @@ export default function StudentsPage() {
     dispatch(
       openConfirmDialog({
         title: "Delete Student",
-        message: "Are you sure you want to delete this student? This action cannot be undone.",
+        message:
+          "Are you sure you want to delete this student? This action cannot be undone.",
         confirmText: "Delete",
         cancelText: "Cancel",
         onConfirm: async () => {
