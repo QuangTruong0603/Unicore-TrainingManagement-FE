@@ -73,7 +73,7 @@ export function SemesterFilterComponent({
 
   return (
     <div className="mb-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div>
           <label className="text-sm mb-1 block" htmlFor="semester-number-input">
             Semester Number
@@ -111,7 +111,6 @@ export function SemesterFilterComponent({
         </div>
 
         <div>
-          {" "}
           <label
             className="text-sm mb-1 block"
             htmlFor="semester-status-select"

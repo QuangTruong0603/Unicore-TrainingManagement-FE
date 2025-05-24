@@ -35,14 +35,14 @@ export default function SemestersPage() {
 
   // Table states
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [sortKey, setSortKey] = useState<string>("semesterNumber");
+  const [sortKey, setSortKey] = useState<string>("year");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Query states
   const [query, setQuery] = useState<SemesterQuery>({
     pageNumber: 1,
     itemsPerpage: 10,
-    orderBy: "semesterNumber",
+    orderBy: "year",
     isDesc: true,
   });
 
@@ -155,7 +155,7 @@ export default function SemestersPage() {
 
   return (
     <DefaultLayout>
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Semester Management</h1>
           <Button
@@ -173,29 +173,30 @@ export default function SemestersPage() {
           onFilterClear={handleFilterClear}
         />
 
-        <div className="bg-white rounded-lg shadow mb-6">
-          <SemesterTable
-            expandedRows={expandedRows}
-            isLoading={isLoading}
-            semesters={semestersData?.data.data || []}
-            sortDirection={sortDirection}
-            sortKey={sortKey}
-            onActiveToggle={handleActiveToggle}
-            onEdit={handleEditClick}
-            onRowToggle={handleRowToggle}
-            onSort={handleSort}
-          />
+        <SemesterTable
+          expandedRows={expandedRows}
+          isLoading={isLoading}
+          semesters={semestersData?.data.data || []}
+          sortDirection={sortDirection}
+          sortKey={sortKey}
+          onActiveToggle={handleActiveToggle}
+          onEdit={handleEditClick}
+          onRowToggle={handleRowToggle}
+          onSort={handleSort}
+        />
 
-          {semestersData && semestersData.data.total > 1 && (
-            <div className="flex justify-center py-4">
-              <Pagination
-                initialPage={query.pageNumber}
-                total={semestersData.data.total}
-                onChange={handlePageChange}
-              />
-            </div>
-          )}
-        </div>
+        {semestersData && semestersData.data.total > 1 && (
+          <div className="flex justify-end py-4">
+            <Pagination
+              initialPage={query.pageNumber}
+              // total={semestersData.data.total}
+              total={Math.ceil(
+                semestersData.data.total / semestersData.data.pageSize
+              )}
+              onChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
 
       <SemesterModal
