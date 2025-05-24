@@ -1,8 +1,85 @@
 import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import { StudentQuery } from "./student.schema";
 import { StudentListResponse } from "./student.dto";
+import { StudentProfile, Address, Guardian } from "@/components/s/sutdent-info/types";
+import { 
+  setStudentProfile, 
+  setProfileLoading, 
+  setProfileError, 
+  clearProfileChanges 
+} from "@/store/slices/studentSlice";
+
+export interface UpdateStudentProfileData {
+  phoneNumber?: string;
+  imageUrl?: string;
+  address?: Address;
+  guardians?: Guardian[];
+}
+
+// Thunk for fetching student profile
+export const fetchStudentProfile = createAsyncThunk(
+  'student/fetchProfile',
+  async (studentId: string, { dispatch }) => {
+    try {
+      dispatch(setProfileLoading(true));
+      dispatch(setProfileError(null));
+      
+      const response = await studentService.getStudentProfile(studentId);
+      
+      if (response.success) {
+        dispatch(setStudentProfile(response.data));
+        return response.data;
+      } else {
+        dispatch(setProfileError("Failed to load profile data"));
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching student profile:", error);
+      dispatch(setProfileError("An error occurred while fetching profile data"));
+      return null;
+    } finally {
+      dispatch(setProfileLoading(false));
+    }
+  }
+);
+
+// Thunk for updating student profile
+export const updateStudentProfile = createAsyncThunk(
+  'student/updateProfile',
+  async ({ studentId, data }: { studentId: string, data: UpdateStudentProfileData }, { dispatch }) => {
+    try {
+      dispatch(setProfileLoading(true));
+      
+      const response = await studentService.updateStudentProfile(studentId, data);
+      
+      if (response.success) {
+        // After successful update, fetch the complete profile again to ensure we have all data
+        const fullProfileResponse = await studentService.getStudentProfile(studentId);
+        
+        if (fullProfileResponse.success) {
+          dispatch(setStudentProfile(fullProfileResponse.data));
+          dispatch(clearProfileChanges());
+          return fullProfileResponse.data;
+        } else {
+          dispatch(setProfileError("Updated profile but failed to refresh data"));
+          return response.data; // Return what we have even if refresh failed
+        }
+      } else {
+        dispatch(setProfileError("Failed to update profile"));
+        return null;
+      }
+    } catch (error) {
+      console.error("Error updating student profile:", error);
+      dispatch(setProfileError("An error occurred while updating profile"));
+      return null;
+    } finally {
+      dispatch(setProfileLoading(false));
+    }
+  }
+);
 
 export const studentService = {
   getStudents: async (query: StudentQuery): Promise<StudentListResponse> => {
@@ -33,6 +110,18 @@ export const studentService = {
 
     return studentClient.get(`${API_ENDPOINTS.STUDENTS}/all`, {
       params,
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+  getStudentById: async (studentId: string): Promise<any> => {
+    return studentClient.get(`${API_ENDPOINTS.STUDENTS}/${studentId}`);
+  },
+  getStudentProfile: async (
+    studentId: string
+  ): Promise<{ success: boolean; data: StudentProfile }> => {
+    return studentClient.get(`${API_ENDPOINTS.STUDENTS}/${studentId}`, {
       headers: {
         accept: "text/plain",
       },
@@ -69,5 +158,16 @@ export const studentService = {
         },
       }
     );
+  },
+  updateStudentProfile: async (
+    studentId: string,
+    data: UpdateStudentProfileData
+  ): Promise<{ success: boolean; data: StudentProfile }> => {
+    return studentClient.put(`${API_ENDPOINTS.STUDENTS}/${studentId}`, data, {
+      headers: {
+        accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    });
   },
 };
