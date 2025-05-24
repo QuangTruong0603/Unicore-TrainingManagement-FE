@@ -2,6 +2,6 @@
     height: calc(100vh - 64px);
     overflow-y: scroll;
 }
-// .container::-webkit-scrollbar {
-//     display: none;
-// }
+.container::-webkit-scrollbar {
+    display: none;
+}
