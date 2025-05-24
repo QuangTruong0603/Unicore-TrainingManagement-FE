@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Edit } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { Edit, Upload } from "lucide-react";
 import {
   Avatar,
   Chip,
@@ -9,25 +9,83 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,
 } from "@heroui/react";
 
 import { StudentProfile } from "./types";
 
 interface ProfileHeaderProps {
   profile: StudentProfile;
-  onUpdate?: (imageUrl: string) => void;
+  onUpdateImage?: (imageFile: File) => void;
 }
 
-export const ProfileHeader = ({ profile, onUpdate }: ProfileHeaderProps) => {
+export const ProfileHeader = ({
+  profile,
+  onUpdateImage,
+}: ProfileHeaderProps) => {
   const [showModal, setShowModal] = useState(false);
-  const [imageUrl, setImageUrl] = useState(profile.imageUrl);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFileChange = useCallback((file: File) => {
+    setImageFile(file);
+    const fileUrl = URL.createObjectURL(file);
+
+    setPreviewUrl(fileUrl);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+
+        if (file.type.startsWith("image/")) {
+          handleFileChange(file);
+        }
+      }
+    },
+    [handleFileChange]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFileChange(e.target.files[0]);
+      }
+    },
+    [handleFileChange]
+  );
 
   const handleSave = () => {
-    if (onUpdate) {
-      onUpdate(imageUrl);
+    if (imageFile) {
+      if (onUpdateImage) {
+        onUpdateImage(imageFile);
+      }
+      setShowModal(false);
+      setImageFile(null);
+      setPreviewUrl(null);
     }
+  };
+
+  const closeModal = () => {
     setShowModal(false);
+    setImageFile(null);
+    setPreviewUrl(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
   };
 
   return (
@@ -39,15 +97,15 @@ export const ProfileHeader = ({ profile, onUpdate }: ProfileHeaderProps) => {
               showFallback
               className="w-24 h-24 text-xl border-2 border-purple-100"
               name={`${profile.firstName} ${profile.lastName}`}
-              src={profile.imageUrl}
+              src={profile.imageUrl || ""}
             />
             <Button
-              onClick={() => setShowModal(true)}
+              isIconOnly
               className="absolute bottom-0 right-0 p-1 min-w-0 h-auto"
               color="primary"
               size="sm"
-              isIconOnly
               title="Edit profile image"
+              onClick={() => setShowModal(true)}
             >
               <Edit size={14} />
             </Button>
@@ -80,41 +138,59 @@ export const ProfileHeader = ({ profile, onUpdate }: ProfileHeaderProps) => {
       </div>
 
       {/* Image Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+      <Modal isOpen={showModal} onClose={closeModal}>
         <ModalContent>
           <ModalHeader>Update Profile Image</ModalHeader>
           <ModalBody>
-            <div className="mb-4">
-              <label
-                htmlFor="imageUrl"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Image URL
-              </label>
-              <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL"
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                isDragging ? "border-primary bg-primary-50" : "border-gray-300"
+              }`}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <input
+                accept="image/*"
+                className="hidden"
+                id="file-upload"
+                type="file"
+                onChange={handleFileSelect}
               />
+              <label
+                className="cursor-pointer flex flex-col items-center justify-center"
+                htmlFor="file-upload"
+              >
+                <Upload className="w-12 h-12 text-gray-400 mb-2" />
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  Drag and drop an image here, or click to select a file
+                </p>
+                <p className="text-xs text-gray-500">
+                  (Only image files are accepted)
+                </p>
+              </label>
             </div>
 
-            {imageUrl && (
+            {previewUrl && (
               <div className="mt-4 flex justify-center">
                 <Avatar
                   showFallback
                   alt="Preview"
                   className="w-32 h-32 text-xl border-2 border-purple-100"
-                  src={imageUrl}
+                  src={previewUrl}
                 />
               </div>
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="default" onClick={() => setShowModal(false)}>
+            <Button color="default" onClick={closeModal}>
               Cancel
             </Button>
-            <Button color="primary" onClick={handleSave}>
+            <Button
+              color="primary"
+              isDisabled={!imageFile}
+              onClick={handleSave}
+            >
               Save
             </Button>
           </ModalFooter>

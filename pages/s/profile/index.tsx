@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Save, AlertCircle } from "lucide-react";
-
 import { Button, Card, Spinner } from "@heroui/react";
 
 import DefaultLayout from "../../../layouts/default";
@@ -14,10 +13,10 @@ import { Address, Guardian } from "@/components/s/sutdent-info/types";
 import {
   fetchStudentProfile,
   updateStudentProfile,
+  updateStudentProfileImage,
 } from "@/services/student/student.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  updateProfileImage,
   updateProfilePhone,
   updateProfileAddress,
   updateProfileGuardians,
@@ -68,10 +67,6 @@ export default function ProfilePage() {
     }
   }, [updateStatus]);
 
-  const handleImageUpdate = (imageUrl: string) => {
-    dispatch(updateProfileImage(imageUrl));
-  };
-
   const handlePhoneUpdate = (phoneNumber: string) => {
     dispatch(updateProfilePhone(phoneNumber));
   };
@@ -82,6 +77,17 @@ export default function ProfilePage() {
 
   const handleGuardiansUpdate = (guardians: Guardian[]) => {
     dispatch(updateProfileGuardians(guardians));
+  };
+
+  const handleImageFileUpdate = (imageFile: File) => {
+    if (!profile) return;
+
+    dispatch(
+      updateStudentProfileImage({
+        studentId: profile.id,
+        imageFile,
+      })
+    );
   };
 
   const handleSaveChanges = async () => {
@@ -107,7 +113,7 @@ export default function ProfilePage() {
         });
       }
     } catch (err) {
-      console.error(err);
+      console.log(err);
       setUpdateStatus({
         message: "An error occurred while updating profile",
         type: "error",
@@ -119,7 +125,7 @@ export default function ProfilePage() {
     return (
       <DefaultLayout>
         <div className="flex justify-center items-center h-full">
-          <Spinner size="lg" color="primary" />
+          <Spinner color="primary" size="lg" />
         </div>
       </DefaultLayout>
     );
@@ -181,15 +187,15 @@ export default function ProfilePage() {
 
             {hasChanges && (
               <Button
-                onClick={handleSaveChanges}
-                disabled={loading}
-                color="primary"
-                size="md"
                 className="flex items-center gap-2"
+                color="primary"
+                disabled={loading}
+                size="md"
+                onClick={handleSaveChanges}
               >
                 {loading ? (
                   <>
-                    <Spinner size="sm" color="white" />
+                    <Spinner color="white" size="sm" />
                     <span>Saving...</span>
                   </>
                 ) : (
@@ -211,7 +217,11 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <ProfileHeader profile={profile} onUpdate={handleImageUpdate} />
+        <ProfileHeader
+          profile={profile}
+          // onUpdate={handleImageUpdate}
+          onUpdateImage={handleImageFileUpdate}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
           <PersonalInfoSection profile={profile} onUpdate={handlePhoneUpdate} />
