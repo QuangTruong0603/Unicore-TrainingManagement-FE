@@ -15,7 +15,7 @@ import { StudentProfile } from "./types";
 
 interface ProfileHeaderProps {
   profile: StudentProfile;
-  onUpdateImage?: (imageFile: File) => void;
+  onUpdateImage?: (imageFile: File) => Promise<void>;
 }
 
 export const ProfileHeader = ({
@@ -26,6 +26,7 @@ export const ProfileHeader = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = useCallback((file: File) => {
     setImageFile(file);
@@ -68,18 +69,27 @@ export const ProfileHeader = ({
     [handleFileChange]
   );
 
-  const handleSave = () => {
-    if (imageFile) {
-      if (onUpdateImage) {
-        onUpdateImage(imageFile);
+  const handleSave = async () => {
+    if (imageFile && onUpdateImage) {
+      setIsLoading(true);
+      try {
+        await onUpdateImage(imageFile);
+        setShowModal(false);
+        setImageFile(null);
+        setPreviewUrl(null);
+      } catch (error) {
+        console.error("Error updating profile image:", error);
+      } finally {
+        setIsLoading(false);
       }
+    } else {
       setShowModal(false);
-      setImageFile(null);
-      setPreviewUrl(null);
     }
   };
 
   const closeModal = () => {
+    if (isLoading) return;
+
     setShowModal(false);
     setImageFile(null);
     setPreviewUrl(null);
@@ -153,12 +163,13 @@ export const ProfileHeader = ({
               <input
                 accept="image/*"
                 className="hidden"
+                disabled={isLoading}
                 id="file-upload"
                 type="file"
                 onChange={handleFileSelect}
               />
               <label
-                className="cursor-pointer flex flex-col items-center justify-center"
+                className={`cursor-pointer flex flex-col items-center justify-center ${isLoading ? "opacity-50" : ""}`}
                 htmlFor="file-upload"
               >
                 <Upload className="w-12 h-12 text-gray-400 mb-2" />
@@ -183,15 +194,16 @@ export const ProfileHeader = ({
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="default" onClick={closeModal}>
+            <Button color="default" disabled={isLoading} onClick={closeModal}>
               Cancel
             </Button>
             <Button
               color="primary"
-              isDisabled={!imageFile}
+              isDisabled={!imageFile || isLoading}
+              isLoading={isLoading}
               onClick={handleSave}
             >
-              Save
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </ModalFooter>
         </ModalContent>

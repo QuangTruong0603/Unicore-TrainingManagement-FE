@@ -17,7 +17,7 @@ import { Address } from "./types";
 
 interface AddressSectionProps {
   address: Address;
-  onUpdate?: (address: Address) => void;
+  onUpdate?: (address: Address) => Promise<void>;
 }
 
 const AddressSection: React.FC<AddressSectionProps> = ({
@@ -26,6 +26,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editAddress, setEditAddress] = useState<Address>({ ...address });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Create full address string
   const fullAddress = [
@@ -45,11 +46,20 @@ const AddressSection: React.FC<AddressSectionProps> = ({
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onUpdate) {
-      onUpdate(editAddress);
+      setIsLoading(true);
+      try {
+        await onUpdate(editAddress);
+        setShowModal(false);
+      } catch (error) {
+        console.error("Error updating address:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setShowModal(false);
     }
-    setShowModal(false);
   };
 
   return (
@@ -140,7 +150,11 @@ const AddressSection: React.FC<AddressSectionProps> = ({
       </Card>
 
       {/* Address Edit Modal */}
-      <Modal isOpen={showModal} size="lg" onClose={() => setShowModal(false)}>
+      <Modal
+        isOpen={showModal}
+        size="lg"
+        onClose={() => !isLoading && setShowModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Update Address Information</ModalHeader>
           <ModalBody>
@@ -153,6 +167,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   Country
                 </label>
                 <Input
+                  disabled={isLoading}
                   id="country"
                   placeholder="Enter country"
                   value={editAddress.country || ""}
@@ -168,6 +183,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   City
                 </label>
                 <Input
+                  disabled={isLoading}
                   id="city"
                   placeholder="Enter city"
                   value={editAddress.city || ""}
@@ -183,6 +199,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   District
                 </label>
                 <Input
+                  disabled={isLoading}
                   id="district"
                   placeholder="Enter district"
                   value={editAddress.district || ""}
@@ -198,6 +215,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   Ward
                 </label>
                 <Input
+                  disabled={isLoading}
                   id="ward"
                   placeholder="Enter ward"
                   value={editAddress.ward || ""}
@@ -214,6 +232,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 Address Detail
               </label>
               <Input
+                disabled={isLoading}
                 id="addressDetail"
                 placeholder="Enter address details"
                 value={editAddress.addressDetail || ""}
@@ -222,11 +241,20 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" onClick={() => setShowModal(false)}>
+            <Button
+              color="default"
+              disabled={isLoading}
+              onClick={() => setShowModal(false)}
+            >
               Cancel
             </Button>
-            <Button color="primary" onClick={handleSave}>
-              Save
+            <Button
+              color="primary"
+              disabled={isLoading}
+              isLoading={isLoading}
+              onClick={handleSave}
+            >
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import { studentClient } from "../api/http-client";
@@ -80,6 +81,7 @@ export const updateStudentProfile = createAsyncThunk(
         if (fullProfileResponse.success) {
           dispatch(setStudentProfile(fullProfileResponse.data));
           dispatch(clearProfileChanges());
+
           return fullProfileResponse.data;
         } else {
           dispatch(
@@ -96,6 +98,7 @@ export const updateStudentProfile = createAsyncThunk(
     } catch (error) {
       console.error("Error updating student profile:", error);
       dispatch(setProfileError("An error occurred while updating profile"));
+
       return null;
     } finally {
       dispatch(setProfileLoading(false));
@@ -139,15 +142,18 @@ export const updateStudentProfileImage = createAsyncThunk(
 
         if (fullProfileResponse.success) {
           dispatch(setStudentProfile(fullProfileResponse.data));
+
           return fullProfileResponse.data;
         } else {
           dispatch(
             setProfileError("Updated image but failed to refresh profile data")
           );
+
           return response.data;
         }
       } else {
         dispatch(setProfileError("Failed to update profile image"));
+
         return null;
       }
     } catch (error) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Save, AlertCircle } from "lucide-react";
-import { Button, Card, Spinner } from "@heroui/react";
+import { AlertCircle } from "lucide-react";
+import { Card, Spinner, addToast } from "@heroui/react";
 
 import DefaultLayout from "../../../layouts/default";
 import "./index.scss";
@@ -16,12 +16,7 @@ import {
   updateStudentProfileImage,
 } from "@/services/student/student.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  updateProfilePhone,
-  updateProfileAddress,
-  updateProfileGuardians,
-  setProfileError,
-} from "@/store/slices/studentSlice";
+import { setProfileError } from "@/store/slices/studentSlice";
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
@@ -29,8 +24,6 @@ export default function ProfilePage() {
     studentProfile: profile,
     profileLoading: loading,
     profileError: error,
-    profileUpdateData: updateData,
-    hasProfileChanges: hasChanges,
   } = useAppSelector((state) => state.student);
 
   const [updateStatus, setUpdateStatus] = useState<{
@@ -67,57 +60,151 @@ export default function ProfilePage() {
     }
   }, [updateStatus]);
 
-  const handlePhoneUpdate = (phoneNumber: string) => {
-    dispatch(updateProfilePhone(phoneNumber));
-  };
-
-  const handleAddressUpdate = (address: Address) => {
-    dispatch(updateProfileAddress(address));
-  };
-
-  const handleGuardiansUpdate = (guardians: Guardian[]) => {
-    dispatch(updateProfileGuardians(guardians));
-  };
-
-  const handleImageFileUpdate = (imageFile: File) => {
+  const handlePhoneUpdate = async (phoneNumber: string): Promise<void> => {
     if (!profile) return;
 
-    dispatch(
-      updateStudentProfileImage({
-        studentId: profile.id,
-        imageFile,
-      })
-    );
-  };
-
-  const handleSaveChanges = async () => {
-    if (!profile || !hasChanges) return;
-
     try {
-      const resultAction = await dispatch(
+      setUpdateStatus({ message: "Updating phone number...", type: null });
+
+      const result = await dispatch(
         updateStudentProfile({
           studentId: profile.id,
-          data: updateData,
+          data: { phoneNumber },
         })
       );
 
-      if (updateStudentProfile.fulfilled.match(resultAction)) {
-        setUpdateStatus({
-          message: "Profile updated successfully!",
-          type: "success",
+      if (updateStudentProfile.fulfilled.match(result)) {
+        addToast({
+          title: "Success",
+          description: "Phone number updated successfully",
+          color: "success",
         });
       } else {
-        setUpdateStatus({
-          message: "Failed to update profile. Please try again.",
-          type: "error",
+        addToast({
+          title: "Failed to update phone number. Please try again.",
+          description: "Please try again.",
+          color: "danger",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      addToast({
+        title: "An error occurred while updating phone number",
+        description: "Please try again.",
+        color: "danger",
+      });
+      throw err; // Re-throw to propagate to the component
+    }
+  };
+
+  const handleAddressUpdate = async (address: Address): Promise<void> => {
+    if (!profile) return;
+
+    try {
+      setUpdateStatus({ message: "Updating address...", type: null });
+
+      const result = await dispatch(
+        updateStudentProfile({
+          studentId: profile.id,
+          data: { address },
+        })
+      );
+
+      if (updateStudentProfile.fulfilled.match(result)) {
+        addToast({
+          title: "Success",
+          description: "Address updated successfully",
+          color: "success",
+        });
+      } else {
+        addToast({
+          title: "Failed to update address. Please try again.",
+          description: "Please try again.",
+          color: "danger",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      addToast({
+        title: "An error occurred while updating address",
+        description: "Please try again.",
+        color: "danger",
+      });
+      throw err; // Re-throw to propagate to the component
+    }
+  };
+
+  const handleGuardiansUpdate = async (
+    guardians: Guardian[]
+  ): Promise<void> => {
+    if (!profile) return;
+
+    try {
+      setUpdateStatus({ message: "Updating guardians...", type: null });
+
+      const result = await dispatch(
+        updateStudentProfile({
+          studentId: profile.id,
+          data: { guardians },
+        })
+      );
+
+      if (updateStudentProfile.fulfilled.match(result)) {
+        addToast({
+          title: "Success",
+          description: "Guardians updated successfully",
+          color: "success",
+        });
+      } else {
+        addToast({
+          title: "Failed to update guardians. Please try again.",
+          description: "Please try again.",
+          color: "danger",
         });
       }
     } catch (err) {
       console.log(err);
       setUpdateStatus({
-        message: "An error occurred while updating profile",
+        message: "An error occurred while updating guardians",
         type: "error",
       });
+      throw err; // Re-throw to propagate to the component
+    }
+  };
+
+  const handleImageFileUpdate = async (imageFile: File): Promise<void> => {
+    if (!profile) return;
+
+    try {
+      setUpdateStatus({ message: "Updating profile image...", type: null });
+
+      const result = await dispatch(
+        updateStudentProfileImage({
+          studentId: profile.id,
+          imageFile,
+        })
+      );
+
+      if (updateStudentProfileImage.fulfilled.match(result)) {
+        addToast({
+          title: "Success",
+          description: "Profile image updated successfully",
+          color: "success",
+        });
+      } else {
+        addToast({
+          title: "Failed to update profile image. Please try again.",
+          description: "Please try again.",
+          color: "danger",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      setUpdateStatus({
+        message: "An error occurred while updating profile image",
+        type: "error",
+      });
+      throw err; // Re-throw to propagate to the component
     }
   };
 
@@ -171,42 +258,18 @@ export default function ProfilePage() {
             Student Information
           </h1>
 
-          <div className="flex items-center gap-2">
-            {updateStatus.type && (
-              <div
-                className={`text-sm px-3 py-1 rounded-md ${
-                  updateStatus.type === "success"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                } flex items-center gap-1`}
-              >
-                {updateStatus.type === "error" && <AlertCircle size={14} />}
-                {updateStatus.message}
-              </div>
-            )}
-
-            {hasChanges && (
-              <Button
-                className="flex items-center gap-2"
-                color="primary"
-                disabled={loading}
-                size="md"
-                onClick={handleSaveChanges}
-              >
-                {loading ? (
-                  <>
-                    <Spinner color="white" size="sm" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          {updateStatus.type && (
+            <div
+              className={`text-sm px-3 py-1 rounded-md ${
+                updateStatus.type === "success"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              } flex items-center gap-1`}
+            >
+              {updateStatus.type === "error" && <AlertCircle size={14} />}
+              {updateStatus.message}
+            </div>
+          )}
         </div>
 
         {/* Show global error message if any */}
@@ -219,7 +282,6 @@ export default function ProfilePage() {
 
         <ProfileHeader
           profile={profile}
-          // onUpdate={handleImageUpdate}
           onUpdateImage={handleImageFileUpdate}
         />
 

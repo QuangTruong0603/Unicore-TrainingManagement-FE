@@ -19,7 +19,7 @@ import { GuardianCard } from "./GuardianCard";
 
 interface GuardiansSectionProps {
   guardians: Guardian[];
-  onUpdate?: (guardians: Guardian[]) => void;
+  onUpdate?: (guardians: Guardian[]) => Promise<void>;
 }
 
 export const GuardiansSection = ({
@@ -38,6 +38,7 @@ export const GuardiansSection = ({
     relationship: "",
   });
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddGuardian = () => {
     // For new guardians, we don't include an ID (backend will generate it)
@@ -97,24 +98,33 @@ export const GuardiansSection = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onUpdate) {
-      // Process guardians before sending to parent
-      // For new guardians (with temp IDs), remove the ID field
-      const processedGuardians = editGuardians.map((guardian) => {
-        if (guardian.id.startsWith("temp-")) {
-          // Destructure to remove id from new guardians
-          const { id, ...guardianWithoutId } = guardian;
+      setIsLoading(true);
+      try {
+        // Process guardians before sending to parent
+        // For new guardians (with temp IDs), remove the ID field
+        const processedGuardians = editGuardians.map((guardian) => {
+          if (guardian.id.startsWith("temp-")) {
+            // Destructure to remove id from new guardians
+            const { id, ...guardianWithoutId } = guardian;
 
-          return guardianWithoutId as Guardian;
-        }
+            return guardianWithoutId as Guardian;
+          }
 
-        return guardian;
-      });
+          return guardian;
+        });
 
-      onUpdate(processedGuardians as Guardian[]);
+        await onUpdate(processedGuardians as Guardian[]);
+        setShowModal(false);
+      } catch (error) {
+        console.error("Error updating guardians:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setShowModal(false);
     }
-    setShowModal(false);
   };
 
   const handleInputChange = (
@@ -157,7 +167,11 @@ export const GuardiansSection = ({
       </Card>
 
       {/* Guardians Edit Modal */}
-      <Modal isOpen={showModal} size="2xl" onClose={() => setShowModal(false)}>
+      <Modal
+        isOpen={showModal}
+        size="2xl"
+        onClose={() => !isLoading && setShowModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Manage Guardians</ModalHeader>
           <ModalBody className="">
@@ -307,11 +321,20 @@ export const GuardiansSection = ({
             )}
           </ModalBody>
           <ModalFooter>
-            <Button color="default" onClick={() => setShowModal(false)}>
+            <Button
+              color="default"
+              disabled={isLoading}
+              onClick={() => setShowModal(false)}
+            >
               Cancel
             </Button>
-            <Button color="primary" onClick={handleSave}>
-              Save Changes
+            <Button
+              color="primary"
+              disabled={isLoading}
+              isLoading={isLoading}
+              onClick={handleSave}
+            >
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </ModalFooter>
         </ModalContent>

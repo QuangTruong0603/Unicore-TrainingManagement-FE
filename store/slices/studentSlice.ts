@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
 import { Student, StudentQuery } from "@/services/student/student.schema";
-import { StudentProfile, Address, Guardian } from "@/components/s/sutdent-info/types";
+import {
+  StudentProfile,
+  Address,
+  Guardian,
+} from "@/components/s/sutdent-info/types";
 import { UpdateStudentProfileData } from "@/services/student/student.service";
 
 export interface PaginatedResponse {
@@ -82,7 +87,7 @@ const studentSlice = createSlice({
           city: "",
           district: "",
           ward: "",
-          addressDetail: ""
+          addressDetail: "",
         },
         imageUrl: action.payload.imageUrl || "",
         phoneNumber: action.payload.phoneNumber || "",
@@ -93,7 +98,7 @@ const studentSlice = createSlice({
         status: action.payload.status || "",
         majorName: action.payload.majorName || "",
         batchName: action.payload.batchName || "",
-        batchYear: action.payload.batchYear || 0
+        batchYear: action.payload.batchYear || 0,
       };
     },
     setProfileLoading: (state, action: PayloadAction<boolean>) => {
@@ -103,19 +108,25 @@ const studentSlice = createSlice({
       state.profileError = action.payload;
     },
     updateProfileImage: (state, action: PayloadAction<string>) => {
-      if (state.studentProfile && state.studentProfile.imageUrl !== action.payload) {
+      if (
+        state.studentProfile &&
+        state.studentProfile.imageUrl !== action.payload
+      ) {
         state.profileUpdateData = {
           ...state.profileUpdateData,
-          imageUrl: action.payload
+          imageUrl: action.payload,
         };
         state.hasProfileChanges = true;
       }
     },
     updateProfilePhone: (state, action: PayloadAction<string>) => {
-      if (state.studentProfile && state.studentProfile.phoneNumber !== action.payload) {
+      if (
+        state.studentProfile &&
+        state.studentProfile.phoneNumber !== action.payload
+      ) {
         state.profileUpdateData = {
           ...state.profileUpdateData,
-          phoneNumber: action.payload
+          phoneNumber: action.payload,
         };
         state.hasProfileChanges = true;
       }
@@ -124,7 +135,7 @@ const studentSlice = createSlice({
       if (state.studentProfile) {
         state.profileUpdateData = {
           ...state.profileUpdateData,
-          address: action.payload
+          address: action.payload,
         };
         state.hasProfileChanges = true;
       }
@@ -133,7 +144,7 @@ const studentSlice = createSlice({
       if (state.studentProfile) {
         state.profileUpdateData = {
           ...state.profileUpdateData,
-          guardians: action.payload
+          guardians: action.payload,
         };
         state.hasProfileChanges = true;
       }
@@ -174,4 +185,4 @@ export const {
   resetState,
 } = studentSlice.actions;
 
-export default studentSlice.reducer; 
+export default studentSlice.reducer;

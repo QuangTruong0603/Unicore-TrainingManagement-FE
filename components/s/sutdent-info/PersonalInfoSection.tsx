@@ -1,34 +1,47 @@
 import React, { useState } from "react";
 import { User, Mail, Phone, Edit } from "lucide-react";
-import { 
-  Modal, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
   ModalFooter,
   Button,
   Input,
   Card,
   CardHeader,
-  CardBody
+  CardBody,
 } from "@heroui/react";
 
 import { StudentProfile } from "./types";
 
 interface PersonalInfoSectionProps {
   profile: StudentProfile;
-  onUpdate?: (phoneNumber: string) => void;
+  onUpdate?: (phoneNumber: string) => Promise<void>;
 }
 
-export const PersonalInfoSection = ({ profile, onUpdate }: PersonalInfoSectionProps) => {
+export const PersonalInfoSection = ({
+  profile,
+  onUpdate,
+}: PersonalInfoSectionProps) => {
   const [showModal, setShowModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onUpdate) {
-      onUpdate(phoneNumber);
+      setIsLoading(true);
+      try {
+        await onUpdate(phoneNumber);
+        setShowModal(false);
+      } catch (error) {
+        console.error("Error updating phone number:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setShowModal(false);
     }
-    setShowModal(false);
   };
 
   return (
@@ -40,12 +53,12 @@ export const PersonalInfoSection = ({ profile, onUpdate }: PersonalInfoSectionPr
             <h2 className="text-lg font-semibold">Personal Information</h2>
           </div>
           <Button
-            onClick={() => setShowModal(true)}
+            isIconOnly
             className="p-1 min-w-0 h-auto"
             color="primary"
-            variant="ghost"
-            isIconOnly
             title="Edit personal information"
+            variant="ghost"
+            onClick={() => setShowModal(true)}
           >
             <Edit size={16} />
           </Button>
@@ -85,28 +98,44 @@ export const PersonalInfoSection = ({ profile, onUpdate }: PersonalInfoSectionPr
       </Card>
 
       {/* Phone Number Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+      <Modal
+        isOpen={showModal}
+        onClose={() => !isLoading && setShowModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Update Phone Number</ModalHeader>
           <ModalBody>
             <div className="mb-4">
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor="phoneNumber"
+              >
                 Phone Number
               </label>
               <Input
+                disabled={isLoading}
                 id="phoneNumber"
+                placeholder="Enter phone number"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Enter phone number"
               />
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" onClick={() => setShowModal(false)}>
+            <Button
+              color="default"
+              disabled={isLoading}
+              onClick={() => setShowModal(false)}
+            >
               Cancel
             </Button>
-            <Button color="primary" onClick={handleSave}>
-              Save
+            <Button
+              color="primary"
+              disabled={isLoading}
+              isLoading={isLoading}
+              onClick={handleSave}
+            >
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </ModalFooter>
         </ModalContent>
