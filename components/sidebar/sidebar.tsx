@@ -18,15 +18,17 @@ import {
   Book,
   Map,
   MapPin,
+  School,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
 import "./sidebar.scss";
 import { MenuItem } from "../menuItem/menuItem";
 import { Logo } from "../icons/icons";
-import { useAuth } from "@/hooks/useAuth";
 
 import { ISidebarProps, IMenuItem } from "./type";
+
+import { useAuth } from "@/hooks/useAuth";
 
 const Sidebar: React.FC<ISidebarProps> = ({
   defaultCollapsed = false,
@@ -67,16 +69,39 @@ const Sidebar: React.FC<ISidebarProps> = ({
       ],
     },
     {
+      key: "/a/academic",
+      title: "Academic",
+      icon: <School size={20} />,
+      isExpanded: true,
+      children: [
+        {
+          key: "/a/academic/semesters",
+          title: "Semesters",
+          icon: <Calendar size={20} />,
+        },
+        {
+          key: "/a/academic/courses",
+          title: "Courses",
+          icon: <BookOpen size={20} />,
+        },
+        {
+          key: "/a/academic/majors",
+          title: "Majors",
+          icon: <GraduationCap size={20} />,
+        },
+        {
+          key: "/a/academic/training-roadmap",
+          title: "Training Roadmaps",
+          icon: <Map size={20} />,
+        },
+      ],
+    },
+    {
       key: "/a/training",
       title: "Training",
       icon: <Book size={20} />,
       isExpanded: true,
       children: [
-        {
-          key: "/a/training/courses",
-          title: "Courses",
-          icon: <BookOpen size={20} />,
-        },
         {
           key: "/a/training/class-schedule",
           title: "Class schedule",
@@ -92,16 +117,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
           title: "Documents",
           icon: <FileText size={20} />,
         },
-        {
-          key: "/a/training/training-roadmap",
-          title: "Training Roadmaps",
-          icon: <Map size={20} />,
-        },
-        {
-          key: "/a/training/majors",
-          title: "Majors",
-          icon: <GraduationCap size={20} />,
-        },
       ],
     },
     {
@@ -114,16 +129,34 @@ const Sidebar: React.FC<ISidebarProps> = ({
   // Student menu items
   const studentMenuItems: IMenuItem[] = [
     {
+      key: "/s/academic",
+      title: "Academic",
+      icon: <School size={20} />,
+      isExpanded: true,
+      children: [
+        {
+          key: "/s/academic/semesters",
+          title: "Semesters",
+          icon: <Calendar size={20} />,
+        },
+        {
+          key: "/s/academic/courses",
+          title: "My Courses",
+          icon: <BookOpen size={20} />,
+        },
+        {
+          key: "/s/academic/roadmap",
+          title: "My Roadmap",
+          icon: <Map size={20} />,
+        },
+      ],
+    },
+    {
       key: "/s/training",
       title: "Training",
       icon: <Book size={20} />,
       isExpanded: true,
       children: [
-        {
-          key: "/s/training/courses",
-          title: "My Courses",
-          icon: <BookOpen size={20} />,
-        },
         {
           key: "/s/training/class-schedule",
           title: "Class Schedule",
@@ -138,11 +171,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
           key: "/s/training/documents",
           title: "Documents",
           icon: <FileText size={20} />,
-        },
-        {
-          key: "/s/training/roadmap",
-          title: "My Roadmap",
-          icon: <Map size={20} />,
         },
       ],
     },
@@ -172,6 +200,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
     if (key === "logout") {
       logout();
       router.push("/login");
+
       return;
     }
     setActiveKey(key);

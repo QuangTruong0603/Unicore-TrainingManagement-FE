@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
   COURSES: "/c/Courses",
   TRAINING_ROADMAPS: "/c/TrainingRoadmaps", // Added training roadmap endpoint
   COURSES_GROUP: "/c/CoursesGroup",
+  SEMESTERS: "/c/Semesters", // Added semester endpoint
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
   BATCHES: "/s/Batch",
