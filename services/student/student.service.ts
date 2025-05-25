@@ -4,6 +4,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
+import { BaseResponse } from "../api/api-response";
 import { StudentQuery } from "./student.schema";
 import { StudentListResponse } from "./student.dto";
 
@@ -231,7 +232,7 @@ export const studentService = {
     file: File,
     batchId: string,
     majorId: string
-  ): Promise<void> => {
+  ): Promise<BaseResponse<any>> => {
     const formData = new FormData();
 
     formData.append("ExcelFile", file);
@@ -257,5 +258,10 @@ export const studentService = {
         "Content-Type": "application/json",
       },
     });
+  },
+  getStudentByEmail: async (email: string): Promise<any> => {
+    return studentClient.get(
+      `${API_ENDPOINTS.STUDENTS}/get-student-by-email?email=${email}`
+    );
   },
 };

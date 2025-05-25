@@ -1,5 +1,5 @@
 export interface Address {
-  id: string;
+  id?: string;
   country: string;
   city: string;
   district: string;
@@ -34,4 +34,5 @@ export interface StudentProfile {
   imageUrl: string;
   address: Address;
   guardians: Guardian[];
+  personId: string;
 }

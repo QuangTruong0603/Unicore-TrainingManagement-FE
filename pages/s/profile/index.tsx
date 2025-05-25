@@ -17,6 +17,7 @@ import {
 } from "@/services/student/student.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setProfileError } from "@/store/slices/studentSlice";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
@@ -25,18 +26,18 @@ export default function ProfilePage() {
     profileLoading: loading,
     profileError: error,
   } = useAppSelector((state) => state.student);
-
+  const { studentInfo } = useAuth();
   const [updateStatus, setUpdateStatus] = useState<{
     message: string;
     type: "success" | "error" | null;
   }>({ message: "", type: null });
 
   useEffect(() => {
-    // Replace with actual student ID or fetch from auth context
-    const studentId = "371db8dc-eb0d-4835-9045-ac3f9c6b3726";
-
-    dispatch(fetchStudentProfile(studentId));
-  }, [dispatch]);
+    // Only fetch profile when studentInfo is available and has an ID
+    if (studentInfo?.id && !loading && !profile) {
+      dispatch(fetchStudentProfile(studentInfo.id));
+    }
+  }, [dispatch, studentInfo, loading, profile]);
 
   // Clear error message after 5 seconds
   useEffect(() => {
@@ -208,7 +209,8 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading && !profile) {
+  // Show loading while auth is loading or while fetching profile with valid student ID
+  if (!studentInfo?.id || !profile) {
     return (
       <DefaultLayout>
         <div className="flex justify-center items-center h-full">
@@ -218,6 +220,7 @@ export default function ProfilePage() {
     );
   }
 
+  // Show error if there's an error and no profile
   if (error && !profile) {
     return (
       <DefaultLayout>
@@ -234,6 +237,26 @@ export default function ProfilePage() {
     );
   }
 
+  // Show message if no student info is available
+  if (!studentInfo?.id) {
+    return (
+      <DefaultLayout>
+        <div className="flex justify-center items-center h-full">
+          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <div>
+              <div className="font-medium">Waiting for student information</div>
+              <div className="text-sm">
+                Please wait while we load your data...
+              </div>
+            </div>
+          </div>
+        </div>
+      </DefaultLayout>
+    );
+  }
+
+  // Show message if no profile data is available
   if (!profile) {
     return (
       <DefaultLayout>
@@ -252,7 +275,10 @@ export default function ProfilePage() {
 
   return (
     <DefaultLayout>
-      <Card className="profile-page p-6 bg-gray-50 border-none overflow-visible">
+      <Card
+        className="profile-page p-6 bg-gray-50 border-none overflow-visible"
+        radius="none"
+      >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-bold text-gray-800">
             Student Information
@@ -290,7 +316,7 @@ export default function ProfilePage() {
         </div>
 
         <AddressSection
-          address={profile.address}
+          address={profile.address || null}
           onUpdate={handleAddressUpdate}
         />
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import router from "next/router";
 
+import { studentService } from "@/services/student/student.service";
+
 interface DecodedToken {
   aud: string;
   exp: number;
@@ -17,9 +19,52 @@ interface User {
   role: string;
 }
 
+interface StudentInfo {
+  id: string;
+  studentCode: string;
+  majorId: string;
+  batchId: string;
+  applicationUser: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    personId: string;
+    dob: string;
+    phoneNumber: string;
+    status: number;
+    imageUrl: string;
+  };
+}
+
+// Helper function to safely access localStorage
+const getLocalStorage = (key: string): string | null => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(key);
+  }
+
+  return null;
+};
+
+// Helper function to safely set localStorage
+const setLocalStorage = (key: string, value: string): void => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(key, value);
+  }
+};
+
+// Helper function to safely remove from localStorage
+const removeLocalStorage = (key: string): void => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(key);
+  }
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
+  const [isStudentInfoLoading, setIsStudentInfoLoading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -27,7 +72,7 @@ export const useAuth = () => {
 
   const checkAuth = () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getLocalStorage("token");
 
       if (!token) {
         setUser(null);
@@ -46,22 +91,61 @@ export const useAuth = () => {
         return;
       }
 
-      const userData = localStorage.getItem("user");
+      const userData = getLocalStorage("user");
 
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+
+        setUser(parsedUser);
+
+        // Check for student info in localStorage
+        if (parsedUser.role === "Student") {
+          const studentData = getLocalStorage("studentInfo");
+
+          if (studentData) {
+            try {
+              setStudentInfo(JSON.parse(studentData));
+            } catch (e) {
+              console.error("Error parsing student info:", e);
+              // If there's an error parsing, try to fetch fresh data
+              fetchStudentInfo(parsedUser.email);
+            }
+          } else {
+            // Only fetch if we don't have data
+            fetchStudentInfo(parsedUser.email);
+          }
+        }
       }
     } catch (error) {
+      console.error("Auth check error:", error);
       logout();
-      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = (token: string) => {
+  // Separate function to fetch student info to avoid duplicate logic
+  const fetchStudentInfo = async (email: string) => {
+    if (isStudentInfoLoading) return; // Prevent multiple simultaneous calls
+
+    setIsStudentInfoLoading(true);
     try {
-      const decoded = jwtDecode<DecodedToken>(token);
+      const response = await studentService.getStudentByEmail(email);
+
+      if (response.success && response.data) {
+        setLocalStorage("studentInfo", JSON.stringify(response.data));
+        setStudentInfo(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching student info:", error);
+    } finally {
+      setIsStudentInfoLoading(false);
+    }
+  };
+
+  const login = async (token: string) => {
+    try {
+      const decoded = jwtDecode<any>(token);
 
       // Check expiration
       const currentTime = Date.now() / 1000;
@@ -71,7 +155,7 @@ export const useAuth = () => {
       }
 
       // Store token
-      localStorage.setItem("token", token);
+      setLocalStorage("token", token);
 
       // Store user info
       const userData: User = {
@@ -83,16 +167,21 @@ export const useAuth = () => {
         ],
       };
 
-      localStorage.setItem("user", JSON.stringify(userData));
+      setLocalStorage("user", JSON.stringify(userData));
       setUser(userData);
 
+      // If user is a student, fetch their information
+      if (userData.role === "Student") {
+        await fetchStudentInfo(userData.email);
+      }
+
       // Redirect based on role
-      if (userData.role === "TrainingManager") {
+      if (userData.role === "Student") {
+        router.push("/s");
+      } else if (userData.role === "TrainingManager") {
         router.push("/t");
       } else if (userData.role === "Admin") {
         router.push("/a");
-      } else if (userData.role === "Student") {
-        router.push("/s");
       } else {
         router.push("/");
       }
@@ -103,16 +192,19 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    removeLocalStorage("token");
+    removeLocalStorage("user");
+    removeLocalStorage("studentInfo");
     router.push("/login");
     setUser(null);
+    setStudentInfo(null);
   };
 
   const isAuthenticated = !!user;
 
   return {
     user,
+    studentInfo,
     login,
     logout,
     isAuthenticated,

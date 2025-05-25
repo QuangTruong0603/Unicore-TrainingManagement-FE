@@ -46,7 +46,7 @@ export const PersonalInfoSection = ({
 
   return (
     <>
-      <Card className="overflow-visible">
+      <Card className="overflow-visible" radius="sm">
         <CardHeader className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2 text-purple-700">
             <User className="h-5 w-5" />
@@ -88,8 +88,8 @@ export const PersonalInfoSection = ({
               <div className="flex items-center gap-2">
                 <User className="text-gray-500 h-4 w-4" />
                 <div>
-                  <p className="text-xs text-gray-500">User ID</p>
-                  <p className="text-sm text-gray-800">{profile.userId}</p>
+                  <p className="text-xs text-gray-500">Personal ID</p>
+                  <p className="text-sm text-gray-800">{profile.personId}</p>
                 </div>
               </div>
             </div>
