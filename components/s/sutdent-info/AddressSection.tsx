@@ -50,7 +50,15 @@ const AddressSection: React.FC<AddressSectionProps> = ({
     if (onUpdate) {
       setIsLoading(true);
       try {
-        await onUpdate(editAddress);
+        // If id is empty string, remove the id property entirely
+        let addressToUpdate: any = { ...editAddress };
+
+        if (addressToUpdate.id === "") {
+          // Remove the id property if it's empty
+          delete addressToUpdate.id;
+        }
+
+        await onUpdate(addressToUpdate);
         setShowModal(false);
       } catch (error) {
         console.error("Error updating address:", error);
@@ -64,7 +72,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
 
   return (
     <>
-      <Card className="mb-6 overflow-visible">
+      <Card className="mb-6 overflow-visible" radius="sm">
         <CardHeader className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2 text-purple-700">
             <MapPin className="h-5 w-5" />

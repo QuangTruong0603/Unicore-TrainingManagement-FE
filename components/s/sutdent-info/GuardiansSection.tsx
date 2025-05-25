@@ -139,7 +139,7 @@ export const GuardiansSection = ({
 
   return (
     <>
-      <Card className="overflow-visible">
+      <Card className="overflow-visible" radius="sm">
         <CardHeader className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2 text-purple-700">
             <Users className="h-5 w-5" />
