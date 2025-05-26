@@ -103,8 +103,8 @@ const Sidebar: React.FC<ISidebarProps> = ({
       isExpanded: true,
       children: [
         {
-          key: "/a/training/class-schedule",
-          title: "Class schedule",
+          key: "/a/training/classes",
+          title: "Classes",
           icon: <Calendar size={20} />,
         },
         {

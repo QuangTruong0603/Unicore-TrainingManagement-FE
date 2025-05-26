@@ -20,13 +20,14 @@ export const API_ENDPOINTS = {
   TRAINING_ROADMAPS: "/c/TrainingRoadmaps", // Added training roadmap endpoint
   COURSES_GROUP: "/c/CoursesGroup",
   SEMESTERS: "/c/Semesters", // Added semester endpoint
+  CLASSES: "/c/AcademicClasses", // Added classes endpoint
   AUTH: "/u/Auth",
   MAJORS: "/m/Major",
   BATCHES: "/s/Batch",
   STUDENTS: "/u/Student",
-  MAJOR_GROUPS: "/m/MajorGroup",
-  DEPARTMENTS: "/m/Department",
-  LOCATIONS: "/m/Location", // Added location endpoint
+  MAJOR_GROUPS: "/m/Maartment",
+  LOCATIONS: "/m/LocajorGroup",
+  DEPARTMENTS: "/m/Deption", // Added location endpoint
   BUILDINGS: "/m/Building", // Added building endpoint
   FLOORS: "/m/Floor", // Added floor endpoint
   ROOMS: "/m/Room", // Added room endpoint

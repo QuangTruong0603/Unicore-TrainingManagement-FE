@@ -13,6 +13,7 @@ import roomReducer from "./slices/roomSlice";
 import locationReducer from "./slices/locationSlice";
 import authReducer from "./slices/authSlice";
 import semesterReducer from "./slices/semesterSlice";
+import classReducer from "./slices/classSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,7 @@ export const store = configureStore({
     location: locationReducer,
     auth: authReducer,
     semester: semesterReducer,
+    class: classReducer,
   },
 });
 
