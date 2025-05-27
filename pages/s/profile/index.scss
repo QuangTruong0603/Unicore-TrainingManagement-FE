@@ -1,0 +1,37 @@
+.profile-page {
+    height: calc(100vh - 64px);
+    overflow-y: scroll;
+}
+.profile-page::-webkit-scrollbar {
+    display: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+}
+
+.avatar-container {
+    position: relative;
+    
+    &:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 12px;
+        height: 12px;
+        background-color: #10b981; // Green for active status
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+}
+
+// Thêm CSS để ẩn thanh cuộn nhưng vẫn giữ chức năng cuộn
+.overflow-y-auto {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}

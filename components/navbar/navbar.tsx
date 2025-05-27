@@ -25,6 +25,7 @@ import { GithubIcon, SearchIcon } from "@/components/icons/icons";
 export const Navbar = () => {
   const handleLogout = useAuth().logout;
   const user = useAuth().user;
+  const studentInfo = useAuth().studentInfo || null;
 
   const searchInput = (
     <Input
@@ -65,7 +66,10 @@ export const Navbar = () => {
             <DropdownTrigger>
               <div className="flex items-center gap-2">
                 {" "}
-                <Avatar className="h-8 w-8" src="https://i.pravatar.cc/150" />
+                <Avatar
+                  className="h-8 w-8"
+                  src={studentInfo?.applicationUser?.imageUrl || ""}
+                />
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold">
                     {user?.email || ""}
@@ -77,7 +81,7 @@ export const Navbar = () => {
               </div>
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions">
-              <DropdownItem key="profile">
+              <DropdownItem key="profile" as={Link} href="/s/profile">
                 <div>View Profile</div>
               </DropdownItem>
               <DropdownItem
