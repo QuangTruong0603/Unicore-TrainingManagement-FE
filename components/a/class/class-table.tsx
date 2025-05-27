@@ -1,12 +1,24 @@
 import React from "react";
-import { Button, Tooltip } from "@heroui/react";
+import {
+  Button,
+  Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
 import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
   ChevronUp,
+  Clock,
   Calendar,
-  Users,
+  MoreVertical,
+  Trash,
+  Power,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import {
   Table as HeroTable,
@@ -30,6 +42,8 @@ interface ClassTableProps {
   onSort?: (key: string) => void;
   onRowToggle: (classId: string) => void;
   onRegistrationToggle: (academicClass: AcademicClass) => void;
+  onDeleteClass?: (academicClass: AcademicClass) => void;
+  onToggleActivation?: (academicClass: AcademicClass) => void;
 }
 
 interface Column {
@@ -48,6 +62,8 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   onSort,
   onRowToggle,
   onRegistrationToggle,
+  onDeleteClass,
+  onToggleActivation,
 }) => {
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
@@ -77,7 +93,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       key: "groupName",
       title: "Group",
       sortable: true,
-      render: (academicClass: AcademicClass) => academicClass.groupName,
+      render: (academicClass: AcademicClass) => academicClass.groupNumber,
     },
     {
       key: "course",
@@ -104,39 +120,65 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
-      key: "capacity",
-      title: "Capacity",
-      sortable: true,
-      render: (academicClass: AcademicClass) => (
-        <div className="flex items-center">
-          <Users className="w-4 h-4 mr-1" /> {academicClass.capacity}
-        </div>
-      ),
-    },
-    {
-      key: "date",
-      title: "Date Range",
-      sortable: true,
+      key: "shift",
+      title: "Shift",
+      sortable: false,
       render: (academicClass: AcademicClass) => {
-        const formatDate = (date: Date) => new Date(date).toLocaleDateString();
+        const shifts = academicClass.scheduleInDays.map(
+          (schedule) => schedule.shift.name
+        );
+        const uniqueShifts = Array.from(new Set(shifts));
 
         return (
-          <div className="flex items-center whitespace-nowrap">
-            <Calendar className="w-4 h-4 mr-1" />
-            {`${formatDate(academicClass.startDate)} - ${formatDate(
-              academicClass.endDate
-            )}`}
+          <div className="flex items-center">
+            <Clock className="w-4 h-4 mr-1" /> {uniqueShifts.join(", ")}
+          </div>
+        );
+      },
+    },
+    {
+      key: "dayOfWeek",
+      title: "Day of Week",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        const days = academicClass.scheduleInDays.map(
+          (schedule) => schedule.dayOfWeek
+        );
+        const uniqueDays = Array.from(new Set(days));
+
+        return (
+          <div className="flex items-center">
+            <Calendar className="w-4 h-4 mr-1" /> {uniqueDays.join(", ")}
+          </div>
+        );
+      },
+    },
+    {
+      key: "room",
+      title: "Room",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        const rooms = academicClass.scheduleInDays.map(
+          (schedule) => schedule.room.name
+        );
+        const uniqueRooms = Array.from(new Set(rooms));
+
+        return (
+          <div className="flex items-center">
+            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
+              {uniqueRooms.join(", ")}
+            </span>
           </div>
         );
       },
     },
     {
       key: "status",
-      title: "Registration Status",
+      title: "Status",
       sortable: true,
       render: (academicClass: AcademicClass) => (
         <div
-          className={`px-2 py-1 rounded-full text-xs ${
+          className={`px-2 py-1 rounded-full text-xs text-center ${
             academicClass.isRegistrable
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
@@ -147,53 +189,107 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
+      key: "isActive",
+      title: "Is Active",
+      sortable: true,
+      render: (_academicClass: AcademicClass) => (
+        <div
+          className={`px-2 py-1 rounded-full text-xs text-center ${
+            true // Assuming all classes shown are active, update with actual field if available
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {"Active"}
+        </div>
+      ),
+    },
+    {
       key: "actions",
       title: "Actions",
       sortable: false,
-      render: (academicClass: AcademicClass) => (
-        <div className="flex gap-2 justify-end pr-2">
-          <Tooltip
-            content={
-              academicClass.isRegistrable
-                ? "Disable Registration"
-                : "Enable Registration"
-            }
-          >
-            <Button
-              isIconOnly
-              size="sm"
-              variant={academicClass.isRegistrable ? "solid" : "flat"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onRegistrationToggle(academicClass);
-              }}
-            >
-              {academicClass.isRegistrable ? (
-                <span className="text-sm">Close</span>
-              ) : (
-                <span className="text-sm">Open</span>
-              )}
-            </Button>
-          </Tooltip>
-          <Tooltip content="Toggle details">
-            <Button
-              isIconOnly
-              size="sm"
-              variant="flat"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRowToggle(academicClass.id);
-              }}
-            >
-              {expandedRows[academicClass.id] ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </Button>
-          </Tooltip>
-        </div>
-      ),
+      render: (academicClass: AcademicClass) => {
+        const handleActionSelection = (key: React.Key) => {
+          switch (key) {
+            case "delete":
+              if (onDeleteClass) onDeleteClass(academicClass);
+              break;
+            case "activate":
+              if (onToggleActivation) onToggleActivation(academicClass);
+              break;
+            case "registration":
+              onRegistrationToggle(academicClass);
+              break;
+          }
+        };
+
+        return (
+          <div className="flex gap-2 justify-end pr-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Class Actions"
+                onAction={handleActionSelection}
+              >
+                <DropdownItem
+                  key="delete"
+                  startContent={<Trash className="w-4 h-4" />}
+                >
+                  Delete
+                </DropdownItem>
+                <DropdownItem
+                  key="activate"
+                  startContent={<Power className="w-4 h-4" />}
+                >
+                  {true ? "Deactivate" : "Activate"}
+                </DropdownItem>
+                <DropdownItem
+                  key="registration"
+                  startContent={
+                    academicClass.isRegistrable ? (
+                      <Lock className="w-4 h-4" />
+                    ) : (
+                      <Unlock className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {academicClass.isRegistrable
+                    ? "Close Registration"
+                    : "Open Registration"}
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+            <Tooltip content="Toggle details">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRowToggle(academicClass.id);
+                }}
+              >
+                {expandedRows[academicClass.id] ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+            </Tooltip>
+          </div>
+        );
+      },
     },
   ];
 
@@ -274,7 +370,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   };
 
   return (
-    <div className={styles.classTable}>
+    <div className={styles.tableWrapper}>
       <HeroTable
         isHeaderSticky
         isStriped
@@ -305,11 +401,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         >
           {classes.map((academicClass) => (
             <React.Fragment key={academicClass.id}>
-              <TableRow
-                key={academicClass.id}
-                className="cursor-pointer"
-                onClick={() => onRowToggle(academicClass.id)}
-              >
+              <TableRow key={academicClass.id}>
                 {columns.map((column) => (
                   <TableCell key={`${academicClass.id}-${column.key}`}>
                     {column.render(academicClass)}
@@ -317,11 +409,11 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                 ))}
               </TableRow>
               {expandedRows[academicClass.id] && (
-                <tr>
-                  <td className="p-0" colSpan={columns.length}>
+                <TableRow>
+                  <TableCell className="p-0" colSpan={columns.length}>
                     {renderExpandedDetails(academicClass)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
             </React.Fragment>
           ))}

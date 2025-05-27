@@ -18,8 +18,6 @@ export interface AcademicClassCreateDto {
   name: string;
   groupNumber: number;
   capacity: number;
-  startDate: Date;
-  endDate: Date;
   listOfWeeks: number[];
   isRegistrable: boolean;
   courseId: string;

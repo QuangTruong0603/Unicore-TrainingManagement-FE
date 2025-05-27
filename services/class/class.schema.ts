@@ -40,10 +40,8 @@ export const scheduleInDaySchema = z.object({
 export const academicClassSchema = z.object({
   id: z.string(),
   name: z.string(),
-  groupName: z.number(),
+  groupNumber: z.number(),
   capacity: z.number(),
-  startDate: z.date(),
-  endDate: z.date(),
   listOfWeeks: z.array(z.number()),
   isRegistrable: z.boolean(),
   courseId: z.string(),
@@ -57,11 +55,9 @@ export type AcademicClass = z.infer<typeof academicClassSchema>;
 
 export const academicClassFilterSchema = z.object({
   name: z.string().optional(),
-  groupName: z.number().optional(),
+  groupNumber: z.number().optional(),
   minCapacity: z.number().optional(),
   maxCapacity: z.number().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
   isRegistrable: z.boolean().optional(),
   courseId: z.string().optional(),
   semesterId: z.string().optional(),

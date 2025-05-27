@@ -25,8 +25,9 @@ export const API_ENDPOINTS = {
   MAJORS: "/m/Major",
   BATCHES: "/s/Batch",
   STUDENTS: "/u/Student",
-  MAJOR_GROUPS: "/m/Maartment",
-  LOCATIONS: "/m/LocajorGroup",
+  MAJOR_GROUPS: "/m/MajorGroup",
+  SHIFTS: "/c/Shifts", // Added shifts endpoint
+  LOCATIONS: "/m/Location", // Added location endpoint
   DEPARTMENTS: "/m/Deption", // Added location endpoint
   BUILDINGS: "/m/Building", // Added building endpoint
   FLOORS: "/m/Floor", // Added floor endpoint

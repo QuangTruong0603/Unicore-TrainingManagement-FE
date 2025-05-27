@@ -95,8 +95,6 @@ class HttpClient {
 
         // Handle request cancellation
         if (axios.isCancel(error)) {
-          console.log("Request cancelled:", error.message);
-
           return Promise.reject(error);
         } // Handle common errors and retry logic
         if ((error as AxiosError<ApiErrorResponse>).response) {
@@ -304,6 +302,7 @@ export const authClient = new HttpClient(API_URLS.AUTH);
 export const majorClient = new HttpClient(API_URLS.MAJOR);
 export const batchClient = new HttpClient(API_URLS.BATCH);
 export const studentClient = new HttpClient(API_URLS.AUTH);
+export const shiftClient = new HttpClient(API_URLS.COURSE); // Using same base URL as course
 export const locationClient = new HttpClient(API_URLS.LOCATION);
 export const buildingClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
 export const floorClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location

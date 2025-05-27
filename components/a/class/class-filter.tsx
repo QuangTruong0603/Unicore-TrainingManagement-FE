@@ -4,24 +4,22 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
-  Chip,
-  DatePicker,
   Input,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Select,
-  SelectItem,
   useDisclosure,
 } from "@heroui/react";
 
 import { AcademicClassQuery } from "@/services/class/class.schema";
 import { Course } from "@/services/course/course.schema";
 import { Semester } from "@/services/semester/semester.schema";
+import { Shift } from "@/services/shift/shift.schema";
 import { courseService } from "@/services/course/course.service";
 import { semesterService } from "@/services/semester/semester.service";
+import { shiftService } from "@/services/shift/shift.service";
 
 interface ClassFilterProps {
   query: AcademicClassQuery;
@@ -30,15 +28,13 @@ interface ClassFilterProps {
 }
 
 interface FilterState {
-  name?: string;
   groupName?: number;
   minCapacity?: number;
   maxCapacity?: number;
-  startDate?: Date;
-  endDate?: Date;
   isRegistrable?: boolean | null;
   courseId?: string;
   semesterId?: string;
+  shiftId?: string;
 }
 
 interface FilterChip {
@@ -55,7 +51,6 @@ export function ClassFilter({
   // Use useDisclosure for modal control
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [filterState, setFilterState] = useState<FilterState>({
-    name: "",
     minCapacity: 0,
     maxCapacity: 100,
     isRegistrable: null,
@@ -63,6 +58,7 @@ export function ClassFilter({
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [shifts, setShifts] = useState<Shift[]>([]);
 
   // Fetch courses and semesters for the dropdowns
   useEffect(() => {
@@ -88,8 +84,14 @@ export function ClassFilter({
           });
 
           setSemesters(semesterResponse.data.data);
+
+          // Fetch shifts
+          const shiftsResponse = await shiftService.getAllShifts();
+
+          setShifts(shiftsResponse.data);
         } catch (error) {
           // Handle errors silently
+          console.error("Error fetching filter data:", error);
         }
       }
     };
@@ -126,16 +128,6 @@ export function ClassFilter({
     const newFilters: any = {};
     let newChips: FilterChip[] = [];
 
-    // Process name filter
-    if (filterState.name) {
-      newFilters.name = filterState.name;
-      newChips.push({
-        id: "name",
-        label: `Name: ${filterState.name}`,
-        onRemove: () => removeFilter("name"),
-      });
-    }
-
     // Process group name filter
     if (filterState.groupName !== undefined) {
       newFilters.groupName = filterState.groupName;
@@ -147,7 +139,7 @@ export function ClassFilter({
     }
 
     // Process capacity range filters
-    if (filterState.minCapacity !== undefined) {
+    if (filterState.minCapacity !== undefined && filterState.minCapacity > 0) {
       newFilters.minCapacity = filterState.minCapacity;
       newChips.push({
         id: "minCapacity",
@@ -156,31 +148,15 @@ export function ClassFilter({
       });
     }
 
-    if (filterState.maxCapacity !== undefined) {
+    if (
+      filterState.maxCapacity !== undefined &&
+      filterState.maxCapacity < 100
+    ) {
       newFilters.maxCapacity = filterState.maxCapacity;
       newChips.push({
         id: "maxCapacity",
         label: `Max Capacity: ${filterState.maxCapacity}`,
         onRemove: () => removeFilter("maxCapacity"),
-      });
-    }
-
-    // Process date filters
-    if (filterState.startDate) {
-      newFilters.startDate = filterState.startDate;
-      newChips.push({
-        id: "startDate",
-        label: `Start Date: ${filterState.startDate.toLocaleDateString()}`,
-        onRemove: () => removeFilter("startDate"),
-      });
-    }
-
-    if (filterState.endDate) {
-      newFilters.endDate = filterState.endDate;
-      newChips.push({
-        id: "endDate",
-        label: `End Date: ${filterState.endDate.toLocaleDateString()}`,
-        onRemove: () => removeFilter("endDate"),
       });
     }
 
@@ -223,6 +199,18 @@ export function ClassFilter({
       });
     }
 
+    // Process shift filter
+    if (filterState.shiftId) {
+      newFilters.shiftId = filterState.shiftId;
+      const selectedShift = shifts.find((s) => s.id === filterState.shiftId);
+
+      newChips.push({
+        id: "shiftId",
+        label: `Shift: ${selectedShift?.name || filterState.shiftId}`,
+        onRemove: () => removeFilter("shiftId"),
+      });
+    }
+
     // Update query with new filters
     onFilterChange({
       ...query,
@@ -239,10 +227,10 @@ export function ClassFilter({
   // Clear all filters
   const clearFilters = () => {
     setFilterState({
-      name: "",
       minCapacity: 0,
       maxCapacity: 100,
       isRegistrable: null,
+      shiftId: undefined,
     });
 
     setFilterChips([]);
@@ -250,201 +238,274 @@ export function ClassFilter({
     onClose();
   };
 
+  // Calculate if any filters are active
+  const hasActiveFilters = filterChips.length > 0;
+
   return (
-    <div className="mb-4">
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+    <div>
+      <div className="flex items-center gap-4">
         <Button
-          size="sm"
-          startContent={<Filter className="w-4 h-4" />}
-          onClick={onOpen}
+          className="flex items-center gap-1"
+          color={hasActiveFilters ? "primary" : "default"}
+          variant={hasActiveFilters ? "solid" : "bordered"}
+          onPress={onOpen}
         >
-          Filter
+          <Filter size={16} />
+          <span>Filters {hasActiveFilters && `(${filterChips.length})`}</span>
         </Button>
-
-        {filterChips.map((chip) => (
-          <Chip key={chip.id} variant="flat" onClose={chip.onRemove}>
-            {chip.label}
-          </Chip>
-        ))}
-
-        {filterChips.length > 0 && (
-          <Button
-            color="danger"
-            size="sm"
-            variant="flat"
-            onClick={() => {
-              setFilterChips([]);
-              onFilterClear();
-            }}
-          >
-            Clear All
-          </Button>
-        )}
       </div>
 
-      {/* Filter Modal */}
-      <Modal isOpen={isOpen} size="2xl" onOpenChange={onOpenChange}>
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="md"
+        onOpenChange={onOpenChange}
+      >
         <ModalContent>
-          <ModalHeader>Filter Classes</ModalHeader>
-          <ModalBody>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Name Filter */}
-              <div>
-                <Input
-                  label="Class Name"
-                  placeholder="Filter by name"
-                  value={filterState.name || ""}
-                  onChange={(e) => updateFilter("name", e.target.value)}
-                />
-              </div>
+          <ModalHeader className="flex justify-between items-center p-4 border-b">
+            <span className="text-lg font-medium">Filter Classes</span>
+          </ModalHeader>
+          <ModalBody className="py-4 px-4">
+            {/* Group Name Filter */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="group-number"
+              >
+                Group Number
+              </label>
+              <Input
+                aria-label="Group Number"
+                className="w-full bg-gray-50"
+                id="group-number"
+                min={1}
+                placeholder="Filter by group number"
+                size="sm"
+                type="number"
+                value={filterState.groupName?.toString() || ""}
+                onChange={(e) => {
+                  const value = e.target.value
+                    ? parseInt(e.target.value, 10)
+                    : undefined;
 
-              {/* Group Name Filter */}
-              <div>
+                  updateFilter("groupName", value);
+                }}
+              />
+            </div>
+
+            {/* Course Filter */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="course-filter"
+              >
+                Course
+              </label>
+              <Autocomplete
+                className="w-full"
+                classNames={{
+                  base: "w-full",
+                  listboxWrapper: "max-h-[400px]",
+                }}
+                defaultItems={courses}
+                id="course-filter"
+                placeholder="Select a course"
+                selectedKey={filterState.courseId}
+                onSelectionChange={(key) => updateFilter("courseId", key)}
+              >
+                {(course) => (
+                  <AutocompleteItem key={course.id} textValue={course.name}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">
+                        {course.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {course.code}
+                      </span>
+                    </div>
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+            </div>
+
+            {/* Semester Filter */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="semester-filter"
+              >
+                Semester
+              </label>
+              <Autocomplete
+                className="w-full"
+                classNames={{
+                  base: "w-full",
+                  listboxWrapper: "max-h-[400px]",
+                }}
+                defaultItems={semesters}
+                id="semester-filter"
+                placeholder="Select a semester"
+                selectedKey={filterState.semesterId}
+                onSelectionChange={(key) => updateFilter("semesterId", key)}
+              >
+                {(semester) => (
+                  <AutocompleteItem
+                    key={semester.id}
+                    textValue={`${semester.semesterNumber}/${semester.year}`}
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">
+                        Semester {semester.semesterNumber}/{semester.year}
+                      </span>
+                      {semester.isActive && (
+                        <span className="text-xs text-success">Active</span>
+                      )}
+                    </div>
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+            </div>
+
+            {/* Shift Filter */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="shift-filter"
+              >
+                Shift
+              </label>
+              <Autocomplete
+                className="w-full"
+                classNames={{
+                  base: "w-full",
+                  listboxWrapper: "max-h-[400px]",
+                }}
+                defaultItems={shifts}
+                id="shift-filter"
+                placeholder="Select a shift"
+                selectedKey={filterState.shiftId}
+                onSelectionChange={(key) => updateFilter("shiftId", key)}
+              >
+                {(shift) => (
+                  <AutocompleteItem key={shift.id} textValue={shift.name}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">
+                        {shift.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {shift.startTime.substring(0, 5)}
+                        {" - "}
+                        {shift.endTime.substring(0, 5)}
+                      </span>
+                    </div>
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+            </div>
+
+            {/* Capacity Range */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="capacity-range"
+              >
+                Capacity Range
+              </label>
+              <div className="flex items-center gap-2 mb-2">
                 <Input
-                  label="Group Number"
-                  min={1}
-                  placeholder="Filter by group number"
+                  aria-label="Minimum capacity"
+                  className="w-[120px] bg-gray-50"
+                  id="min-capacity"
+                  min={0}
+                  size="sm"
                   type="number"
-                  value={filterState.groupName?.toString() || ""}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : undefined;
-
-                    updateFilter("groupName", value);
-                  }}
-                />
-              </div>
-
-              {/* Course Filter */}
-              <div>
-                <Autocomplete
-                  defaultItems={courses}
-                  label="Course"
-                  placeholder="Select a course"
-                  selectedKey={filterState.courseId}
-                  onSelectionChange={(key) => updateFilter("courseId", key)}
-                >
-                  {(course) => (
-                    <AutocompleteItem key={course.id} textValue={course.name}>
-                      <div className="flex flex-col">
-                        <span>{course.name}</span>
-                        <span className="text-tiny text-default-400">
-                          {course.code}
-                        </span>
-                      </div>
-                    </AutocompleteItem>
-                  )}
-                </Autocomplete>
-              </div>
-
-              {/* Semester Filter */}
-              <div>
-                <Autocomplete
-                  defaultItems={semesters}
-                  label="Semester"
-                  placeholder="Select a semester"
-                  selectedKey={filterState.semesterId}
-                  onSelectionChange={(key) => updateFilter("semesterId", key)}
-                >
-                  {(semester) => (
-                    <AutocompleteItem
-                      key={semester.id}
-                      textValue={`${semester.semesterNumber}/${semester.year}`}
-                    >
-                      <div className="flex flex-col">
-                        <span>
-                          Semester {semester.semesterNumber}/{semester.year}
-                        </span>
-                        {semester.isActive && (
-                          <span className="text-tiny text-success">Active</span>
-                        )}
-                      </div>
-                    </AutocompleteItem>
-                  )}
-                </Autocomplete>
-              </div>
-
-              {/* Capacity Range */}
-              <div className="md:col-span-2">
-                <p className="text-sm mb-1">Capacity Range</p>
-                <div className="flex items-center gap-4">
-                  <Input
-                    label="Min"
-                    min={0}
-                    type="number"
-                    value={filterState.minCapacity?.toString() || "0"}
-                    onChange={(e) =>
-                      updateFilter(
-                        "minCapacity",
-                        e.target.value ? parseInt(e.target.value, 10) : 0
-                      )
-                    }
-                  />
-                  <Input
-                    label="Max"
-                    min={0}
-                    type="number"
-                    value={filterState.maxCapacity?.toString() || "100"}
-                    onChange={(e) =>
-                      updateFilter(
-                        "maxCapacity",
-                        e.target.value ? parseInt(e.target.value, 10) : 100
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Date Range */}
-              <div>
-                <DatePicker
-                  label="Start Date"
-                  onChange={(date) => updateFilter("startDate", date)}
-                />
-              </div>
-              <div>
-                <DatePicker
-                  label="End Date"
-                  onChange={(date) => updateFilter("endDate", date)}
-                />
-              </div>
-
-              {/* Registration Status */}
-              <div>
-                <Select
-                  label="Registration Status"
-                  placeholder="Select status"
-                  selectedKeys={
-                    filterState.isRegistrable !== null &&
-                    filterState.isRegistrable !== undefined
-                      ? [filterState.isRegistrable.toString()]
-                      : []
+                  value={filterState.minCapacity?.toString() || "0"}
+                  onChange={(e) =>
+                    updateFilter(
+                      "minCapacity",
+                      e.target.value ? parseInt(e.target.value, 10) : 0
+                    )
                   }
-                  onChange={(e) => {
-                    const value = e.target.value;
+                />
+                <span>to</span>
+                <Input
+                  aria-label="Maximum capacity"
+                  className="w-[120px] bg-gray-50"
+                  id="max-capacity"
+                  min={0}
+                  size="sm"
+                  type="number"
+                  value={filterState.maxCapacity?.toString() || "100"}
+                  onChange={(e) =>
+                    updateFilter(
+                      "maxCapacity",
+                      e.target.value ? parseInt(e.target.value, 10) : 100
+                    )
+                  }
+                />
+              </div>
+            </div>
 
-                    if (value === "") {
-                      updateFilter("isRegistrable", null);
-                    } else {
-                      updateFilter("isRegistrable", value === "true");
-                    }
-                  }}
+            {/* Registration Status */}
+            <div className="mb-6">
+              <label
+                className="block text-sm font-medium text-gray-700 mb-2"
+                htmlFor="registration-toggle"
+              >
+                Registration Status
+              </label>
+              <div className="flex gap-2" id="registration-toggle" role="group">
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isRegistrable === true ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isRegistrable === true ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isRegistrable",
+                      filterState.isRegistrable === true ? null : true
+                    )
+                  }
                 >
-                  <SelectItem key="">Any</SelectItem>
-                  <SelectItem key="true">Open</SelectItem>
-                  <SelectItem key="false">Closed</SelectItem>
-                </Select>
+                  Open
+                </Button>
+                <Button
+                  className="flex-1"
+                  color={
+                    filterState.isRegistrable === false ? "primary" : "default"
+                  }
+                  size="sm"
+                  variant={
+                    filterState.isRegistrable === false ? "solid" : "bordered"
+                  }
+                  onPress={() =>
+                    updateFilter(
+                      "isRegistrable",
+                      filterState.isRegistrable === false ? null : false
+                    )
+                  }
+                >
+                  Closed
+                </Button>
               </div>
             </div>
           </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={clearFilters}>
-              Clear All
+          <ModalFooter className="border-t pt-4 flex justify-between">
+            <Button color="danger" variant="light" onPress={clearFilters}>
+              Reset All
             </Button>
-            <Button color="primary" onPress={applyFilters}>
-              Apply Filters
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="bordered" onPress={onClose}>
+                Cancel
+              </Button>
+              <Button color="primary" onPress={applyFilters}>
+                Apply Filters
+              </Button>
+            </div>
           </ModalFooter>
         </ModalContent>
       </Modal>

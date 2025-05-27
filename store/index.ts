@@ -14,6 +14,7 @@ import locationReducer from "./slices/locationSlice";
 import authReducer from "./slices/authSlice";
 import semesterReducer from "./slices/semesterSlice";
 import classReducer from "./slices/classSlice";
+import shiftReducer from "./slices/shiftSlice";
 
 export const store = configureStore({
   reducer: {
@@ -31,6 +32,7 @@ export const store = configureStore({
     auth: authReducer,
     semester: semesterReducer,
     class: classReducer,
+    shift: shiftReducer,
   },
 });
 

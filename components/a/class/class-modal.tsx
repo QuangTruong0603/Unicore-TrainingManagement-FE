@@ -6,7 +6,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  DatePicker,
   Input,
   Modal,
   ModalBody,
@@ -20,9 +19,12 @@ import {
 import { Course } from "@/services/course/course.schema";
 import { Semester } from "@/services/semester/semester.schema";
 import { AcademicClass } from "@/services/class/class.schema";
+import { Shift } from "@/services/shift/shift.schema";
 import { AcademicClassCreateDto } from "@/services/class/class.dto";
 import { courseService } from "@/services/course/course.service";
 import { semesterService } from "@/services/semester/semester.service";
+import { roomService } from "@/services/room/room.service";
+import { shiftService } from "@/services/shift/shift.service";
 
 interface ClassModalProps {
   isOpen: boolean;
@@ -37,14 +39,7 @@ interface Room {
   id: string;
   name: string;
   availableSeats: number;
-  floorId: string;
-}
-
-interface Shift {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
+  floorId?: string; // Make floorId optional to match the service response
 }
 
 export function ClassModal({
@@ -60,7 +55,7 @@ export function ClassModal({
   const [rooms, setRooms] = useState<Room[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
-  const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
+  const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]); // Empty by default
 
   const {
     handleSubmit,
@@ -76,9 +71,7 @@ export function ClassModal({
             name: "",
             groupNumber: 1,
             capacity: 30,
-            startDate: new Date(),
-            endDate: new Date(new Date().setMonth(new Date().getMonth() + 3)),
-            listOfWeeks: Array.from({ length: 15 }, (_, i) => i + 1),
+            listOfWeeks: [], // Empty by default
             isRegistrable: false,
             courseId: "",
             semesterId: "",
@@ -86,10 +79,8 @@ export function ClassModal({
           }
         : {
             name: academicClass?.name || "",
-            groupNumber: academicClass?.groupName || 1,
+            groupNumber: academicClass?.groupNumber || 1,
             capacity: academicClass?.capacity || 30,
-            startDate: academicClass?.startDate || new Date(),
-            endDate: academicClass?.endDate || new Date(),
             listOfWeeks: academicClass?.listOfWeeks || [],
             isRegistrable: academicClass?.isRegistrable || false,
             courseId: academicClass?.courseId || "",
@@ -131,70 +122,22 @@ export function ClassModal({
 
           setSemesters(semesterResponse.data.data);
 
-          // Fetch rooms (simplified example)
-          // In a real app, you would call the actual room service
-          /* 
-          const roomResponse = await roomService.getRooms();
-          setRooms(roomResponse.data);
-          */
+          // Fetch actual rooms from room service
+          const roomResponse = await roomService.getAllRooms();
 
-          // For now, use example room data
-          setRooms([
-            {
-              id: "room1",
-              name: "A101",
-              availableSeats: 40,
-              floorId: "floor1",
-            },
-            {
-              id: "room2",
-              name: "A102",
-              availableSeats: 30,
-              floorId: "floor1",
-            },
-            {
-              id: "room3",
-              name: "B201",
-              availableSeats: 50,
-              floorId: "floor2",
-            },
-            {
-              id: "room4",
-              name: "B202",
-              availableSeats: 35,
-              floorId: "floor2",
-            },
-          ]);
+          setRooms(
+            roomResponse.map((room: any) => ({
+              ...room,
+              floorId: room.floorId ?? "", // Provide a default if missing
+            }))
+          );
+          // Fetch shifts using our new service
+          const shiftResponse = await shiftService.getAllShifts();
 
-          // Example shift data
-          setShifts([
-            {
-              id: "shift1",
-              name: "Morning 1",
-              startTime: "07:00:00",
-              endTime: "09:30:00",
-            },
-            {
-              id: "shift2",
-              name: "Morning 2",
-              startTime: "09:45:00",
-              endTime: "12:15:00",
-            },
-            {
-              id: "shift3",
-              name: "Afternoon 1",
-              startTime: "13:00:00",
-              endTime: "15:30:00",
-            },
-            {
-              id: "shift4",
-              name: "Afternoon 2",
-              startTime: "15:45:00",
-              endTime: "18:15:00",
-            },
-          ]);
-        } catch (error) {
-          // Error handling
+          setShifts(shiftResponse.data);
+        } catch {
+          // Error handling - silently fail but could be enhanced with toast notifications
+          setIsLoadingData(false);
         } finally {
           setIsLoadingData(false);
         }
@@ -221,27 +164,29 @@ export function ClassModal({
     }
   }, [selectedCourseId, courses, mode, setValue, watch]);
 
-  // Generate weeks based on start and end date
+  // Update available weeks when semester changes
+  const selectedSemesterId = watch("semesterId");
+
   useEffect(() => {
-    const startDate = watch("startDate");
-    const endDate = watch("endDate");
+    if (selectedSemesterId) {
+      const selectedSemester = semesters.find(
+        (semester) => semester.id === selectedSemesterId
+      );
 
-    if (startDate && endDate) {
-      // Calculate number of weeks between dates (approximate)
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      const diffWeeks = Math.ceil(diffDays / 7);
+      if (selectedSemester && selectedSemester.numberOfWeeks > 0) {
+        // Update the available weeks based on the selected semester
+        const numberOfWeeks = selectedSemester.numberOfWeeks;
 
-      // Generate week numbers
-      const weeks = Array.from({ length: diffWeeks }, (_, i) => i + 1);
+        const weeksArray = Array.from(
+          { length: numberOfWeeks },
+          (_, i) => i + 1
+        );
 
-      setSelectedWeeks(weeks);
-
-      if (mode === "create") {
-        setValue("listOfWeeks", weeks);
+        setSelectedWeeks(weeksArray);
+        // Don't auto-select weeks by default
       }
     }
-  }, [watch("startDate"), watch("endDate"), mode, setValue]);
+  }, [selectedSemesterId, semesters]);
 
   const handleFormSubmit = async (data: AcademicClassCreateDto) => {
     await onSubmit(data);
@@ -264,13 +209,15 @@ export function ClassModal({
   // Add a schedule entry
   const addScheduleEntry = () => {
     const currentSchedule = watch("scheduleInDays") || [];
+    const defaultRoom = rooms.length > 0 ? rooms[0].id : "";
+    const defaultShift = shifts.length > 0 ? shifts[0].id : "";
 
     setValue("scheduleInDays", [
       ...currentSchedule,
       {
         dayOfWeek: "Monday",
-        roomId: "",
-        shiftId: "",
+        roomId: defaultRoom,
+        shiftId: defaultShift,
       },
     ]);
   };
@@ -318,7 +265,8 @@ export function ClassModal({
               {/* Basic Information */}
               <div className="md:col-span-2">
                 <h3 className="text-lg font-medium mb-2">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 mb-3">
+                  {/* Class name in a single row */}
                   <Controller
                     control={control}
                     name="name"
@@ -335,61 +283,50 @@ export function ClassModal({
                     )}
                   />
 
-                  <Controller
-                    control={control}
-                    name="groupNumber"
-                    render={({ field }) => (
-                      <Input
-                        isRequired
-                        errorMessage={errors.groupNumber?.message}
-                        isDisabled={isLoadingData}
-                        label="Group Number"
-                        min={1}
-                        placeholder="Enter group number"
-                        type="number"
-                        value={field.value?.toString()}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value, 10) || 1)
-                        }
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="capacity"
-                    render={({ field }) => (
-                      <Input
-                        isRequired
-                        errorMessage={errors.capacity?.message}
-                        isDisabled={isLoadingData}
-                        label="Capacity"
-                        min={1}
-                        placeholder="Enter maximum capacity"
-                        type="number"
-                        value={field.value?.toString()}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value, 10) || 30)
-                        }
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="isRegistrable"
-                    render={({ field }) => (
-                      <div className="flex items-center h-full pt-6">
-                        <Checkbox
+                  {/* Group number and capacity in the same row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Controller
+                      control={control}
+                      name="groupNumber"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          errorMessage={errors.groupNumber?.message}
                           isDisabled={isLoadingData}
-                          isSelected={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          Open for Registration
-                        </Checkbox>
-                      </div>
-                    )}
-                  />
+                          label="Group Number"
+                          min={1}
+                          placeholder="Enter group number"
+                          type="number"
+                          value={field.value?.toString()}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value, 10) || 1)
+                          }
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      control={control}
+                      name="capacity"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          errorMessage={errors.capacity?.message}
+                          isDisabled={isLoadingData}
+                          label="Capacity"
+                          min={1}
+                          placeholder="Enter maximum capacity"
+                          type="number"
+                          value={field.value?.toString()}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value, 10) || 30)
+                          }
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* Registration status at the bottom */}
                 </div>
               </div>
 
@@ -459,57 +396,31 @@ export function ClassModal({
                 rules={{ required: "Semester is required" }}
               />
 
-              {/* Date Range */}
               <Controller
                 control={control}
-                name="startDate"
+                name="isRegistrable"
                 render={({ field }) => (
-                  <DatePicker
-                    isRequired
-                    errorMessage={errors.startDate?.message}
-                    isDisabled={isLoadingData}
-                    label="Start Date"
-                    onChange={(date) => {
-                      if (date) field.onChange(date);
-                    }}
-                  />
+                  <div className="flex items-center">
+                    <Checkbox
+                      isDisabled={isLoadingData}
+                      isSelected={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      Open for Registration
+                    </Checkbox>
+                  </div>
                 )}
-                rules={{ required: "Start date is required" }}
-              />
-
-              <Controller
-                control={control}
-                name="endDate"
-                render={({ field }) => (
-                  <DatePicker
-                    isRequired
-                    errorMessage={errors.endDate?.message}
-                    isDisabled={isLoadingData}
-                    label="End Date"
-                    onChange={(date) => {
-                      if (date) field.onChange(date);
-                    }}
-                  />
-                )}
-                rules={{
-                  required: "End date is required",
-                  validate: (value) => {
-                    const startDate = watch("startDate");
-
-                    return (
-                      (startDate && value && value > startDate) ||
-                      "End date must be after start date"
-                    );
-                  },
-                }}
               />
 
               {/* Week Selection */}
               <div className="md:col-span-2">
                 <h3 className="text-lg font-medium mb-2">Week Selection</h3>
                 <p className="text-sm text-gray-500 mb-2">
-                  Select the weeks this class will be held
+                  {selectedSemesterId
+                    ? "Select the weeks this class will be held"
+                    : "Please select a semester first to see available weeks"}
                 </p>
+
                 <div className="flex flex-wrap gap-2">
                   {selectedWeeks.map((week) => (
                     <Chip
