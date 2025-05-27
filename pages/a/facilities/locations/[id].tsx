@@ -38,6 +38,7 @@ import { Location } from "@/services/location/location.schema";
 import { buildingService } from "@/services/building/building.service";
 import { floorService } from "@/services/floor/floor.service";
 import { roomService } from "@/services/room/room.service";
+import "./index.scss"; // Import your styles
 
 export default function LocationDetailPage() {
   const router = useRouter();

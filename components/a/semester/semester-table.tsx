@@ -90,6 +90,26 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
       ),
     },
     {
+      key: "startDate",
+      title: "Start Date",
+      sortable: true,
+      render: (semester: Semester) =>
+        new Date(semester.startDate).toLocaleDateString(),
+    },
+    {
+      key: "endDate",
+      title: "End Date",
+      sortable: true,
+      render: (semester: Semester) =>
+        new Date(semester.endDate).toLocaleDateString(),
+    },
+    {
+      key: "numberOfWeeks",
+      title: "Weeks",
+      sortable: true,
+      render: (semester: Semester) => semester.numberOfWeeks,
+    },
+    {
       key: "actions",
       title: "Actions",
       render: (semester: Semester) => (

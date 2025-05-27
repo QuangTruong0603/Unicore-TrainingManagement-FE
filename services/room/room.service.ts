@@ -45,7 +45,8 @@ class RoomService {
       }
 
       if (query.filter.availableSeats) {
-        params["Filter.AvailableSeats"] = query.filter.availableSeats.toString();
+        params["Filter.AvailableSeats"] =
+          query.filter.availableSeats.toString();
       }
     }
 
@@ -80,23 +81,31 @@ class RoomService {
   }
 
   async createRoom(data: RoomCreateDto): Promise<Room> {
-    return buildingClient.post(API_ENDPOINTS.ROOMS, data, {
+    const response = await buildingClient.post(API_ENDPOINTS.ROOMS, data, {
       headers: {
         accept: "text/plain",
       },
     });
+
+    return response.data as Room;
   }
 
   async updateRoom(id: string, data: RoomUpdateDto): Promise<Room> {
-    return buildingClient.put(`${API_ENDPOINTS.ROOMS}/${id}`, data, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
+    const response = await buildingClient.put(
+      `${API_ENDPOINTS.ROOMS}/${id}`,
+      data,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+
+    return response.data as Room;
   }
 
   async activateRoom(id: string): Promise<Room> {
-    return buildingClient.post(
+    const response = await buildingClient.post(
       `${API_ENDPOINTS.ROOMS}/${id}/activate`,
       {},
       {
@@ -105,10 +114,12 @@ class RoomService {
         },
       }
     );
+
+    return response.data as Room;
   }
 
   async deactivateRoom(id: string): Promise<Room> {
-    return buildingClient.post(
+    const response = await buildingClient.post(
       `${API_ENDPOINTS.ROOMS}/${id}/deactivate`,
       {},
       {
@@ -117,6 +128,8 @@ class RoomService {
         },
       }
     );
+
+    return response.data as Room;
   }
 
   async toggleStatus(id: string): Promise<Room> {
@@ -130,11 +143,13 @@ class RoomService {
   }
 
   async getRoomById(id: string): Promise<Room> {
-    return buildingClient.get(`${API_ENDPOINTS.ROOMS}/${id}`, {
+    const response = await buildingClient.get(`${API_ENDPOINTS.ROOMS}/${id}`, {
       headers: {
         accept: "text/plain",
       },
     });
+
+    return response.data as Room;
   }
 
   async getAllRooms(
@@ -158,15 +173,18 @@ class RoomService {
     }
 
     const queryString = params.toString();
+
     if (queryString) {
       url += `?${queryString}`;
     }
 
-    return buildingClient.get(url, {
+    const response = await buildingClient.get(url, {
       headers: {
         accept: "text/plain",
       },
     });
+
+    return response.data as Room[];
   }
 }
 

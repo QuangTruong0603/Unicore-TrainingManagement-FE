@@ -52,6 +52,15 @@ export const useSemestersWithCustomHook = (query: SemesterQuery) => {
     ...(query.filters?.isActive !== undefined && {
       "Filter.IsActive": query.filters.isActive!.toString(),
     }),
+    ...(query.filters?.startDate !== undefined && {
+      "Filter.StartDate": query.filters.startDate.toISOString(),
+    }),
+    ...(query.filters?.endDate !== undefined && {
+      "Filter.EndDate": query.filters.endDate.toISOString(),
+    }),
+    ...(query.filters?.numberOfWeeks !== undefined && {
+      "Filter.NumberOfWeeks": query.filters.numberOfWeeks.toString(),
+    }),
   };
 
   return useApiGet(

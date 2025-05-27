@@ -9,12 +9,18 @@ export const departmentService = {
   getDepartments: async (
     params?: GetDepartmentsParams
   ): Promise<DepartmentResponse> => {
-    return majorClient.get(API_ENDPOINTS.DEPARTMENTS, {
+    const response = await majorClient.get(API_ENDPOINTS.DEPARTMENTS, {
       params,
       headers: {
         accept: "text/plain",
       },
     });
+
+    // Ensure the response matches DepartmentResponse
+    return {
+      data: response.data?.data ?? response.data ?? [],
+      total: response.data?.total ?? response.data?.length ?? 0,
+    } as DepartmentResponse;
   },
 
   getDepartmentsPagination: async (

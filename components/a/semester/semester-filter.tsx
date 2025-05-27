@@ -16,6 +16,9 @@ interface FilterState {
   semesterNumber: number | null;
   year: number | null;
   isActive: boolean | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  numberOfWeeks: number | null;
 }
 
 export function SemesterFilterComponent({
@@ -26,6 +29,9 @@ export function SemesterFilterComponent({
     semesterNumber: null,
     year: null,
     isActive: null,
+    startDate: null,
+    endDate: null,
+    numberOfWeeks: null,
   });
 
   // Initialize filter state based on current query
@@ -35,6 +41,9 @@ export function SemesterFilterComponent({
         semesterNumber: query.filters.semesterNumber ?? null,
         year: query.filters.year ?? null,
         isActive: query.filters.isActive ?? null,
+        startDate: query.filters.startDate ?? null,
+        endDate: query.filters.endDate ?? null,
+        numberOfWeeks: query.filters.numberOfWeeks ?? null,
       });
     }
   }, [query]);
@@ -62,6 +71,18 @@ export function SemesterFilterComponent({
 
     if (state.isActive !== null) {
       newFilters.isActive = state.isActive;
+    }
+
+    if (state.startDate !== null) {
+      newFilters.startDate = state.startDate;
+    }
+
+    if (state.endDate !== null) {
+      newFilters.endDate = state.endDate;
+    }
+
+    if (state.numberOfWeeks !== null) {
+      newFilters.numberOfWeeks = state.numberOfWeeks;
     }
 
     // Apply the filters to the query
@@ -139,6 +160,65 @@ export function SemesterFilterComponent({
             <SelectItem key="true">Active</SelectItem>
             <SelectItem key="false">Inactive</SelectItem>
           </Select>
+        </div>
+
+        <div>
+          <label className="text-sm mb-1 block" htmlFor="number-of-weeks-input">
+            Number of Weeks
+          </label>
+          <Input
+            id="number-of-weeks-input"
+            min={1}
+            placeholder="Enter number of weeks"
+            size="sm"
+            type="number"
+            value={filterState.numberOfWeeks?.toString() || ""}
+            onValueChange={(value) =>
+              updateFilter("numberOfWeeks", value ? parseInt(value, 10) : null)
+            }
+          />
+        </div>
+
+        <div>
+          <label className="text-sm mb-1 block" htmlFor="start-date-input">
+            Start Date
+          </label>          <Input
+            id="start-date-input"
+            placeholder="Select start date"
+            size="sm"
+            type="date"
+            value={
+              filterState.startDate
+                ? filterState.startDate.toISOString().split("T")[0]
+                : ""
+            }
+            onChange={(e) => {
+              const value = e.target.value;
+              
+              updateFilter("startDate", value ? new Date(value) : null);
+            }}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm mb-1 block" htmlFor="end-date-input">
+            End Date
+          </label>          <Input
+            id="end-date-input"
+            placeholder="Select end date"
+            size="sm"
+            type="date"
+            value={
+              filterState.endDate
+                ? filterState.endDate.toISOString().split("T")[0]
+                : ""
+            }
+            onChange={(e) => {
+              const value = e.target.value;
+              
+              updateFilter("endDate", value ? new Date(value) : null);
+            }}
+          />
         </div>
       </div>
     </div>

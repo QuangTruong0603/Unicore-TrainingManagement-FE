@@ -310,7 +310,6 @@ export const CourseTable: React.FC<CourseTableProps> = ({
 
   return (
     <div className={styles.tableWrapper}>
-      {" "}
       <HeroTable aria-label="Courses Table">
         <TableHeader>
           {columns.map((column) => (
