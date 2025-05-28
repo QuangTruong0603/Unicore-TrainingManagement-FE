@@ -173,9 +173,10 @@ export default function CourseMaterialsPage() {
         // Update existing material
         if (isFormData) {
           const formData = data as FormData;
+
           await materialService.updateMaterialWithFile(
             courseId as string,
-            selectedMaterial.id,
+            selectedMaterial.materialId,
             formData.get("Name") as string,
             formData.get("File") as File,
             formData.get("MaterialTypeId") as string
@@ -183,7 +184,7 @@ export default function CourseMaterialsPage() {
         } else {
           await materialService.updateMaterial(
             courseId as string,
-            selectedMaterial.id,
+            selectedMaterial.materialId,
             data as MaterialUpdateDto
           );
         }
@@ -308,7 +309,7 @@ export default function CourseMaterialsPage() {
 
                 return (
                   <MaterialCard
-                    key={material.id}
+                    key={material.materialId}
                     material={material}
                     materialType={materialType}
                     onEdit={handleEditMaterial}

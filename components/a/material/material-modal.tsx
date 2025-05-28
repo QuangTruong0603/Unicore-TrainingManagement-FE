@@ -21,13 +21,13 @@ import { MaterialCreateDto, MaterialUpdateDto, Material } from "@/services/mater
 interface MaterialModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
-  onSubmit: (data: MaterialCreateDto | MaterialUpdateDto | FormData, isFormData: boolean) => Promise<void>;
+  onSubmit: (data: MaterialCreateDto | MaterialUpdateDto | FormData, isFormData: boolean, materialId?: string) => Promise<void>;
   materialTypes: MaterialType[];
   courseId: string;
   isSubmitting: boolean;
   mode: "create" | "edit";
   initialData?: {
-    id?: string;
+    materialId?: string;
     name: string;
     materialTypeId: string;
     fileUrl?: string;
@@ -163,9 +163,15 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
       // Make sure the file is correctly appended with its filename
       formData.append('File', selectedFile, selectedFile.name);
     }
-    
-    // Submit with FormData
-    await onSubmit(formData, true);
+    console.log(initialData);
+    if (mode === "edit" && initialData?.materialId) {
+      console.log(initialData.materialId);
+      // Pass materialId as a separate parameter
+      await onSubmit(formData, true, initialData.materialId);
+    } else {
+      // Submit with FormData only for create
+      await onSubmit(formData, true);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

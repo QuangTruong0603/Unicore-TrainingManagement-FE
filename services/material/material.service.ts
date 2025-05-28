@@ -98,13 +98,24 @@ class MaterialService {
     id: string,
     data: MaterialUpdateDto
   ): Promise<BaseResponse<Material>> {
+    console.log(data);
+    const formData = new FormData();
+    formData.append('Name', data.name);
+    
+    if (data.materialTypeId) {
+      formData.append('MaterialTypeId', data.materialTypeId);
+    }
+    
+    if (data.file) {
+      formData.append('File', data.file, data.file.name);
+    }
+
     return courseClient.put(
       `${API_ENDPOINTS.COURSES}/${courseId}/course-materials/${id}`,
-      data,
+      formData,
       {
         headers: {
           accept: "text/plain",
-          "Content-Type": "application/json"
         },
       }
     );
@@ -191,6 +202,9 @@ class MaterialService {
     );
   }
 
+  /**
+   * @deprecated Use updateMaterial instead which now supports file uploads
+   */
   async updateMaterialWithFile(
     courseId: string,
     id: string,

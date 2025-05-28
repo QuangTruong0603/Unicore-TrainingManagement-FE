@@ -1,7 +1,7 @@
 import { PaginatedResponse } from "../dto";
 
 export interface Material {
-  id: string;
+  materialId: string;
   name: string;
   fileUrl: string;
   materialTypeId: string;
@@ -34,6 +34,7 @@ export interface MaterialCreateDto {
 export interface MaterialUpdateDto {
   name: string;
   materialTypeId?: string;
+  file?: File;
 }
 
 export interface MaterialListResponse extends PaginatedResponse<Material> {}
