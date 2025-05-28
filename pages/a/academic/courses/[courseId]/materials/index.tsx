@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Plus, Search, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, ArrowLeft } from "lucide-react";
 import {
   Button,
   Input,
@@ -8,15 +8,10 @@ import {
   Spinner,
   Tabs,
   Tab,
-  Card,
-  CardBody,
-  CardHeader,
-  CardFooter,
   useDisclosure,
 } from "@heroui/react";
 
 import DefaultLayout from "@/layouts/default";
-import { Material } from "@/services/material/material.schema";
 import { materialService } from "@/services/material/material.service";
 import { MaterialType } from "@/services/material-type/material-type.schema";
 import { materialTypeService } from "@/services/material-type/material-type.service";
@@ -25,7 +20,7 @@ import {
   MaterialCreateDto,
   MaterialUpdateDto,
 } from "@/services/material/material.schema";
-import { MaterialModal } from "@/components/a/material/material-modal";
+import { MaterialModal, MaterialCard } from "@/components/a/material/material-modal";
 
 interface MaterialTypeWithMaterials extends MaterialType {
   materials: MaterialInterface[];
@@ -46,7 +41,7 @@ export default function CourseMaterialsPage() {
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialInterface | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   // Add states for pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -61,7 +56,7 @@ export default function CourseMaterialsPage() {
 
   const fetchData = async () => {
     if (!courseId) return;
-
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -75,7 +70,6 @@ export default function CourseMaterialsPage() {
         courseId as string
       );
       const materials = materialsResponse.data || [];
-      console.log(materials);
 
       // Group materials by type
       const typesWithMaterials = types.map((type) => {
@@ -157,13 +151,9 @@ export default function CourseMaterialsPage() {
     }
 
     try {
-      console.log(`Deleting material: Course ID=${courseId}, Material ID=${materialId}`);
       await materialService.deleteMaterial(courseId as string, materialId);
-      // Show success message
-      alert("Material deleted successfully");
       fetchData(); // Refresh the data
     } catch (err) {
-      console.error("Error deleting material:", err);
       setError(
         err instanceof Error ? err.message : "Failed to delete material"
       );
@@ -183,7 +173,6 @@ export default function CourseMaterialsPage() {
         // Update existing material
         if (isFormData) {
           const formData = data as FormData;
-          // Make sure File is handled properly
           await materialService.updateMaterialWithFile(
             courseId as string,
             selectedMaterial.id,
@@ -202,8 +191,6 @@ export default function CourseMaterialsPage() {
         // Create new material
         if (isFormData) {
           const formData = data as FormData;
-
-          // Make sure File is handled properly
           await materialService.createMaterialWithFile(
             courseId as string,
             formData.get("Name") as string,
@@ -306,7 +293,6 @@ export default function CourseMaterialsPage() {
             <Tab key={type.id} title={type.name} />
           ))}
         </Tabs>
-        <div>paginatedMaterials: {JSON.stringify(paginatedMaterials)}</div>
 
         <div className="bg-white rounded-lg shadow p-4">
           {paginatedMaterials.length === 0 ? (
@@ -321,50 +307,13 @@ export default function CourseMaterialsPage() {
                 );
 
                 return (
-                  <Card key={material.id} className="shadow-sm">
-                    <CardHeader className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-medium">{material.name}</h3>
-                        <span className="text-xs bg-orange-100 text-primary px-2 py-1 rounded-full">
-                          {materialType?.name || "Unknown Type"}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardBody>
-                      {material.fileUrl && (
-                        <a
-                          href={material.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline text-sm"
-                        >
-                          View File
-                        </a>
-                      )}
-                    </CardBody>
-                    <CardFooter className="flex justify-end gap-2">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        color="warning"
-                        onPress={() => handleEditMaterial(material)}
-                      >
-                        <Edit size={16} />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        color="danger"
-                        onPress={() => {
-                          handleDeleteMaterial(material.materialId);
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  <MaterialCard
+                    key={material.id}
+                    material={material}
+                    materialType={materialType}
+                    onEdit={handleEditMaterial}
+                    onDelete={handleDeleteMaterial}
+                  />
                 );
               })}
             </div>
