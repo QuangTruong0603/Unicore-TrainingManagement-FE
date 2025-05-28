@@ -288,7 +288,7 @@ class HttpClient {
     url: string,
     config?: AxiosRequestConfig
   ): Promise<BaseResponse<T>> {
-    return this.request<T>({ ...config, method: "delete", url }); // Fixed: removed duplicate config parameter
+    return this.request<T>({ ...config, method: "delete", url });
   }
 
   /**

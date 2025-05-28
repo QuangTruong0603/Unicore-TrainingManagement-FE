@@ -75,6 +75,7 @@ export default function CourseMaterialsPage() {
         courseId as string
       );
       const materials = materialsResponse.data || [];
+      console.log(materials);
 
       // Group materials by type
       const typesWithMaterials = types.map((type) => {
@@ -144,15 +145,25 @@ export default function CourseMaterialsPage() {
 
   const handleDeleteMaterial = async (materialId: string) => {
     if (!courseId) return;
+    
+    // Validate materialId exists
+    if (!materialId) {
+      setError("Material ID is missing");
+      return;
+    }
 
     if (!window.confirm("Are you sure you want to delete this material?")) {
       return;
     }
 
     try {
+      console.log(`Deleting material: Course ID=${courseId}, Material ID=${materialId}`);
       await materialService.deleteMaterial(courseId as string, materialId);
+      // Show success message
+      alert("Material deleted successfully");
       fetchData(); // Refresh the data
     } catch (err) {
+      console.error("Error deleting material:", err);
       setError(
         err instanceof Error ? err.message : "Failed to delete material"
       );
@@ -191,6 +202,7 @@ export default function CourseMaterialsPage() {
         // Create new material
         if (isFormData) {
           const formData = data as FormData;
+
           // Make sure File is handled properly
           await materialService.createMaterialWithFile(
             courseId as string,
@@ -294,6 +306,7 @@ export default function CourseMaterialsPage() {
             <Tab key={type.id} title={type.name} />
           ))}
         </Tabs>
+        <div>paginatedMaterials: {JSON.stringify(paginatedMaterials)}</div>
 
         <div className="bg-white rounded-lg shadow p-4">
           {paginatedMaterials.length === 0 ? (
@@ -344,7 +357,9 @@ export default function CourseMaterialsPage() {
                         size="sm"
                         variant="flat"
                         color="danger"
-                        onPress={() => handleDeleteMaterial(material.id)}
+                        onPress={() => {
+                          handleDeleteMaterial(material.materialId);
+                        }}
                       >
                         <Trash2 size={16} />
                       </Button>

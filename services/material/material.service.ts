@@ -111,6 +111,17 @@ class MaterialService {
   }
 
   async deleteMaterial(courseId: string, id: string): Promise<void> {
+    // Validate parameters
+    if (!courseId) {
+      throw new Error("Course ID is required");
+    }
+    
+    if (!id) {
+      throw new Error("Material ID is required");
+    }
+    
+    console.log(`Deleting material with ID: ${id} from course: ${courseId}`);
+    
     await courseClient.delete(
       `${API_ENDPOINTS.COURSES}/${courseId}/course-materials/${id}`,
       {
