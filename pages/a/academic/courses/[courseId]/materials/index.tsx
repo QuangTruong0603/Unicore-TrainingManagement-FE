@@ -20,7 +20,8 @@ import {
   MaterialCreateDto,
   MaterialUpdateDto,
 } from "@/services/material/material.schema";
-import { MaterialModal, MaterialCard } from "@/components/a/material/material-modal";
+import { MaterialModal } from "@/components/a/material/material-modal";
+import { MaterialCard } from "@/components/a/material/material-card";
 
 interface MaterialTypeWithMaterials extends MaterialType {
   materials: MaterialInterface[];
@@ -192,6 +193,7 @@ export default function CourseMaterialsPage() {
         // Create new material
         if (isFormData) {
           const formData = data as FormData;
+
           await materialService.createMaterialWithFile(
             courseId as string,
             formData.get("Name") as string,
