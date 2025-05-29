@@ -7,6 +7,9 @@ interface SemesterFilters {
   semesterNumber?: number;
   year?: number;
   isActive?: boolean | null;
+  startDate?: Date;
+  endDate?: Date;
+  numberOfWeeks?: number;
 }
 
 // Extend SemesterQuery to include filters
@@ -28,7 +31,7 @@ const initialState: SemesterState = {
   query: {
     pageNumber: 1,
     itemsPerpage: 10,
-    orderBy: undefined,
+    orderBy: "",
     isDesc: false,
   },
   total: 0,

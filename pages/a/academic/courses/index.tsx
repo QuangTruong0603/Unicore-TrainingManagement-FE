@@ -323,7 +323,6 @@ export default function CoursesPage() {
           {/* Search and filter container */}
           <div className="flex items-center gap-4 mb-2">
             <div className="relative flex-1">
-              {" "}
               <Input
                 className="pl-10 w-full rounded-xl"
                 placeholder="Search course names..."

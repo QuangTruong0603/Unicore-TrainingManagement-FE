@@ -14,6 +14,7 @@ import {
   CreateLocationData,
   UpdateLocationData,
 } from "@/services/location/location.dto";
+import "./index.scss";
 
 export default function LocationsPage() {
   // Location state
@@ -162,7 +163,7 @@ export default function LocationsPage() {
 
   return (
     <DefaultLayout>
-      <div className="p-6">
+      <div className="container p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Location Management</h1>
           <Button

@@ -41,6 +41,19 @@ export const semesterService = {
       if (query.filters.isActive !== undefined) {
         params["Filter.IsActive"] = query.filters.isActive!.toString();
       }
+
+      // Add new filter fields
+      if (query.filters.startDate !== undefined) {
+        params["Filter.StartDate"] = query.filters.startDate.toISOString();
+      }
+
+      if (query.filters.endDate !== undefined) {
+        params["Filter.EndDate"] = query.filters.endDate.toISOString();
+      }
+
+      if (query.filters.numberOfWeeks !== undefined) {
+        params["Filter.NumberOfWeeks"] = query.filters.numberOfWeeks.toString();
+      }
     }
 
     // Create URLSearchParams object

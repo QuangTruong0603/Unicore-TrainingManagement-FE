@@ -47,11 +47,17 @@ export function SemesterModal({
         ? {
             semesterNumber: 1,
             year: new Date().getFullYear(),
+            startDate: new Date(),
+            endDate: new Date(),
+            numberOfWeeks: 15,
           }
         : {
             semesterNumber: semester?.semesterNumber || 1,
             year: semester?.year || new Date().getFullYear(),
             isActive: semester?.isActive || false,
+            startDate: semester?.startDate || new Date(),
+            endDate: semester?.endDate || new Date(),
+            numberOfWeeks: semester?.numberOfWeeks || 15,
           },
   });
 
@@ -64,12 +70,18 @@ export function SemesterModal({
         reset({
           semesterNumber: 1,
           year: new Date().getFullYear(),
+          startDate: new Date(),
+          endDate: new Date(),
+          numberOfWeeks: 15,
         });
       } else if (semester) {
         reset({
           semesterNumber: semester.semesterNumber,
           year: semester.year,
           isActive: semester.isActive,
+          startDate: semester.startDate,
+          endDate: semester.endDate,
+          numberOfWeeks: semester.numberOfWeeks,
         });
       }
     }
@@ -146,6 +158,65 @@ export function SemesterModal({
                     max: {
                       value: 2030,
                       message: "Year must not exceed 2030",
+                    },
+                    valueAsNumber: true,
+                  })}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1" htmlFor="startDate">
+                  Start Date*
+                </label>
+                <Input
+                  errorMessage={errors.startDate?.message}
+                  id="startDate"
+                  isInvalid={!!errors.startDate}
+                  label="Start Date"
+                  placeholder="Select start date"
+                  type="date"
+                  {...register("startDate", {
+                    required: "Start date is required",
+                    valueAsDate: true,
+                  })}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1" htmlFor="endDate">
+                  End Date*
+                </label>
+                <Input
+                  errorMessage={errors.endDate?.message}
+                  id="endDate"
+                  isInvalid={!!errors.endDate}
+                  label="End Date"
+                  placeholder="Select end date"
+                  type="date"
+                  {...register("endDate", {
+                    required: "End date is required",
+                    valueAsDate: true,
+                  })}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1" htmlFor="numberOfWeeks">
+                  Number of Weeks*
+                </label>
+                <Input
+                  errorMessage={errors.numberOfWeeks?.message}
+                  id="numberOfWeeks"
+                  isInvalid={!!errors.numberOfWeeks}
+                  label="Number of Weeks"
+                  min={1}
+                  placeholder="Enter number of weeks"
+                  type="number"
+                  {...register("numberOfWeeks", {
+                    required: "Number of weeks is required",
+                    min: {
+                      value: 1,
+                      message: "Number of weeks must be at least 1",
                     },
                     valueAsNumber: true,
                   })}

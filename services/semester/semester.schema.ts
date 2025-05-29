@@ -5,6 +5,9 @@ export const semesterSchema = z.object({
   semesterNumber: z.number(),
   year: z.number(),
   isActive: z.boolean(),
+  startDate: z.date(),
+  endDate: z.date(),
+  numberOfWeeks: z.number(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -15,6 +18,9 @@ export const semesterFilterSchema = z.object({
   semesterNumber: z.number().optional(),
   year: z.number().optional(),
   isActive: z.boolean().nullable().optional(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  numberOfWeeks: z.number().optional(),
 });
 
 export type SemesterFilter = z.infer<typeof semesterFilterSchema>;
