@@ -3,8 +3,8 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
-
 import { BaseResponse } from "../api/api-response";
+
 import { StudentQuery } from "./student.schema";
 import { StudentListResponse } from "./student.dto";
 

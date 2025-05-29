@@ -16,6 +16,7 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/react";
+import { useRouter } from "next/router";
 
 import styles from "./course-table.module.scss";
 
@@ -49,6 +50,12 @@ export const CourseTable: React.FC<CourseTableProps> = ({
   onRowToggle,
   onActiveToggle,
 }) => {
+  const router = useRouter();
+
+  const handleNavigateToMaterials = (courseId: string, courseName: string) => {
+    router.push(`/a/academic/courses/${courseId}/materials?name=${encodeURIComponent(courseName)}`);
+  };
+
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
 
@@ -72,8 +79,9 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       sortable: true,
       render: (course: Course) => (
         <div
-          className="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis"
+          className="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis cursor-pointer text-primary hover:underline"
           title={course.name}
+          onClick={() => handleNavigateToMaterials(course.id, course.name)}
         >
           {course.name}
         </div>

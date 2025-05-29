@@ -67,6 +67,11 @@ class HttpClient {
         // Add request ID to headers for logging/tracking
         config.headers = config.headers || {};
         config.headers["X-Request-ID"] = requestId;
+        
+        // Don't set Content-Type for FormData (will be set automatically with boundary)
+        if (config.data instanceof FormData) {
+          delete config.headers["Content-Type"];
+        }
 
         // Get token from localStorage
         const token =
@@ -281,7 +286,7 @@ class HttpClient {
     url: string,
     config?: AxiosRequestConfig
   ): Promise<BaseResponse<T>> {
-    return this.request<T>({ ...config, method: "delete", url }); // Fixed: removed duplicate config parameter
+    return this.request<T>({ ...config, method: "delete", url });
   }
 
   /**
