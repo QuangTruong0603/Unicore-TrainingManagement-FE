@@ -3,9 +3,7 @@ import { Button, Card, CardHeader, CardBody, CardFooter } from "@heroui/react";
 import { Edit, Trash2 } from "lucide-react";
 
 import { MaterialType } from "@/services/material-type/material-type.schema";
-import {
-  Material,
-} from "@/services/material/material.schema";
+import { Material } from "@/services/material/material.schema";
 interface MaterialCardProps {
   material: Material;
   materialType?: MaterialType;
@@ -32,10 +30,10 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
       <CardBody>
         {material.fileUrl && (
           <a
-            href={material.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className="text-primary hover:underline text-sm"
+            href={material.fileUrl}
+            rel="noopener noreferrer"
+            target="_blank"
           >
             View File
           </a>
@@ -44,18 +42,18 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
       <CardFooter className="flex justify-end gap-2">
         <Button
           isIconOnly
+          color="warning"
           size="sm"
           variant="flat"
-          color="warning"
           onPress={() => onEdit(material)}
         >
           <Edit size={16} />
         </Button>
         <Button
           isIconOnly
+          color="danger"
           size="sm"
           variant="flat"
-          color="danger"
           onPress={() => onDelete(material.id)}
         >
           <Trash2 size={16} />

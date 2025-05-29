@@ -10,13 +10,21 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
+
 import { MaterialType } from "@/services/material-type/material-type.schema";
-import { MaterialCreateDto, MaterialUpdateDto } from "@/services/material/material.schema";
+import {
+  MaterialCreateDto,
+  MaterialUpdateDto,
+} from "@/services/material/material.schema";
 
 interface MaterialModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
-  onSubmit: (data: MaterialCreateDto | MaterialUpdateDto | FormData, isFormData: boolean, materialId?: string) => Promise<void>;
+  onSubmit: (
+    data: MaterialCreateDto | MaterialUpdateDto | FormData,
+    isFormData: boolean,
+    materialId?: string
+  ) => Promise<void>;
   materialTypes: MaterialType[];
   courseId: string;
   isSubmitting: boolean;
@@ -34,7 +42,6 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
   onOpenChange,
   onSubmit,
   materialTypes,
-  courseId,
   isSubmitting,
   mode,
   initialData,
@@ -57,7 +64,7 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
       setMaterialTypeId("");
       setSelectedFile(null);
     }
-    
+
     // Reset errors
     setNameError("");
     setMaterialTypeError("");
@@ -69,34 +76,35 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
     setNameError("");
     setMaterialTypeError("");
     setFileError("");
-    
+
     // Validate
     let hasError = false;
-    
+
     if (!name.trim()) {
       setNameError("Material name is required");
       hasError = true;
     }
-    
+
     if (!materialTypeId) {
       setMaterialTypeError("Material type is required");
       hasError = true;
     }
-    
+
     if (mode === "create" && !selectedFile) {
       setFileError("File is required");
       hasError = true;
     }
-    
+
     if (hasError) return;
-    
+
     // Always use FormData for consistency
     const formData = new FormData();
-    formData.append('Name', name);
-    formData.append('MaterialTypeId', materialTypeId);
-    
+
+    formData.append("Name", name);
+    formData.append("MaterialTypeId", materialTypeId);
+
     if (selectedFile) {
-      formData.append('File', selectedFile, selectedFile.name);
+      formData.append("File", selectedFile, selectedFile.name);
     }
     if (mode === "edit" && initialData?.materialId) {
       // Pass materialId as a separate parameter
@@ -109,6 +117,7 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       setSelectedFile(file);
       setFileError("");
@@ -125,39 +134,37 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
           <div className="space-y-4">
             <div>
               <Input
+                isRequired
+                errorMessage={nameError}
                 label="Material Name"
                 placeholder="Enter material name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                errorMessage={nameError}
-                isRequired
               />
             </div>
-            
+
             <div>
               <Select
+                isRequired
+                errorMessage={materialTypeError}
                 label="Material Type"
                 placeholder="Select material type"
                 selectedKeys={materialTypeId ? [materialTypeId] : []}
                 onChange={(e) => setMaterialTypeId(e.target.value)}
-                errorMessage={materialTypeError}
-                isRequired
               >
                 {materialTypes.map((type) => (
-                  <SelectItem key={type.id}>
-                    {type.name}
-                  </SelectItem>
+                  <SelectItem key={type.id}>{type.name}</SelectItem>
                 ))}
               </Select>
             </div>
-            
+
             <div>
               <Input
-                type="file"
-                label="Upload File"
-                onChange={handleFileChange}
                 errorMessage={fileError}
                 isRequired={mode === "create"}
+                label="Upload File"
+                type="file"
+                onChange={handleFileChange}
               />
               {selectedFile && (
                 <p className="text-sm text-green-600 mt-1">
@@ -166,7 +173,15 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
               )}
               {initialData?.fileUrl && !selectedFile && mode === "edit" && (
                 <p className="text-sm text-blue-600 mt-1">
-                  Current file: <a href={initialData.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">View</a>
+                  Current file:{" "}
+                  <a
+                    className="underline"
+                    href={initialData.fileUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    View
+                  </a>
                 </p>
               )}
             </div>
@@ -175,17 +190,17 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
         <ModalFooter>
           <Button
             color="danger"
+            isDisabled={isSubmitting}
             variant="flat"
             onPress={onOpenChange}
-            isDisabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
             color="primary"
-            onPress={handleSubmit}
-            isLoading={isSubmitting}
             isDisabled={isSubmitting}
+            isLoading={isSubmitting}
+            onPress={handleSubmit}
           >
             {mode === "create" ? "Add Material" : "Save Changes"}
           </Button>

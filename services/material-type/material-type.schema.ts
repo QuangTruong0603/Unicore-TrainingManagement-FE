@@ -26,4 +26,5 @@ export interface MaterialTypeUpdateDto {
   name: string;
 }
 
-export interface MaterialTypeListResponse extends PaginatedResponse<MaterialType> {} 
+export interface MaterialTypeListResponse
+  extends PaginatedResponse<MaterialType> {}

@@ -24,7 +24,7 @@ import {
 } from "@/services/material/material.schema";
 import { MaterialModal } from "@/components/a/material/material-modal";
 import { MaterialCard } from "@/components/a/material/material-card";
-import { RootState, AppDispatch } from "@/store";
+import { RootState } from "@/store";
 import {
   fetchMaterials,
   setPage,
@@ -62,6 +62,7 @@ export default function CourseMaterialsPage() {
   const fetchMaterialTypes = async () => {
     try {
       const typesResponse = await materialTypeService.getAllMaterialTypes();
+
       setMaterialTypes(typesResponse.data || []);
     } catch (err) {
       console.error("Failed to load material types:", err);
@@ -140,6 +141,7 @@ export default function CourseMaterialsPage() {
         description: "Material ID is missing",
         color: "danger",
       });
+
       return;
     }
 
@@ -153,10 +155,13 @@ export default function CourseMaterialsPage() {
         cancelText: "Cancel",
         onConfirm: async () => {
           try {
-            await materialService.deleteMaterial(courseId as string, materialId);
+            await materialService.deleteMaterial(
+              courseId as string,
+              materialId
+            );
             // Refresh materials after deletion
             dispatch(fetchMaterials({ courseId: courseId as string, query }));
-            
+
             addToast({
               title: "Success",
               description: "Material deleted successfully",
@@ -203,7 +208,7 @@ export default function CourseMaterialsPage() {
             data as MaterialUpdateDto
           );
         }
-        
+
         addToast({
           title: "Success",
           description: "Material updated successfully",
@@ -226,7 +231,7 @@ export default function CourseMaterialsPage() {
             data as MaterialCreateDto
           );
         }
-        
+
         addToast({
           title: "Success",
           description: "Material created successfully",
@@ -253,11 +258,6 @@ export default function CourseMaterialsPage() {
     router.push("/a/academic/courses");
   };
 
-  // Get the currently selected material type object
-  const selectedMaterialType = query.materialTypeId
-    ? materialTypes.find((type) => type.id === query.materialTypeId)
-    : null;
-
   if (isLoading && materials.length === 0) {
     return (
       <DefaultLayout>
@@ -274,8 +274,8 @@ export default function CourseMaterialsPage() {
         <div className="flex items-center mb-6">
           <Button
             isIconOnly
-            variant="light"
             className="mr-2"
+            variant="light"
             onPress={handleBackToCourses}
           >
             <ArrowLeft size={20} />
@@ -308,9 +308,9 @@ export default function CourseMaterialsPage() {
 
         <Tabs
           aria-label="Material Types"
+          className="mb-6"
           selectedKey={query.materialTypeId || "all"}
           onSelectionChange={(key) => handleTabChange(key as string)}
-          className="mb-6"
         >
           <Tab key="all" title="All Materials" />
           {materialTypes.map((type) => (
@@ -341,8 +341,8 @@ export default function CourseMaterialsPage() {
                     key={material.id}
                     material={material}
                     materialType={materialType}
-                    onEdit={handleEditMaterial}
                     onDelete={handleDeleteMaterial}
+                    onEdit={handleEditMaterial}
                   />
                 );
               })}
@@ -356,8 +356,8 @@ export default function CourseMaterialsPage() {
               Showing {materials.length} of {total} materials
             </div>
             <Pagination
-              total={Math.ceil(total / (query.itemsPerpage || 10))}
               page={query.pageNumber || 1}
+              total={Math.ceil(total / (query.itemsPerpage || 10))}
               onChange={handlePageChange}
             />
           </div>
@@ -365,14 +365,14 @@ export default function CourseMaterialsPage() {
 
         {/* Material Modal */}
         <MaterialModal
+          courseId={courseId as string}
+          initialData={selectedMaterial || undefined}
           isOpen={isModalOpen}
+          isSubmitting={isSubmitting}
+          materialTypes={materialTypes}
+          mode={selectedMaterial ? "edit" : "create"}
           onOpenChange={onModalOpenChange}
           onSubmit={handleMaterialSubmit}
-          materialTypes={materialTypes}
-          courseId={courseId as string}
-          isSubmitting={isSubmitting}
-          mode={selectedMaterial ? "edit" : "create"}
-          initialData={selectedMaterial || undefined}
         />
       </div>
     </DefaultLayout>

@@ -1,6 +1,7 @@
 import { API_ENDPOINTS } from "../api/api-config";
 import { courseClient } from "../api/http-client";
 import { BaseResponse } from "../dto";
+
 import {
   Material,
   MaterialListResponse,
@@ -87,7 +88,7 @@ class MaterialService {
       {
         headers: {
           accept: "text/plain",
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
       }
     );
@@ -98,16 +99,16 @@ class MaterialService {
     id: string,
     data: MaterialUpdateDto
   ): Promise<BaseResponse<Material>> {
-    console.log(data);
     const formData = new FormData();
-    formData.append('Name', data.name);
-    
+
+    formData.append("Name", data.name);
+
     if (data.materialTypeId) {
-      formData.append('MaterialTypeId', data.materialTypeId);
+      formData.append("MaterialTypeId", data.materialTypeId);
     }
-    
+
     if (data.file) {
-      formData.append('File', data.file, data.file.name);
+      formData.append("File", data.file, data.file.name);
     }
 
     return courseClient.put(
@@ -126,13 +127,11 @@ class MaterialService {
     if (!courseId) {
       throw new Error("Course ID is required");
     }
-    
+
     if (!id) {
       throw new Error("Material ID is required");
     }
-    
-    console.log(`Deleting material with ID: ${id} from course: ${courseId}`);
-    
+
     await courseClient.delete(
       `${API_ENDPOINTS.COURSES}/${courseId}/course-materials/${id}`,
       {
@@ -169,6 +168,7 @@ class MaterialService {
     }
 
     const queryString = params.toString();
+
     if (queryString) {
       url += `?${queryString}`;
     }
@@ -187,17 +187,18 @@ class MaterialService {
     materialTypeId: string
   ): Promise<BaseResponse<Material>> {
     const formData = new FormData();
-    formData.append('Name', name);
-    formData.append('File', file, file.name);
-    formData.append('MaterialTypeId', materialTypeId);
+
+    formData.append("Name", name);
+    formData.append("File", file, file.name);
+    formData.append("MaterialTypeId", materialTypeId);
 
     return courseClient.post(
       `${API_ENDPOINTS.COURSES}/${courseId}/course-materials`,
       formData,
       {
         headers: {
-          accept: "text/plain"
-        }
+          accept: "text/plain",
+        },
       }
     );
   }
@@ -213,14 +214,15 @@ class MaterialService {
     materialTypeId?: string
   ): Promise<BaseResponse<Material>> {
     const formData = new FormData();
-    formData.append('Name', name);
-    
+
+    formData.append("Name", name);
+
     if (file) {
-      formData.append('File', file, file.name);
+      formData.append("File", file, file.name);
     }
-    
+
     if (materialTypeId) {
-      formData.append('MaterialTypeId', materialTypeId);
+      formData.append("MaterialTypeId", materialTypeId);
     }
 
     return courseClient.put(
@@ -228,8 +230,8 @@ class MaterialService {
       formData,
       {
         headers: {
-          accept: "text/plain"
-        }
+          accept: "text/plain",
+        },
       }
     );
   }

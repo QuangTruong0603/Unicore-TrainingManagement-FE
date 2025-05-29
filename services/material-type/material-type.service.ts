@@ -1,6 +1,7 @@
 import { API_ENDPOINTS } from "../api/api-config";
 import { courseClient } from "../api/http-client";
 import { BaseResponse } from "../dto";
+
 import {
   MaterialType,
   MaterialTypeListResponse,
@@ -10,7 +11,9 @@ import {
 } from "./material-type.schema";
 
 class MaterialTypeService {
-  async getMaterialTypes(query: MaterialTypeQuery): Promise<BaseResponse<MaterialTypeListResponse["data"]>> {
+  async getMaterialTypes(
+    query: MaterialTypeQuery
+  ): Promise<BaseResponse<MaterialTypeListResponse["data"]>> {
     let params: Record<string, string> = {
       "Pagination.PageNumber": query.pageNumber?.toString() || "1",
       "Pagination.ItemsPerpage": query.itemsPerpage?.toString() || "10",
@@ -41,31 +44,29 @@ class MaterialTypeService {
       searchParams.append(key, value);
     });
 
-    return courseClient.get(
-      `${API_ENDPOINTS.COURSES}/material-types/page`,
-      {
-        params: searchParams,
-        paramsSerializer: (params) => params.toString(),
-        headers: {
-          accept: "text/plain",
-        },
-      }
-    );
+    return courseClient.get(`${API_ENDPOINTS.COURSES}/material-types/page`, {
+      params: searchParams,
+      paramsSerializer: (params) => params.toString(),
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
-  async createMaterialType(data: MaterialTypeCreateDto): Promise<BaseResponse<MaterialType>> {
-    return courseClient.post(
-      `${API_ENDPOINTS.COURSES}/material-types`,
-      data,
-      {
-        headers: {
-          accept: "text/plain",
-        },
-      }
-    );
+  async createMaterialType(
+    data: MaterialTypeCreateDto
+  ): Promise<BaseResponse<MaterialType>> {
+    return courseClient.post(`${API_ENDPOINTS.COURSES}/material-types`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
-  async updateMaterialType(id: string, data: MaterialTypeUpdateDto): Promise<BaseResponse<MaterialType>> {
+  async updateMaterialType(
+    id: string,
+    data: MaterialTypeUpdateDto
+  ): Promise<BaseResponse<MaterialType>> {
     return courseClient.put(
       `${API_ENDPOINTS.COURSES}/material-types/${id}`,
       data,
@@ -89,7 +90,9 @@ class MaterialTypeService {
     );
   }
 
-  async deactivateMaterialType(id: string): Promise<BaseResponse<MaterialType>> {
+  async deactivateMaterialType(
+    id: string
+  ): Promise<BaseResponse<MaterialType>> {
     return courseClient.post(
       `${API_ENDPOINTS.COURSES}/material-types/${id}/deactivate`,
       {},
@@ -112,26 +115,20 @@ class MaterialTypeService {
   }
 
   async getMaterialTypeById(id: string): Promise<BaseResponse<MaterialType>> {
-    return courseClient.get(
-      `${API_ENDPOINTS.COURSES}/material-types/${id}`,
-      {
-        headers: {
-          accept: "text/plain",
-        },
-      }
-    );
+    return courseClient.get(`${API_ENDPOINTS.COURSES}/material-types/${id}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 
   async getAllMaterialTypes(): Promise<BaseResponse<MaterialType[]>> {
-    return courseClient.get(
-      `${API_ENDPOINTS.COURSES}/material-types`,
-      {
-        headers: {
-          accept: "text/plain",
-        },
-      }
-    );
+    return courseClient.get(`${API_ENDPOINTS.COURSES}/material-types`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   }
 }
 
-export const materialTypeService = new MaterialTypeService(); 
+export const materialTypeService = new MaterialTypeService();
