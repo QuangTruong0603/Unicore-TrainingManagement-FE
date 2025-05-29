@@ -20,7 +20,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
   onDelete,
 }) => {
   return (
-    <Card key={material.materialId} className="shadow-sm">
+    <Card key={material.id} className="shadow-sm">
       <CardHeader className="flex justify-between items-start">
         <div>
           <h3 className="text-lg font-medium">{material.name}</h3>
@@ -56,7 +56,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
           size="sm"
           variant="flat"
           color="danger"
-          onPress={() => onDelete(material.materialId)}
+          onPress={() => onDelete(material.id)}
         >
           <Trash2 size={16} />
         </Button>

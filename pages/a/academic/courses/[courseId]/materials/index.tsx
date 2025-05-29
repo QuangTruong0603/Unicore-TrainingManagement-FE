@@ -9,8 +9,9 @@ import {
   Tabs,
   Tab,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import DefaultLayout from "@/layouts/default";
 import { materialService } from "@/services/material/material.service";
@@ -27,21 +28,18 @@ import { RootState, AppDispatch } from "@/store";
 import {
   fetchMaterials,
   setPage,
-  setItemsPerPage,
   setMaterialTypeFilter,
   setSearchTerm,
   setCourseId,
 } from "@/store/slices/materialSlice";
-
-interface MaterialTypeWithMaterials extends MaterialType {
-  materials: MaterialInterface[];
-}
+import { openConfirmDialog } from "@/store/slices/confirmDialogSlice";
+import { useAppDispatch } from "@/store/hooks";
 
 export default function CourseMaterialsPage() {
   const router = useRouter();
   const { courseId, name } = router.query;
   const courseName = typeof name === "string" ? decodeURIComponent(name) : "";
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
   // Get material state from Redux
   const { materials, query, total, isLoading, error } = useSelector(
@@ -67,6 +65,11 @@ export default function CourseMaterialsPage() {
       setMaterialTypes(typesResponse.data || []);
     } catch (err) {
       console.error("Failed to load material types:", err);
+      addToast({
+        title: "Error",
+        description: "Failed to load material types",
+        color: "danger",
+      });
     }
   };
 
@@ -88,6 +91,17 @@ export default function CourseMaterialsPage() {
   useEffect(() => {
     fetchMaterialTypes();
   }, []);
+
+  // Show error toast when there's an error from Redux
+  useEffect(() => {
+    if (error) {
+      addToast({
+        title: "Error",
+        description: error,
+        color: "danger",
+      });
+    }
+  }, [error]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchTerm(e.target.value));
@@ -115,26 +129,50 @@ export default function CourseMaterialsPage() {
     onOpenModal();
   };
 
-  const handleDeleteMaterial = async (materialId: string) => {
+  const handleDeleteMaterial = (materialId: string) => {
     if (!courseId) return;
+    console.log(materialId);
 
     // Validate materialId exists
     if (!materialId) {
-      console.error("Material ID is missing");
+      addToast({
+        title: "Error",
+        description: "Material ID is missing",
+        color: "danger",
+      });
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this material?")) {
-      return;
-    }
+    // Get material name for the confirmation message
 
-    try {
-      await materialService.deleteMaterial(courseId as string, materialId);
-      // Refresh materials after deletion
-      dispatch(fetchMaterials({ courseId: courseId as string, query }));
-    } catch (err) {
-      console.error("Failed to delete material:", err);
-    }
+    dispatch(
+      openConfirmDialog({
+        title: "Delete Material",
+        message: `Are you sure you want to delete this material?`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          try {
+            await materialService.deleteMaterial(courseId as string, materialId);
+            // Refresh materials after deletion
+            dispatch(fetchMaterials({ courseId: courseId as string, query }));
+            
+            addToast({
+              title: "Success",
+              description: "Material deleted successfully",
+              color: "success",
+            });
+          } catch (err) {
+            console.error("Failed to delete material:", err);
+            addToast({
+              title: "Error",
+              description: "Failed to delete material",
+              color: "danger",
+            });
+          }
+        },
+      })
+    );
   };
 
   const handleMaterialSubmit = async (
@@ -153,7 +191,7 @@ export default function CourseMaterialsPage() {
 
           await materialService.updateMaterialWithFile(
             courseId as string,
-            selectedMaterial.materialId,
+            selectedMaterial.id,
             formData.get("Name") as string,
             formData.get("File") as File,
             formData.get("MaterialTypeId") as string
@@ -161,10 +199,16 @@ export default function CourseMaterialsPage() {
         } else {
           await materialService.updateMaterial(
             courseId as string,
-            selectedMaterial.materialId,
+            selectedMaterial.id,
             data as MaterialUpdateDto
           );
         }
+        
+        addToast({
+          title: "Success",
+          description: "Material updated successfully",
+          color: "success",
+        });
       } else {
         // Create new material
         if (isFormData) {
@@ -182,6 +226,12 @@ export default function CourseMaterialsPage() {
             data as MaterialCreateDto
           );
         }
+        
+        addToast({
+          title: "Success",
+          description: "Material created successfully",
+          color: "success",
+        });
       }
 
       onModalOpenChange();
@@ -189,6 +239,11 @@ export default function CourseMaterialsPage() {
       dispatch(fetchMaterials({ courseId: courseId as string, query }));
     } catch (err) {
       console.error("Failed to save material:", err);
+      addToast({
+        title: "Error",
+        description: "Failed to save material",
+        color: "danger",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -283,7 +338,7 @@ export default function CourseMaterialsPage() {
 
                 return (
                   <MaterialCard
-                    key={material.materialId}
+                    key={material.id}
                     material={material}
                     materialType={materialType}
                     onEdit={handleEditMaterial}
