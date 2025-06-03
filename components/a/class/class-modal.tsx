@@ -20,11 +20,15 @@ import { Course } from "@/services/course/course.schema";
 import { Semester } from "@/services/semester/semester.schema";
 import { AcademicClass } from "@/services/class/class.schema";
 import { Shift } from "@/services/shift/shift.schema";
-import { AcademicClassCreateDto } from "@/services/class/class.dto";
+import {
+  AcademicClassCreateDto,
+  ScheduleInDayCreateForClassDto,
+} from "@/services/class/class.dto";
 import { courseService } from "@/services/course/course.service";
 import { semesterService } from "@/services/semester/semester.service";
 import { roomService } from "@/services/room/room.service";
 import { shiftService } from "@/services/shift/shift.service";
+import { classService } from "@/services/class/class.service";
 
 interface ClassModalProps {
   isOpen: boolean;
@@ -54,6 +58,7 @@ export function ClassModal({
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [theoryClasses, setTheoryClasses] = useState<AcademicClass[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]); // Empty by default
 
@@ -75,6 +80,7 @@ export function ClassModal({
             isRegistrable: false,
             courseId: "",
             semesterId: "",
+            parentTheoryAcademicClassId: null,
             scheduleInDays: [],
           }
         : {
@@ -85,12 +91,16 @@ export function ClassModal({
             isRegistrable: academicClass?.isRegistrable || false,
             courseId: academicClass?.courseId || "",
             semesterId: academicClass?.semesterId || "",
+            parentTheoryAcademicClassId:
+              academicClass?.parentTheoryAcademicClassId || null,
             scheduleInDays:
-              academicClass?.scheduleInDays.map((s) => ({
-                dayOfWeek: s.dayOfWeek,
-                roomId: s.roomId,
-                shiftId: s.shiftId,
-              })) || [],
+              academicClass?.scheduleInDays.map(
+                (s: ScheduleInDayCreateForClassDto) => ({
+                  dayOfWeek: s.dayOfWeek,
+                  roomId: s.roomId,
+                  shiftId: s.shiftId,
+                })
+              ) || [],
           },
   });
 
@@ -187,6 +197,49 @@ export function ClassModal({
       }
     }
   }, [selectedSemesterId, semesters]);
+
+  // Fetch theory classes when course and semester are selected (for practice classes)
+  useEffect(() => {
+    const fetchTheoryClasses = async () => {
+      if (selectedCourseId && selectedSemesterId) {
+        const selectedCourse = courses.find(
+          (course) => course.id === selectedCourseId
+        );
+
+        // Only fetch theory classes if the course has practice periods
+        if (selectedCourse && selectedCourse.practicePeriod > 0) {
+          try {
+            // Fetch theory classes for the same course and semester
+            const theoryClassResponse = await classService.getClasses({
+              pageNumber: 1,
+              itemsPerpage: 100,
+              isDesc: false,
+              filters: {
+                courseId: selectedCourseId,
+                semesterId: selectedSemesterId,
+              },
+            });
+
+            // Filter to only get theory classes (where parentTheoryAcademicClassId is null)
+            const theoryClasses = (theoryClassResponse.data.data || []).filter(
+              (cls: AcademicClass) => cls.parentTheoryAcademicClassId === null
+            );
+
+            setTheoryClasses(theoryClasses);
+          } catch {
+            // Silently handle error
+            setTheoryClasses([]);
+          }
+        } else {
+          setTheoryClasses([]);
+        }
+      } else {
+        setTheoryClasses([]);
+      }
+    };
+
+    fetchTheoryClasses();
+  }, [selectedCourseId, selectedSemesterId, courses]);
 
   const handleFormSubmit = async (data: AcademicClassCreateDto) => {
     await onSubmit(data);
@@ -395,6 +448,48 @@ export function ClassModal({
                 )}
                 rules={{ required: "Semester is required" }}
               />
+
+              {/* Parent Theory Class Selection - Only show if course has practice periods */}
+              {(() => {
+                const selectedCourse = courses.find(
+                  (course) => course.id === selectedCourseId
+                );
+
+                return selectedCourse && selectedCourse.practicePeriod > 0 ? (
+                  <Controller
+                    control={control}
+                    name="parentTheoryAcademicClassId"
+                    render={({ field }) => (
+                      <Autocomplete
+                        allowsEmptyCollection
+                        defaultItems={theoryClasses}
+                        errorMessage={
+                          errors.parentTheoryAcademicClassId?.message
+                        }
+                        isLoading={isLoadingData}
+                        label="Parent Theory Class"
+                        placeholder="Select a theory class (optional for practice class)"
+                        selectedKey={field.value}
+                        onSelectionChange={field.onChange}
+                      >
+                        {(theoryClass) => (
+                          <AutocompleteItem
+                            key={theoryClass.id}
+                            textValue={theoryClass.name}
+                          >
+                            <div className="flex flex-col">
+                              <span>{theoryClass.name}</span>
+                              <span className="text-tiny text-default-400">
+                                Group {theoryClass.groupNumber}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        )}
+                      </Autocomplete>
+                    )}
+                  />
+                ) : null;
+              })()}
 
               <Controller
                 control={control}

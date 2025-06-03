@@ -6,6 +6,7 @@ import {
   AcademicClassResponse,
   AcademicClassListResponse,
   AcademicClassCreateDto,
+  ClassRegistrationScheduleDto,
 } from "./class.dto";
 
 export const classService = {
@@ -33,24 +34,12 @@ export const classService = {
       params["Filter.Name"] = query.filters.name;
     }
 
-    if (query.filters?.groupName !== undefined) {
-      params["Filter.GroupName"] = query.filters.groupName.toString();
-    }
-
     if (query.filters?.minCapacity !== undefined) {
       params["Filter.MinCapacity"] = query.filters.minCapacity.toString();
     }
 
     if (query.filters?.maxCapacity !== undefined) {
       params["Filter.MaxCapacity"] = query.filters.maxCapacity.toString();
-    }
-
-    if (query.filters?.startDate) {
-      params["Filter.StartDate"] = query.filters.startDate.toISOString();
-    }
-
-    if (query.filters?.endDate) {
-      params["Filter.EndDate"] = query.filters.endDate.toISOString();
     }
 
     if (query.filters?.isRegistrable !== undefined) {
@@ -175,5 +164,16 @@ export const classService = {
         accept: "text/plain",
       },
     });
+  },
+
+  createClassRegistrationSchedule: async (
+    scheduleData: ClassRegistrationScheduleDto
+  ): Promise<void> => {
+    const response = await courseClient.post(
+      `${API_ENDPOINTS.CLASSES}/registration/schedule-with-times`,
+      scheduleData
+    );
+
+    return response.data;
   },
 };

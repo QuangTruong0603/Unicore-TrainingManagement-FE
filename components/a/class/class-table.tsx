@@ -6,19 +6,19 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Checkbox,
 } from "@heroui/react";
 import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
   ChevronUp,
-  Clock,
-  Calendar,
   MoreVertical,
   Trash,
   Power,
   Lock,
   Unlock,
+  Edit,
 } from "lucide-react";
 import {
   Table as HeroTable,
@@ -44,11 +44,15 @@ interface ClassTableProps {
   onRegistrationToggle: (academicClass: AcademicClass) => void;
   onDeleteClass?: (academicClass: AcademicClass) => void;
   onToggleActivation?: (academicClass: AcademicClass) => void;
+  onUpdateClass?: (academicClass: AcademicClass) => void;
+  selectedClasses: string[];
+  onSelectedClassesChange: (selectedClasses: string[]) => void;
+  allowMultiSelect?: boolean;
 }
 
 interface Column {
   key: string;
-  title: string;
+  title: string | React.ReactNode;
   sortable?: boolean;
   render: (academicClass: AcademicClass) => React.ReactNode;
 }
@@ -64,7 +68,30 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   onRegistrationToggle,
   onDeleteClass,
   onToggleActivation,
+  onUpdateClass,
+  selectedClasses,
+  onSelectedClassesChange,
+  allowMultiSelect,
 }) => {
+  // Safety check: Ensure classes is an array
+  const safeClasses = Array.isArray(classes) ? classes : [];
+
+  const handleSelectionChange = (classId: string, isChecked: boolean) => {
+    if (isChecked) {
+      onSelectedClassesChange([...selectedClasses, classId]);
+    } else {
+      onSelectedClassesChange(selectedClasses.filter((id) => id !== classId));
+    }
+  };
+
+  const handleSelectAll = (isChecked: boolean) => {
+    if (isChecked) {
+      onSelectedClassesChange(safeClasses.map((c) => c.id));
+    } else {
+      onSelectedClassesChange([]);
+    }
+  };
+
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
 
@@ -76,6 +103,36 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   };
 
   const columns: Column[] = [
+    // Selection column (only visible if allowMultiSelect is true)
+    ...(allowMultiSelect
+      ? [
+          {
+            key: "select",
+            title: (
+              <Checkbox
+                isIndeterminate={
+                  selectedClasses.length > 0 &&
+                  selectedClasses.length < safeClasses.length
+                }
+                isSelected={
+                  selectedClasses.length === safeClasses.length &&
+                  safeClasses.length > 0
+                }
+                onValueChange={handleSelectAll}
+              />
+            ),
+            sortable: false,
+            render: (academicClass: AcademicClass) => (
+              <Checkbox
+                isSelected={selectedClasses.includes(academicClass.id)}
+                onValueChange={(isChecked) =>
+                  handleSelectionChange(academicClass.id, isChecked)
+                }
+              />
+            ),
+          },
+        ]
+      : []),
     {
       key: "name",
       title: "Name",
@@ -102,7 +159,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       render: (academicClass: AcademicClass) => (
         <div className="max-w-[250px] w-full overflow-hidden">
           <Tooltip content={academicClass.course.name}>
-            <span className="bg-blue-100 text-primary px-2 py-1 rounded-full text-xs cursor-help">
+            <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs cursor-help">
               {academicClass.course.code}
             </span>
           </Tooltip>
@@ -110,64 +167,51 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
+      key: "type",
+      title: "Type",
+      sortable: false,
+      render: (academicClass: AcademicClass) => (
+        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+          {academicClass.parentTheoryAcademicClassId === null
+            ? "Theory"
+            : "Practice"}
+        </span>
+      ),
+    },
+    {
       key: "semester",
       title: "Semester",
       sortable: false,
       render: (academicClass: AcademicClass) => (
-        <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
           {`${academicClass.semester.semesterNumber}/${academicClass.semester.year}`}
         </span>
       ),
     },
     {
-      key: "shift",
-      title: "Shift",
+      key: "schedule",
+      title: "Schedule",
       sortable: false,
       render: (academicClass: AcademicClass) => {
-        const shifts = academicClass.scheduleInDays.map(
-          (schedule) => schedule.shift.name
-        );
-        const uniqueShifts = Array.from(new Set(shifts));
+        if (
+          !academicClass.scheduleInDays ||
+          academicClass.scheduleInDays.length === 0
+        ) {
+          return <span className="text-gray-500 text-xs">No schedule</span>;
+        }
 
         return (
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-1" /> {uniqueShifts.join(", ")}
-          </div>
-        );
-      },
-    },
-    {
-      key: "dayOfWeek",
-      title: "Day of Week",
-      sortable: false,
-      render: (academicClass: AcademicClass) => {
-        const days = academicClass.scheduleInDays.map(
-          (schedule) => schedule.dayOfWeek
-        );
-        const uniqueDays = Array.from(new Set(days));
-
-        return (
-          <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-1" /> {uniqueDays.join(", ")}
-          </div>
-        );
-      },
-    },
-    {
-      key: "room",
-      title: "Room",
-      sortable: false,
-      render: (academicClass: AcademicClass) => {
-        const rooms = academicClass.scheduleInDays.map(
-          (schedule) => schedule.room.name
-        );
-        const uniqueRooms = Array.from(new Set(rooms));
-
-        return (
-          <div className="flex items-center">
-            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
-              {uniqueRooms.join(", ")}
-            </span>
+          <div className="flex flex-wrap gap-1 max-w-[300px]">
+            {academicClass.scheduleInDays.map(
+              (schedule: any, index: number) => (
+                <span
+                  key={`${schedule.id || index}`}
+                  className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs whitespace-nowrap"
+                >
+                  {`${schedule.shift.name} ${schedule.dayOfWeek} ${schedule.room.name}`}
+                </span>
+              )
+            )}
           </div>
         );
       },
@@ -211,6 +255,9 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       render: (academicClass: AcademicClass) => {
         const handleActionSelection = (key: React.Key) => {
           switch (key) {
+            case "update":
+              if (onUpdateClass) onUpdateClass(academicClass);
+              break;
             case "delete":
               if (onDeleteClass) onDeleteClass(academicClass);
               break;
@@ -242,6 +289,12 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                 aria-label="Class Actions"
                 onAction={handleActionSelection}
               >
+                <DropdownItem
+                  key="update"
+                  startContent={<Edit className="w-4 h-4" />}
+                >
+                  Update
+                </DropdownItem>
                 <DropdownItem
                   key="delete"
                   startContent={<Trash className="w-4 h-4" />}
@@ -326,7 +379,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             {academicClass.scheduleInDays &&
             academicClass.scheduleInDays.length > 0 ? (
               <div className="space-y-1 mt-1">
-                {academicClass.scheduleInDays.map((schedule) => (
+                {academicClass.scheduleInDays.map((schedule: any) => (
                   <div
                     key={schedule.id}
                     className="bg-white p-1.5 rounded border text-xs"
@@ -399,7 +452,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
           isLoading={isLoading}
           loadingContent={"Loading classes..."}
         >
-          {classes.map((academicClass) => (
+          {safeClasses.map((academicClass) => (
             <React.Fragment key={academicClass.id}>
               <TableRow key={academicClass.id}>
                 {columns.map((column) => (

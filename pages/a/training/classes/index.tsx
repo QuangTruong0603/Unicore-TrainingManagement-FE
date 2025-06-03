@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, CalendarClock } from "lucide-react";
 import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
 import { ClassFilter } from "@/components/a/class/class-filter";
 import { ClassModal } from "@/components/a/class/class-modal";
 import { ClassTable } from "@/components/a/class/class-table";
+import { ClassRegistrationModal } from "@/components/a/class/class-registration-modal";
 import DefaultLayout from "@/layouts/default";
 import { AcademicClass } from "@/services/class/class.schema";
-import { AcademicClassCreateDto } from "@/services/class/class.dto";
+import {
+  AcademicClassCreateDto,
+  ClassRegistrationScheduleDto,
+} from "@/services/class/class.dto";
 import { classService } from "@/services/class/class.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -46,6 +50,7 @@ export default function ClassesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const debouncedSearchValue = useDebounce(searchInputValue, 600);
   // Track expanded rows
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -60,6 +65,13 @@ export default function ClassesPage() {
   // Update modal
   const { isOpen: isUpdateOpen, onOpenChange: onUpdateOpenChange } =
     useDisclosure();
+
+  // Registration schedule modal
+  const {
+    isOpen: isRegistrationOpen,
+    onOpen: onRegistrationOpen,
+    onOpenChange: onRegistrationOpenChange,
+  } = useDisclosure();
 
   // Effect for handling debounced search
   useEffect(() => {
@@ -87,7 +99,6 @@ export default function ClassesPage() {
       })
     );
   }, [debouncedSearchValue]);
-
   // Fetch classes
   useEffect(() => {
     const fetchClasses = async () => {
@@ -95,8 +106,8 @@ export default function ClassesPage() {
         dispatch(setLoading(true));
         const response = await classService.getClasses(query);
 
-        dispatch(setClasses(response.data.data));
-        dispatch(setTotal(response.data.total));
+        dispatch(setClasses(response.data.data || []));
+        dispatch(setTotal(response.data.total || 0));
       } catch (error) {
         dispatch(
           setError(error instanceof Error ? error.message : "An error occurred")
@@ -297,6 +308,29 @@ export default function ClassesPage() {
     }
   };
 
+  // Handle registration schedule creation
+  const handleCreateRegistrationSchedule = async (
+    data: ClassRegistrationScheduleDto
+  ) => {
+    try {
+      setIsSubmitting(true);
+      await classService.createClassRegistrationSchedule(data);
+
+      // Refresh data
+      const response = await classService.getClasses(query);
+
+      dispatch(setClasses(response.data.data));
+
+      // Reset selection
+      setSelectedClasses([]);
+      onRegistrationOpenChange();
+    } catch (error) {
+      dispatch(setError("Failed to set registration schedule"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Create class
   const handleCreateClass = async (data: AcademicClassCreateDto) => {
     try {
@@ -342,15 +376,27 @@ export default function ClassesPage() {
   return (
     <DefaultLayout>
       <div className="container mx-auto px-4 py-8">
+        {" "}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Classes Management</h1>
-          <Button
-            color="primary"
-            startContent={<Plus className="w-4 h-4" />}
-            onClick={onCreateOpen}
-          >
-            Create Class
-          </Button>
+          <div className="flex items-center gap-3">
+            {selectedClasses.length > 0 && (
+              <Button
+                color="secondary"
+                startContent={<CalendarClock className="w-4 h-4" />}
+                onClick={onRegistrationOpen}
+              >
+                Set Registration Schedule ({selectedClasses.length})
+              </Button>
+            )}
+            <Button
+              color="primary"
+              startContent={<Plus className="w-4 h-4" />}
+              onClick={onCreateOpen}
+            >
+              Create Class
+            </Button>
+          </div>
         </div>
         {/* Search and Filter Section */}
         <div className="mb-6">
@@ -394,18 +440,20 @@ export default function ClassesPage() {
         </div>
         {/* Classes Table */}
         <div className="bg-white rounded-lg shadow">
+          {" "}
           <ClassTable
+            allowMultiSelect={true}
             classes={classes}
             expandedRows={expandedRows}
             isLoading={isLoading}
+            selectedClasses={selectedClasses}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
-            onRowToggle={toggleRow}
-            onSort={handleSort}
             onRegistrationToggle={handleRegistrationToggle}
-            // onEditClick={handleEditClick}
+            onRowToggle={toggleRow}
+            onSelectedClassesChange={setSelectedClasses}
+            onSort={handleSort}
           />
-
           {/* Pagination */}
           <div className="px-4 py-3 border-t flex justify-end">
             <Pagination
@@ -432,6 +480,14 @@ export default function ClassesPage() {
           mode="update"
           onOpenChange={onUpdateOpenChange}
           onSubmit={handleUpdateClass}
+        />
+        {/* Registration Schedule Modal */}
+        <ClassRegistrationModal
+          isOpen={isRegistrationOpen}
+          isSubmitting={isSubmitting}
+          selectedClasses={selectedClasses}
+          onOpenChange={onRegistrationOpenChange}
+          onSubmit={handleCreateRegistrationSchedule}
         />
       </div>
     </DefaultLayout>

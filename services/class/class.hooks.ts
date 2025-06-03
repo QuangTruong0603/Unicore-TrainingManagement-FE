@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from "../api/api-config";
 import { useApiGet, useApiPost } from "../api/api-hooks";
 
 import { AcademicClassQuery } from "./class.schema";
-import { AcademicClassCreateDto } from "./class.dto";
+import { AcademicClassCreateDto, ClassRegistrationScheduleDto } from "./class.dto";
 import { classService } from "./class.service";
 
 // React Query implementation for getting classes with pagination and filters
@@ -109,4 +109,29 @@ export const useClassesByCourseId = (courseId: string) => {
     queryFn: () => classService.getClassesByCourseId(courseId),
     enabled: !!courseId, // Only run query if courseId is provided
   });
+};
+
+// Mutation for setting class registration schedule
+export const useCreateClassRegistrationSchedule = () => {
+  return useMutation({
+    mutationFn: (scheduleData: ClassRegistrationScheduleDto) =>
+      classService.createClassRegistrationSchedule(scheduleData),
+  });
+};
+
+// Alternative using custom hook
+export const useCreateClassRegistrationScheduleWithCustomHook = () => {
+  return useApiPost<void, ClassRegistrationScheduleDto>(
+    courseClient,
+    `${API_ENDPOINTS.CLASSES}/registration/schedule-with-times`, 
+    {},
+    {
+      onSuccess: (_data) => {
+        // Success handling
+      },
+      onError: (_error) => {
+        // Error handling
+      },
+    }
+  );
 };

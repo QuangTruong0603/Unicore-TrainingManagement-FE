@@ -1,5 +1,13 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import React from "react";
-import { Button, Tooltip } from "@heroui/react";
+import {
+  Button,
+  Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
 import {
   ArrowDown,
   ArrowUp,
@@ -7,6 +15,9 @@ import {
   ChevronUp,
   Power,
   PowerOff,
+  MoreVertical,
+  Edit,
+  Trash,
 } from "lucide-react";
 import {
   Table as HeroTable,
@@ -31,6 +42,8 @@ interface CourseTableProps {
   onSort?: (key: string) => void;
   onRowToggle: (courseId: string) => void;
   onActiveToggle: (course: Course) => void;
+  onDeleteCourse?: (course: Course) => void;
+  onUpdateCourse?: (course: Course) => void;
 }
 
 interface Column {
@@ -49,11 +62,15 @@ export const CourseTable: React.FC<CourseTableProps> = ({
   onSort,
   onRowToggle,
   onActiveToggle,
+  onDeleteCourse,
+  onUpdateCourse,
 }) => {
   const router = useRouter();
 
   const handleNavigateToMaterials = (courseId: string, courseName: string) => {
-    router.push(`/a/academic/courses/${courseId}/materials?name=${encodeURIComponent(courseName)}`);
+    router.push(
+      `/a/academic/courses/${courseId}/materials?name=${encodeURIComponent(courseName)}`
+    );
   };
 
   const renderSortIcon = (key: string) => {
@@ -78,6 +95,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       title: "Name",
       sortable: true,
       render: (course: Course) => (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
         <div
           className="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis cursor-pointer text-primary hover:underline"
           title={course.name}
@@ -100,7 +118,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
           ) : course.majors && course.majors.length > 0 ? (
             course.majors.map((major) => (
               <Tooltip key={major.id} content={major.name}>
-                <span className="bg-orange-100 text-primary px-2 py-1 rounded-full text-xs cursor-help">
+                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs cursor-help">
                   {major.code}
                 </span>
               </Tooltip>
@@ -117,7 +135,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       sortable: true,
       render: (course: Course) => (
         <span
-          className={`px-2 py-1 rounded text-sm ${course.isOpenForAll ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          className={`px-2 py-1 rounded-full text-xs ${course.isOpenForAll ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
           {course.isOpenForAll ? "Open For All" : "Not Open For All"}
         </span>
@@ -129,7 +147,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
       sortable: true,
       render: (course: Course) => (
         <span
-          className={`px-2 py-1 rounded text-sm ${course.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+          className={`px-2 py-1 rounded-full text-xs ${course.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
           {course.isActive ? "Active" : "Inactive"}
         </span>
@@ -138,22 +156,69 @@ export const CourseTable: React.FC<CourseTableProps> = ({
     {
       key: "actions",
       title: "Actions",
-      render: (course: Course) => (
-        <div className="flex gap-2">
-          <Button
-            className="flex items-center gap-1 h-8 px-3 font-medium"
-            color={course.isActive ? "danger" : "success"}
-            size="sm"
-            startContent={
-              course.isActive ? <PowerOff size={16} /> : <Power size={16} />
-            }
-            variant="flat"
-            onPress={() => onActiveToggle(course)}
-          >
-            {course.isActive ? "Deactivate" : "Activate"}
-          </Button>
-        </div>
-      ),
+      render: (course: Course) => {
+        const handleActionSelection = (key: React.Key) => {
+          switch (key) {
+            case "update":
+              if (onUpdateCourse) onUpdateCourse(course);
+              break;
+            case "delete":
+              if (onDeleteCourse) onDeleteCourse(course);
+              break;
+            case "activate":
+              onActiveToggle(course);
+              break;
+          }
+        };
+
+        return (
+          <div className="flex gap-2 justify-end pr-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Course Actions"
+                onAction={handleActionSelection}
+              >
+                <DropdownItem
+                  key="update"
+                  startContent={<Edit className="w-4 h-4" />}
+                >
+                  Update
+                </DropdownItem>
+                <DropdownItem
+                  key="delete"
+                  startContent={<Trash className="w-4 h-4" />}
+                >
+                  Delete
+                </DropdownItem>
+                <DropdownItem
+                  key="activate"
+                  startContent={
+                    course.isActive ? (
+                      <PowerOff className="w-4 h-4" />
+                    ) : (
+                      <Power className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {course.isActive ? "Deactivate" : "Activate"}
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        );
+      },
     },
     {
       key: "expand",
@@ -212,7 +277,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
                 course.majors.map((major) => (
                   <span
                     key={major.id}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                    className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
                   >
                     {major.code}
                   </span>
