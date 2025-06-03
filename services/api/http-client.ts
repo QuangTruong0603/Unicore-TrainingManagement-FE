@@ -5,6 +5,7 @@ import axios, {
   AxiosResponse,
   CancelTokenSource,
 } from "axios";
+import { addToast } from "@heroui/react";
 
 import { API_URLS, COMMON_HEADERS, REQUEST_TIMEOUT } from "./api-config";
 import { BaseResponse } from "./api-response";
@@ -205,7 +206,6 @@ class HttpClient {
     });
     this.cancelTokens.clear();
   }
-
   /**
    * Generate a cancelable config for a request
    */
@@ -222,7 +222,9 @@ class HttpClient {
       requestId,
       retryCount: 0, // Initialize retry count
     };
-  } /**
+  }
+
+  /**
    * Generic request method
    */
   public async request<T = any>(
@@ -230,25 +232,20 @@ class HttpClient {
   ): Promise<BaseResponse<T>> {
     const cancelableConfig = this.getCancelableConfig(config);
     const response: AxiosResponse<any> =
-      await this.instance.request(cancelableConfig); // Transform response to match BaseResponse format
+      await this.instance.request(cancelableConfig);
 
-    // If response already has the expected structure, use it
-    if (
-      response.data &&
-      response.data.hasOwnProperty("success") &&
-      response.data.hasOwnProperty("data") &&
-      response.data.hasOwnProperty("errors")
-    ) {
-      return response.data as BaseResponse<T>;
+    if (response.data.errors) {
+      addToast({
+        title: "Error",
+        description: response.data.errors.join(", "),
+        color: "danger",
+      });
     }
 
-    // Otherwise, transform the response to match BaseResponse format
-    return {
-      success: true,
-      data: response.data as T,
-      errors: [],
-    };
-  } /**
+    return response.data as BaseResponse<T>;
+  }
+
+  /**
    * GET method
    */
   public get<T = any>(

@@ -37,7 +37,7 @@ export const scheduleInDaySchema = z.object({
   shift: shiftSchema,
 });
 
-export const academicClassSchema = z.object({
+export const academicClassBasic = z.object({
   id: z.string(),
   name: z.string(),
   groupNumber: z.number(),
@@ -49,7 +49,31 @@ export const academicClassSchema = z.object({
   semesterId: z.string(),
   semester: semesterSchema,
   scheduleInDays: z.array(scheduleInDaySchema),
+  registrationOpenTime: z.date().optional(),
+  registrationCloseTime: z.date().optional(),
 });
+
+export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    groupNumber: z.number(),
+    capacity: z.number(),
+    listOfWeeks: z.array(z.number()),
+    isRegistrable: z.boolean(),
+    courseId: z.string(),
+    course: courseSchema,
+    semesterId: z.string(),
+    semester: semesterSchema,
+    parentTheoryAcademicClassId: z.string().nullable(),
+    parentTheoryAcademicClass: z.lazy(() => academicClassBasic).nullable(),
+    childPracticeAcademicClassIds: z.array(z.string()),
+    childPracticeAcademicClasses: z.array(z.lazy(() => academicClassBasic)),
+    scheduleInDays: z.array(scheduleInDaySchema),
+    registrationOpenTime: z.date().optional(),
+    registrationCloseTime: z.date().optional(),
+  })
+);
 
 export type AcademicClass = z.infer<typeof academicClassSchema>;
 

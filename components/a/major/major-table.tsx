@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Power, PowerOff } from "lucide-react";
+import { ArrowDown, ArrowUp, Power, PowerOff, MoreVertical, Edit, Trash } from "lucide-react";
 import {
   Button,
   Chip,
@@ -8,6 +8,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 
 import styles from "./major-table.module.scss";
@@ -21,6 +25,8 @@ interface MajorTableProps {
   sortDirection?: string;
   onSort?: (key: string) => void;
   onActiveToggle?: (major: Major) => void;
+  onDeleteMajor?: (major: Major) => void;
+  onUpdateMajor?: (major: Major) => void;
 }
 
 export const MajorTable = ({
@@ -30,6 +36,8 @@ export const MajorTable = ({
   sortDirection = "asc",
   onSort,
   onActiveToggle,
+  onDeleteMajor,
+  onUpdateMajor,
 }: MajorTableProps) => {
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
@@ -113,18 +121,63 @@ export const MajorTable = ({
               </Chip>
             </TableCell>
             <TableCell>
-              <Button
-                className="flex items-center gap-1 h-8 px-3 font-medium"
-                color={major.isActive ? "danger" : "success"}
-                size="sm"
-                startContent={
-                  major.isActive ? <PowerOff size={16} /> : <Power size={16} />
-                }
-                variant="flat"
-                onPress={() => onActiveToggle && onActiveToggle(major)}
-              >
-                {major.isActive ? "Deactivate" : "Activate"}
-              </Button>
+              <div className="flex gap-2 justify-end pr-2">
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Major Actions"
+                    onAction={(key) => {
+                      switch (key) {
+                        case "update":
+                          if (onUpdateMajor) onUpdateMajor(major);
+                          break;
+                        case "delete":
+                          if (onDeleteMajor) onDeleteMajor(major);
+                          break;
+                        case "activate":
+                          if (onActiveToggle) onActiveToggle(major);
+                          break;
+                      }
+                    }}
+                  >
+                    <DropdownItem
+                      key="update"
+                      startContent={<Edit className="w-4 h-4" />}
+                    >
+                      Update
+                    </DropdownItem>
+                    <DropdownItem
+                      key="delete"
+                      startContent={<Trash className="w-4 h-4" />}
+                    >
+                      Delete
+                    </DropdownItem>
+                    <DropdownItem
+                      key="activate"
+                      startContent={
+                        major.isActive ? (
+                          <PowerOff className="w-4 h-4" />
+                        ) : (
+                          <Power className="w-4 h-4" />
+                        )
+                      }
+                    >
+                      {major.isActive ? "Deactivate" : "Activate"}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              </div>
             </TableCell>
           </TableRow>
         )}

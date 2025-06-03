@@ -8,8 +8,19 @@ import {
   TableCell,
   Button,
   Spinner,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
-import { ChevronDown, ChevronUp, Trash, Pencil } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Trash,
+  Pencil,
+  MoreVertical,
+  Edit,
+} from "lucide-react";
 
 import { Student } from "@/services/student/student.schema";
 interface StudentTableProps {
@@ -29,6 +40,7 @@ interface StudentTableProps {
   onRowToggle: (studentId: string) => void;
   onDelete: (studentId: string) => void;
   onEdit: (student: Student) => void;
+  onUpdate?: (student: Student) => void;
 }
 
 export const StudentTable: React.FC<StudentTableProps> = ({
@@ -39,6 +51,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   sortDirection,
   onSort,
   onEdit,
+  onUpdate,
 }) => {
   const renderSortIcon = (columnKey: string) => {
     if (sortKey !== columnKey) return null;
@@ -146,22 +159,44 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                 </span>
               </TableCell>
               <TableCell className="text-center">
-                <Button
-                  className="ml-1"
-                  size="sm"
-                  variant="light"
-                  onPress={() => onEdit(student)}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button
-                  className="ml-1"
-                  size="sm"
-                  variant="light"
-                  onPress={() => handleDelete(student.id)}
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button isIconOnly size="sm" variant="light">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Student Actions"
+                    onAction={(key) => {
+                      if (key === "edit") {
+                        onEdit(student);
+                      } else if (key === "update") {
+                        if (onUpdate) onUpdate(student);
+                      } else if (key === "delete") {
+                        handleDelete(student.id);
+                      }
+                    }}
+                  >
+                    <DropdownItem
+                      key="edit"
+                      startContent={<Pencil className="w-4 h-4" />}
+                    >
+                      Edit
+                    </DropdownItem>
+                    <DropdownItem
+                      key="update"
+                      startContent={<Edit className="w-4 h-4" />}
+                    >
+                      Update
+                    </DropdownItem>
+                    <DropdownItem
+                      key="delete"
+                      startContent={<Trash className="w-4 h-4" />}
+                    >
+                      Delete
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
               </TableCell>
             </TableRow>
           </React.Fragment>

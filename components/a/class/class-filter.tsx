@@ -91,7 +91,6 @@ export function ClassFilter({
           setShifts(shiftsResponse.data);
         } catch (error) {
           // Handle errors silently
-          console.error("Error fetching filter data:", error);
         }
       }
     };

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Power, PowerOff, Edit } from "lucide-react";
+import { ArrowDown, ArrowUp, Power, PowerOff, Edit, MoreVertical, Trash } from "lucide-react";
 import {
   Button,
   Chip,
@@ -8,6 +8,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 
 import styles from "./room-table.module.scss";
@@ -22,6 +26,7 @@ interface RoomTableProps {
   onSort?: (key: string) => void;
   onActiveToggle?: (room: Room) => void;
   onEdit?: (room: Room) => void;
+  onDeleteRoom?: (room: Room) => void;
 }
 
 export const RoomTable = ({
@@ -32,6 +37,7 @@ export const RoomTable = ({
   onSort,
   onActiveToggle,
   onEdit,
+  onDeleteRoom,
 }: RoomTableProps) => {
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
@@ -103,37 +109,62 @@ export const RoomTable = ({
               </Chip>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                {onEdit && (
-                  <Button
-                    className="flex items-center gap-1 h-8 px-3 font-medium"
-                    color="primary"
-                    size="sm"
-                    startContent={<Edit size={16} />}
-                    variant="flat"
-                    onPress={() => onEdit(room)}
+              <div className="flex gap-2 justify-end pr-2">
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Room Actions"
+                    onAction={(key) => {
+                      switch (key) {
+                        case "edit":
+                          if (onEdit) onEdit(room);
+                          break;
+                        case "delete":
+                          if (onDeleteRoom) onDeleteRoom(room);
+                          break;
+                        case "activate":
+                          if (onActiveToggle) onActiveToggle(room);
+                          break;
+                      }
+                    }}
                   >
-                    Edit
-                  </Button>
-                )}
-                {onActiveToggle && (
-                  <Button
-                    className="flex items-center gap-1 h-8 px-3 font-medium"
-                    color={room.isActive ? "danger" : "success"}
-                    size="sm"
-                    startContent={
-                      room.isActive ? (
-                        <PowerOff size={16} />
-                      ) : (
-                        <Power size={16} />
-                      )
-                    }
-                    variant="flat"
-                    onPress={() => onActiveToggle(room)}
-                  >
-                    {room.isActive ? "Deactivate" : "Activate"}
-                  </Button>
-                )}
+                    <DropdownItem
+                      key="edit"
+                      startContent={<Edit className="w-4 h-4" />}
+                    >
+                      Edit
+                    </DropdownItem>
+                    <DropdownItem
+                      key="delete"
+                      startContent={<Trash className="w-4 h-4" />}
+                    >
+                      Delete
+                    </DropdownItem>
+                    <DropdownItem
+                      key="activate"
+                      startContent={
+                        room.isActive ? (
+                          <PowerOff className="w-4 h-4" />
+                        ) : (
+                          <Power className="w-4 h-4" />
+                        )
+                      }
+                    >
+                      {room.isActive ? "Deactivate" : "Activate"}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
               </div>
             </TableCell>
           </TableRow>

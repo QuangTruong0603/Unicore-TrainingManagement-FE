@@ -22,7 +22,14 @@ export interface AcademicClassCreateDto {
   isRegistrable: boolean;
   courseId: string;
   semesterId: string;
+  parentTheoryAcademicClassId: string | null;
   scheduleInDays: ScheduleInDayCreateForClassDto[];
+}
+
+export interface ClassRegistrationScheduleDto {
+  academicClassIds: string[];
+  registrationOpenTime: Date;
+  registrationCloseTime: Date;
 }
 
 export interface AcademicClassResponse extends BaseResponse<AcademicClass> {}
