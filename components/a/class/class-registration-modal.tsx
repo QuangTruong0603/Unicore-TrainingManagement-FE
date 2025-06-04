@@ -2,15 +2,15 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   Button,
+  DatePicker,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
 } from "@heroui/react";
-import DatePicker from "react-datepicker";
+import { now, CalendarDateTime } from "@internationalized/date";
 
-import "react-datepicker/dist/react-datepicker.css";
 import { ClassRegistrationScheduleDto } from "@/services/class/class.dto";
 
 interface ClassRegistrationModalProps {
@@ -28,30 +28,56 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
   onSubmit,
   selectedClasses,
 }) => {
+  // Define Vietnam timezone (UTC+7)
+  const VIETNAM_TIMEZONE = "Asia/Ho_Chi_Minh";
+
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<{
-    registrationOpenTime: Date;
-    registrationCloseTime: Date;
+    registrationOpenTime: CalendarDateTime;
+    registrationCloseTime: CalendarDateTime;
   }>({
     defaultValues: {
-      registrationOpenTime: new Date(),
-      registrationCloseTime: new Date(
-        new Date().getTime() + 7 * 24 * 60 * 60 * 1000
-      ), // Default to 1 week later
+      registrationOpenTime: now(VIETNAM_TIMEZONE).add({ hours: 1 }),
+      registrationCloseTime: now(VIETNAM_TIMEZONE).add({ days: 7 }),
     },
   });
 
+  const registrationOpenTime = watch("registrationOpenTime");
+
   const onFormSubmit = (data: {
-    registrationOpenTime: Date;
-    registrationCloseTime: Date;
+    registrationOpenTime: CalendarDateTime;
+    registrationCloseTime: CalendarDateTime;
   }) => {
+    // Ensure dates are valid
+    if (!data.registrationOpenTime || !data.registrationCloseTime) {
+      return;
+    }
+    // Convert CalendarDateTime to Date objects for the API with explicit timezone handling
+    // Create dates in Vietnam timezone
+    const openTime = data.registrationOpenTime.toDate(VIETNAM_TIMEZONE);
+    const closeTime = data.registrationCloseTime.toDate(VIETNAM_TIMEZONE);
+
+    // Create explicit date strings that preserve the Vietnam time (UTC+7)
+    const vtOpenTime = new Date(
+      `${openTime.getFullYear()}-${String(openTime.getMonth() + 1).padStart(2, "0")}-${String(openTime.getDate()).padStart(2, "0")}T${String(openTime.getHours()).padStart(2, "0")}:${String(openTime.getMinutes()).padStart(2, "0")}:00+07:00`
+    );
+    const vtCloseTime = new Date(
+      `${closeTime.getFullYear()}-${String(closeTime.getMonth() + 1).padStart(2, "0")}-${String(closeTime.getDate()).padStart(2, "0")}T${String(closeTime.getHours()).padStart(2, "0")}:${String(closeTime.getMinutes()).padStart(2, "0")}:00+07:00`
+    );
+
+    // Ensure close time is after open time
+    if (vtCloseTime <= vtOpenTime) {
+      return;
+    }
+
     onSubmit({
       academicClassIds: selectedClasses,
-      registrationOpenTime: data.registrationOpenTime,
-      registrationCloseTime: data.registrationCloseTime,
+      registrationOpenTime: vtOpenTime,
+      registrationCloseTime: vtCloseTime,
     });
   };
 
@@ -74,27 +100,34 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
             </p>
 
             <div className="space-y-4">
+              {" "}
               <div>
-                <label
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                  htmlFor="registrationOpenTime"
-                >
-                  Registration Open Time
-                </label>
                 <Controller
                   control={control}
                   name="registrationOpenTime"
                   render={({ field }) => (
                     <DatePicker
-                      showTimeSelect
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      dateFormat="MMMM d, yyyy h:mm aa"
-                      id="registrationOpenTime"
-                      selected={field.value}
-                      onChange={(date: Date | null) => field.onChange(date)}
+                      hideTimeZone
+                      showMonthAndYearPickers
+                      className="w-full"
+                      granularity="minute"
+                      label="Registration Open Time (Vietnam Time)"
+                      minValue={now(VIETNAM_TIMEZONE)}
+                      value={field.value}
+                      variant="bordered"
+                      onChange={(value) => field.onChange(value)}
                     />
                   )}
-                  rules={{ required: "This field is required" }}
+                  rules={{
+                    required: "Registration open time is required",
+                    validate: (value) => {
+                      if (!value || value.compare(now(VIETNAM_TIMEZONE)) < 0) {
+                        return "Registration open time cannot be in the past";
+                      }
+
+                      return true;
+                    },
+                  }}
                 />
                 {errors.registrationOpenTime && (
                   <p className="text-red-500 text-xs mt-1">
@@ -102,28 +135,36 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
                   </p>
                 )}
               </div>
-
               <div>
-                <label
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                  htmlFor="registrationCloseTime"
-                >
-                  Registration Close Time
-                </label>
                 <Controller
                   control={control}
                   name="registrationCloseTime"
                   render={({ field }) => (
                     <DatePicker
-                      showTimeSelect
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      dateFormat="MMMM d, yyyy h:mm aa"
-                      id="registrationCloseTime"
-                      selected={field.value}
-                      onChange={(date: Date | null) => field.onChange(date)}
+                      hideTimeZone
+                      showMonthAndYearPickers
+                      className="w-full"
+                      granularity="minute"
+                      label="Registration Close Time (Vietnam Time)"
+                      minValue={registrationOpenTime || now(VIETNAM_TIMEZONE)}
+                      value={field.value}
+                      variant="bordered"
+                      onChange={(value) => field.onChange(value)}
                     />
                   )}
-                  rules={{ required: "This field is required" }}
+                  rules={{
+                    required: "Registration close time is required",
+                    validate: (value) => {
+                      if (!value || !registrationOpenTime) {
+                        return "Registration close time is required";
+                      }
+                      if (value.compare(registrationOpenTime) <= 0) {
+                        return "Registration close time must be after open time";
+                      }
+
+                      return true;
+                    },
+                  }}
                 />
                 {errors.registrationCloseTime && (
                   <p className="text-red-500 text-xs mt-1">

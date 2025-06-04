@@ -31,6 +31,7 @@ export interface CreateTrainingRoadmapData {
     semesterNumber: number;
     coursesGroupId?: string;
   }[];
+  batchIds: string[];
 }
 
 export interface UpdateTrainingRoadmapData {
@@ -39,6 +40,7 @@ export interface UpdateTrainingRoadmapData {
   description?: string;
   code?: string;
   startYear?: number;
+  batchIds?: string[];
   trainingRoadmapCourses?: {
     courseId: string;
     semesterNumber: number;

@@ -221,7 +221,8 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
       .filter((g) => g.semesterNumber === semesterNumber)
       .map((g) => ({
         id: g.id,
-        groupName: g.coursesGroup?.groupName || "Course Group",
+        groupName:
+          g.coursesGroupName || g.coursesGroup?.groupName || "Course Group",
         isDraft: true,
         isFromApi: g.isFromApi, // Keep track if it came from API
         draftId: g.id,
@@ -235,10 +236,12 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
             0
           ) || 0,
         credit:
-          g.coursesGroup?.credit || g.coursesGroup?.courses?.[0]?.credit || 0, // Use coursesGroup.credit first
-        code: `Group-${g.coursesGroupId?.substring(0, 4)}`, // Generate a code for display
-        name: g.coursesGroup?.groupName || "Course Group", // Use group name for display
-        coursesGroup: g.coursesGroup, // Include the full coursesGroup object
+          g.credit ||
+          g.coursesGroup?.credit ||
+          g.coursesGroup?.courses?.[0]?.credit ||
+          0, // Use direct credit first
+        name: g.coursesGroupName || g.coursesGroup?.groupName || "Course Group", // Use direct coursesGroupName first
+        coursesGroup: g.coursesGroup, // Include the full coursesGroup object if available
       }));
 
     return [...draftCourses, ...draftCourseGroups];
@@ -478,7 +481,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
   };
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-hidden">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold">Course Assignment</h2>
@@ -522,7 +525,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
       {/* Horizontal scrolling semester cards */}
       <div
         ref={semestersContainerRef}
-        className="flex gap-6 overflow-x-auto pb-4 snap-x scroll-smooth"
+        className="flex gap-6 overflow-x-auto pb-4 snap-x scroll-smooth max-w-[72rem] mx-auto px-2"
         style={{ scrollbarWidth: "thin" }}
       >
         {allSemesters.map((semesterNumber) => {
@@ -531,7 +534,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
           return (
             <Card
               key={semesterNumber}
-              className={`min-w-[300px] max-w-[300px] ${semesterNumber === nextSemester ? "border-dashed border-2 border-gray-300" : ""} snap-center`}
+              className={`min-w-[18.75rem] max-w-[18.75rem] ${semesterNumber === nextSemester ? "border-dashed border-2 border-gray-300" : ""} snap-center`}
             >
               <div
                 className={`
@@ -580,7 +583,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                               : course.name}
                           </h4>{" "}
                           <Badge
-                            className="whitespace-nowrap flex-shrink-0 min-w-[65px] text-center"
+                            className="whitespace-nowrap flex-shrink-0 min-w-[4.0625rem] text-center"
                             color={
                               course.type === "courseGroup"
                                 ? "secondary"

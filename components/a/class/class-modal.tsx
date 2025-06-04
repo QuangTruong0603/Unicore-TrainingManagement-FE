@@ -220,14 +220,12 @@ export function ClassModal({
               },
             });
 
-            // Filter to only get theory classes (where parentTheoryAcademicClassId is null)
             const theoryClasses = (theoryClassResponse.data.data || []).filter(
-              (cls: AcademicClass) => cls.parentTheoryAcademicClassId === null
+              (cls: AcademicClass) => !cls.parentTheoryAcademicClassId
             );
 
             setTheoryClasses(theoryClasses);
           } catch {
-            // Silently handle error
             setTheoryClasses([]);
           }
         } else {

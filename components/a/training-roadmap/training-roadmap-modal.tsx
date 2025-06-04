@@ -14,11 +14,13 @@ import {
 } from "./training-roadmap-form";
 
 import { Major } from "@/services/major/major.schema";
+import { Batch } from "@/services/batch/batch.schema";
 
 interface TrainingRoadmapModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   majors: Major[];
+  batches: Batch[];
   onSubmit: (data: TrainingRoadmapFormData) => void;
   isSubmitting: boolean;
   mode: "create"; // Only create mode is supported
@@ -28,6 +30,7 @@ export function TrainingRoadmapModal({
   isOpen,
   onOpenChange,
   majors,
+  batches,
   onSubmit,
   isSubmitting,
   mode,
@@ -43,6 +46,7 @@ export function TrainingRoadmapModal({
 
             <ModalBody>
               <TrainingRoadmapForm
+                batches={batches}
                 isSubmitting={isSubmitting}
                 majors={majors}
                 mode={mode}

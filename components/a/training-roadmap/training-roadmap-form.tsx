@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input, Select, SelectItem, Textarea } from "@heroui/react";
 
 import { Major } from "@/services/major/major.schema";
+import { Batch } from "@/services/batch/batch.schema";
 
 // Create a schema for form validation
 export const trainingRoadmapFormSchema = z.object({
@@ -34,12 +35,14 @@ export const trainingRoadmapFormSchema = z.object({
       })
       .min(2000, "Start Year must be 2000 or later")
   ) as unknown as z.ZodNumber,
+  batchIds: z.array(z.string()),
 });
 
 export type TrainingRoadmapFormData = z.infer<typeof trainingRoadmapFormSchema>;
 
 interface TrainingRoadmapFormProps {
   majors: Major[];
+  batches: Batch[];
   onSubmit: (data: TrainingRoadmapFormData) => void;
   isSubmitting?: boolean;
   mode: "create"; // Only create mode is supported
@@ -47,9 +50,10 @@ interface TrainingRoadmapFormProps {
 
 export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
   majors,
+  batches,
   onSubmit,
   isSubmitting = false,
-  mode = "create",
+  mode: _mode = "create",
 }) => {
   // Get current year for the start year field
   const currentYear = new Date().getFullYear();
@@ -66,6 +70,7 @@ export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
       name: "",
       description: "",
       startYear: currentYear,
+      batchIds: [],
     },
   });
 
@@ -189,6 +194,46 @@ export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
               onChange={(e) => onChange(e.target.value)}
               {...rest}
             />
+          )}
+        />
+      </div>
+
+      {/* Batch Selection */}
+      <div className="form-group">
+        <label
+          className="block text-sm font-medium text-gray-700 mb-1"
+          htmlFor="batchIds"
+        >
+          Batches
+        </label>
+        <Controller
+          control={control}
+          name="batchIds"
+          render={({ field }) => (
+            <Select
+              className="w-full"
+              errorMessage={errors.batchIds?.message}
+              id="batchIds"
+              isDisabled={isSubmitting}
+              isInvalid={!!errors.batchIds}
+              placeholder="Select batches"
+              selectedKeys={field.value}
+              selectionMode="multiple"
+              onSelectionChange={(keys) => {
+                const selectedArray = Array.from(keys as Set<string>);
+
+                field.onChange(selectedArray);
+              }}
+            >
+              {batches.map((batch) => (
+                <SelectItem
+                  key={batch.id}
+                  textValue={`${batch.title} (${batch.startYear})`}
+                >
+                  {batch.title} ({batch.startYear})
+                </SelectItem>
+              ))}
+            </Select>
           )}
         />
       </div>
