@@ -1,5 +1,12 @@
 import React from "react";
-import { Button } from "@heroui/react";
+import {
+  Button,
+  Chip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
 import {
   ArrowDown,
   ArrowUp,
@@ -7,6 +14,9 @@ import {
   ChevronUp,
   Power,
   PowerOff,
+  MoreVertical,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -30,7 +40,8 @@ interface TrainingRoadmapTableProps {
   sortDirection?: "asc" | "desc";
   onSort?: (key: string) => void;
   onRowToggle: (roadmapId: string) => void;
-  onEdit: (roadmap: TrainingRoadmap) => void; // Kept for interface compatibility, not used
+  onEdit: (roadmap: TrainingRoadmap) => void;
+  onDelete: (roadmap: TrainingRoadmap) => void;
   onActiveToggle: (roadmap: TrainingRoadmap) => void;
 }
 
@@ -49,6 +60,8 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
   sortDirection,
   onSort,
   onRowToggle,
+  onEdit,
+  onDelete,
   onActiveToggle,
 }) => {
   const renderSortIcon = (key: string) => {
@@ -78,7 +91,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
         >
           <Link
             className="text-inherit hover:text-primary cursor-pointer"
-            href={`/a/training/training-roadmap/${roadmap.id}`}
+            href={`/a/academic/training-roadmap/${roadmap.id}`}
           >
             {roadmap.name}
           </Link>
@@ -106,35 +119,103 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
       ),
     },
     {
+      key: "batches",
+      title: "Batches",
+      render: (roadmap: TrainingRoadmap) => (
+        <div className="flex flex-wrap gap-1 max-w-[300px]">
+          {roadmap.batchDatas && roadmap.batchDatas.length > 0 ? (
+            roadmap.batchDatas.slice(0, 3).map((batch) => (
+              <Chip
+                key={batch.id}
+                className="text-xs"
+                color="primary"
+                size="sm"
+                variant="flat"
+              >
+                {batch.title} ({batch.startYear})
+              </Chip>
+            ))
+          ) : (
+            <span className="text-gray-400 text-sm">No batches</span>
+          )}
+          {roadmap.batchDatas && roadmap.batchDatas.length > 3 && (
+            <Chip className="text-xs" color="default" size="sm" variant="flat">
+              +{roadmap.batchDatas.length - 3}
+            </Chip>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "status",
       title: "Status",
       sortable: true,
       render: (roadmap: TrainingRoadmap) => (
-        <span
-          className={`px-2 py-1 rounded text-sm ${roadmap.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+        <Chip
+          className="text-xs"
+          color={roadmap.isActive ? "success" : "danger"}
+          size="sm"
+          variant="flat"
         >
           {roadmap.isActive ? "Active" : "Inactive"}
-        </span>
+        </Chip>
       ),
     },
     {
       key: "actions",
       title: "Actions",
       render: (roadmap: TrainingRoadmap) => (
-        <div className="flex gap-2">
-          <Button
-            className="flex items-center gap-1 h-8 px-3 font-medium"
-            color={roadmap.isActive ? "danger" : "success"}
-            size="sm"
-            startContent={
-              roadmap.isActive ? <PowerOff size={16} /> : <Power size={16} />
-            }
-            variant="flat"
-            onPress={() => onActiveToggle(roadmap)}
-          >
-            {roadmap.isActive ? "Deactivate" : "Activate"}
-          </Button>
-        </div>
+        <Dropdown>
+          <DropdownTrigger>
+            <Button
+              isIconOnly
+              className="h-8 w-8 min-w-0"
+              size="sm"
+              variant="light"
+            >
+              <MoreVertical size={16} />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Actions">
+            <DropdownItem
+              key="edit"
+              startContent={<Edit size={16} />}
+              onPress={() => {
+                console.log("Edit roadmap:", roadmap);
+                onEdit(roadmap);
+              }}
+            >
+              Update
+            </DropdownItem>
+            <DropdownItem
+              key="toggle-status"
+              startContent={
+                roadmap.isActive ? <PowerOff size={16} /> : <Power size={16} />
+              }
+              onPress={() => {
+                console.log(
+                  `${roadmap.isActive ? "Deactivate" : "Activate"} roadmap:`,
+                  roadmap
+                );
+                onActiveToggle(roadmap);
+              }}
+            >
+              {roadmap.isActive ? "Deactivate" : "Activate"}
+            </DropdownItem>
+            <DropdownItem
+              key="delete"
+              className="text-danger"
+              color="danger"
+              startContent={<Trash2 size={16} />}
+              onPress={() => {
+                console.log("Delete roadmap:", roadmap);
+                onDelete(roadmap);
+              }}
+            >
+              Delete
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       ),
     },
     {

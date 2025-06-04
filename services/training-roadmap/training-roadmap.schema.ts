@@ -1,3 +1,4 @@
+import { batch } from "react-redux";
 import { z } from "zod";
 
 // Basic course reference schema (to avoid circular dependencies)
@@ -24,10 +25,6 @@ export const coursesGroupSchema = z.object({
   majorId: z.string(),
   courses: z.array(courseReferenceSchema),
   credit: z.number(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-  createdBy: z.string().nullable(),
-  updatedBy: z.string().nullable(),
 });
 
 export type CoursesGroup = z.infer<typeof coursesGroupSchema>;
@@ -38,11 +35,9 @@ export const coursesGroupSemesterSchema = z.object({
   semesterNumber: z.number(),
   coursesGroupId: z.string(),
   trainingRoadmapId: z.string(),
-  coursesGroup: coursesGroupSchema.optional(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-  createdBy: z.string().nullable(),
-  updatedBy: z.string().nullable(),
+  // coursesGroup: coursesGroupSchema.optional(),
+  coursesGroupName: z.string(),
+  credit: z.number(),
 });
 
 export type CoursesGroupSemester = z.infer<typeof coursesGroupSemesterSchema>;
@@ -54,10 +49,6 @@ export const trainingRoadmapCourseSchema = z.object({
   courseId: z.string(),
   course: courseReferenceSchema,
   semesterNumber: z.number(),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-  createdBy: z.string().nullable(),
-  updatedBy: z.string().nullable(),
 });
 
 export type TrainingRoadmapCourse = z.infer<typeof trainingRoadmapCourseSchema>;
@@ -73,11 +64,17 @@ export const trainingRoadmapSchema = z.object({
   startYear: z.number(),
   coursesGroupSemesters: z.array(coursesGroupSemesterSchema),
   trainingRoadmapCourses: z.array(trainingRoadmapCourseSchema),
+  batchIds: z.array(z.string()),
+  batchDatas: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      startYear: z.number(),
+      title: z.string(),
+      endYear: z.number(),
+    })
+  ),
   isActive: z.boolean().default(true),
-  createdAt: z.string().or(z.date()),
-  updatedAt: z.string().or(z.date()),
-  createdBy: z.string().nullable(),
-  updatedBy: z.string().nullable(),
 });
 
 export type TrainingRoadmap = z.infer<typeof trainingRoadmapSchema>;

@@ -34,139 +34,106 @@ const TrainingRoadmapDetailPage: React.FC = () => {
   if (isError || !roadmap) {
     return (
       <DefaultLayout>
-        <div className="p-6 text-center">
-          <h2 className="text-2xl mb-4 text-red-600">Error</h2>
-          <p className="mb-6">Failed to load training roadmap details.</p>
-          <Button
-            color="primary"
-            onClick={() => router.push("/training/training-roadmap")}
-          >
-            Return to Training Roadmaps
-          </Button>
-        </div>
+        <div className="p-6 text-center" />
       </DefaultLayout>
     );
   }
 
   return (
     <DefaultLayout>
-      <Head>
-        <title>{roadmap.name} - Training Roadmap</title>
-      </Head>
+      <div>
+        <Head>
+          <title>{roadmap.name} - Training Roadmap</title>
+        </Head>
 
-      <div className="container mx-auto py-6 px-4">
-        <div className="mb-6">
-          <Link passHref href="/a/training/training-roadmap">
-            <Button color="default" variant="flat">
-              Back to Training Roadmaps
-            </Button>
-          </Link>
-        </div>
+        <div className="container mx-auto py-6 px-4">
+          <div className="mb-6">
+            <Link passHref href="/a/academic/training-roadmap">
+              <Button color="default" variant="flat">
+                Back to Training Roadmaps
+              </Button>
+            </Link>
+          </div>
 
-        <h1 className="text-3xl font-bold mb-6">{roadmap.name}</h1>
+          <h1 className="text-3xl font-bold mb-6">{roadmap.name}</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main information */}
-          <Card className="lg:col-span-2">
-            <CardBody>
-              <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main information */}
+            <Card className="lg:col-span-2">
+              <CardBody>
+                <h2 className="text-xl font-semibold mb-4">
+                  Basic Information
+                </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p className="text-sm text-gray-500">Code</p>
-                  <p className="font-medium">{roadmap.code}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-500">Start Year</p>
-                  <p className="font-medium">{roadmap.startYear}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-500">Major</p>
-                  <p className="font-medium">
-                    {roadmap.majorData
-                      ? `${roadmap.majorData.name} (${roadmap.majorData.code})`
-                      : roadmap.majorId}
-                  </p>
-                </div>
-
-                <div className="md:col-span-2">
-                  <p className="text-sm text-gray-500">Description</p>
-                  <p>{roadmap.description}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-500">Created At</p>
-                  <p className="font-medium">
-                    {new Date(roadmap.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-500">Updated At</p>
-                  <p className="font-medium">
-                    {new Date(roadmap.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                {roadmap.createdBy && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div>
-                    <p className="text-sm text-gray-500">Created By</p>
-                    <p className="font-medium">{roadmap.createdBy}</p>
+                    <p className="text-sm text-gray-500">Code</p>
+                    <p className="font-medium">{roadmap.code}</p>
                   </div>
-                )}
 
-                {roadmap.updatedBy && (
                   <div>
-                    <p className="text-sm text-gray-500">Updated By</p>
-                    <p className="font-medium">{roadmap.updatedBy}</p>
+                    <p className="text-sm text-gray-500">Start Year</p>
+                    <p className="font-medium">{roadmap.startYear}</p>
                   </div>
-                )}
-              </div>
-            </CardBody>
-          </Card>
 
-          {/* Summary Card */}
-          <Card>
-            <CardBody>
-              <h2 className="text-xl font-semibold mb-4">Summary</h2>
+                  <div>
+                    <p className="text-sm text-gray-500">Major</p>
+                    <p className="font-medium">
+                      {roadmap.majorData
+                        ? `${roadmap.majorData.name} (${roadmap.majorData.code})`
+                        : roadmap.majorId}
+                    </p>
+                  </div>
 
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Total Semesters</p>
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-500">Description</p>
+                    <p>{roadmap.description}</p>
+                  </div>
                 </div>
+              </CardBody>
+            </Card>
 
-                <div>
-                  <p className="text-sm text-gray-500">Total Courses</p>
-                  <p className="text-2xl font-bold">
-                    {roadmap.trainingRoadmapCourses.length || 0}
-                  </p>
+            {/* Summary Card */}
+            <Card>
+              <CardBody>
+                <h2 className="text-xl font-semibold mb-4">Summary</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Semesters</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Total Courses</p>
+                    <p className="text-2xl font-bold">
+                      {roadmap.trainingRoadmapCourses.length || 0}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Total Credits</p>
+                    <p className="text-2xl font-bold">
+                      {roadmap.trainingRoadmapCourses.reduce((total, item) => {
+                        return total + (item.course?.credit || 0);
+                      }, 0)}
+                    </p>
+                  </div>
                 </div>
+              </CardBody>
+            </Card>
+          </div>
 
-                <div>
-                  <p className="text-sm text-gray-500">Total Credits</p>
-                  <p className="text-2xl font-bold">
-                    {roadmap.trainingRoadmapCourses.reduce((total, item) => {
-                      return total + (item.course?.credit || 0);
-                    }, 0)}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Tabs for Course Assignment and Course Group Assignment */}
-        <div className="mt-5">
-          <Tabs aria-label="Training Roadmap Management">
-            <Tab key="courses" title="Course Assignment">
-              <CourseAssignment roadmap={roadmap} onUpdate={refetch} />
-            </Tab>
-            <Tab key="groups" title="Course Group Management">
-              <CourseGroupAssignment roadmap={roadmap} onUpdate={refetch} />
-            </Tab>
-          </Tabs>
+          {/* Tabs for Course Assignment and Course Group Assignment */}
+          <div className="mt-5">
+            <Tabs aria-label="Training Roadmap Management">
+              <Tab key="courses" title="Course Assignment">
+                <CourseAssignment roadmap={roadmap} onUpdate={refetch} />
+              </Tab>
+              <Tab key="groups" title="Course Group Management">
+                <CourseGroupAssignment roadmap={roadmap} onUpdate={refetch} />
+              </Tab>
+            </Tabs>
+          </div>
         </div>
       </div>
     </DefaultLayout>

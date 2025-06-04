@@ -19,6 +19,8 @@ import { TrainingRoadmapTable } from "@/components/a/training-roadmap/training-r
 import { TrainingRoadmapModal } from "@/components/a/training-roadmap/training-roadmap-modal";
 import { majorService } from "@/services/major/major.service";
 import { Major } from "@/services/major/major.schema";
+import { batchService } from "@/services/batch/batch.service";
+import { Batch } from "@/services/batch/batch.schema";
 import { TrainingRoadmap } from "@/services/training-roadmap/training-roadmap.schema";
 import { TrainingRoadmapFormData } from "@/components/a/training-roadmap/training-roadmap-form";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -65,9 +67,11 @@ const TrainingRoadmapPage: React.FC = () => {
   const { roadmaps, query, totalPages, isLoading } = useAppSelector(
     (state) => state.trainingRoadmap
   );
-
   // State for majors (for filter)
   const [majors, setMajors] = useState<Major[]>([]);
+
+  // State for batches (for modal)
+  const [batches, setBatches] = useState<Batch[]>([]);
 
   // State for expanded rows
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -101,7 +105,8 @@ const TrainingRoadmapPage: React.FC = () => {
   // State for form submission
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
 
-  // Fetch majors on component mount
+  // Fetch majors and batches on component mount
+
   useEffect(() => {
     const fetchMajors = async () => {
       try {
@@ -113,7 +118,18 @@ const TrainingRoadmapPage: React.FC = () => {
       }
     };
 
+    const fetchBatches = async () => {
+      try {
+        const response = await batchService.getBatches();
+
+        setBatches(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch batches:", error);
+      }
+    };
+
     fetchMajors();
+    fetchBatches();
   }, []);
 
   // Fetch training roadmaps when query changes
@@ -407,7 +423,12 @@ const TrainingRoadmapPage: React.FC = () => {
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
             onActiveToggle={handleActiveToggle}
-            onEdit={() => {}} // Empty function as we're removing edit functionality
+            onDelete={(roadmap) => {
+              console.log("Delete roadmap requested:", roadmap);
+            }}
+            onEdit={(roadmap) => {
+              console.log("Edit roadmap requested:", roadmap);
+            }}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
           />
@@ -423,6 +444,7 @@ const TrainingRoadmapPage: React.FC = () => {
         </div>
         {/* Modal for creating roadmap */}
         <TrainingRoadmapModal
+          batches={batches}
           isOpen={createModalOpen}
           isSubmitting={isCreateSubmitting}
           majors={majors}
