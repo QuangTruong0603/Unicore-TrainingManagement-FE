@@ -17,6 +17,7 @@ export interface CreateCourseData {
   cost: number;
   credit: number;
   practicePeriod: number;
+  theoryPeriod: number;
   isRequired: boolean;
   isOpenForAll: boolean;
   majorIds: string[];
@@ -34,6 +35,7 @@ export interface UpdateCourseData {
   cost?: number;
   credit?: number;
   practicePeriod?: number;
+  theoryPeriod?: number;
   isRequired?: boolean;
   isOpenForAll?: boolean;
   majorIds?: string[];

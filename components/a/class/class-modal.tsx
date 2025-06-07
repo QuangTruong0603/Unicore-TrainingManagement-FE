@@ -4,7 +4,6 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
-  Checkbox,
   Chip,
   Input,
   Modal,
@@ -76,7 +75,7 @@ export function ClassModal({
             name: "",
             groupNumber: 1,
             capacity: 30,
-            listOfWeeks: [], // Empty by default
+            listOfWeeks: [],
             isRegistrable: false,
             courseId: "",
             semesterId: "",
@@ -488,22 +487,6 @@ export function ClassModal({
                   />
                 ) : null;
               })()}
-
-              <Controller
-                control={control}
-                name="isRegistrable"
-                render={({ field }) => (
-                  <div className="flex items-center">
-                    <Checkbox
-                      isDisabled={isLoadingData}
-                      isSelected={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      Open for Registration
-                    </Checkbox>
-                  </div>
-                )}
-              />
 
               {/* Week Selection */}
               <div className="md:col-span-2">

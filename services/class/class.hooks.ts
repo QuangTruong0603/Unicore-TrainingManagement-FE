@@ -5,7 +5,10 @@ import { API_ENDPOINTS } from "../api/api-config";
 import { useApiGet, useApiPost } from "../api/api-hooks";
 
 import { AcademicClassQuery } from "./class.schema";
-import { AcademicClassCreateDto, ClassRegistrationScheduleDto } from "./class.dto";
+import {
+  AcademicClassCreateDto,
+  ClassRegistrationScheduleDto,
+} from "./class.dto";
 import { classService } from "./class.service";
 
 // React Query implementation for getting classes with pagination and filters
@@ -13,6 +16,19 @@ export const useClasses = (query: AcademicClassQuery) => {
   return useQuery({
     queryKey: ["classes", query],
     queryFn: () => classService.getClasses(query),
+  });
+};
+
+// Hook for getting classes by major and batch
+export const useClassesByMajorAndBatch = (
+  majorId: string,
+  batchId: string,
+  enabled = true
+) => {
+  return useQuery({
+    queryKey: ["classes", "major", majorId, "batch", batchId],
+    queryFn: () => classService.getClassesByMajorAndBatch(majorId, batchId),
+    enabled: enabled && !!majorId && !!batchId,
   });
 };
 
@@ -28,7 +44,8 @@ export const useClassesWithCustomHook = (query: AcademicClassQuery) => {
     courseClient,
     `${API_ENDPOINTS.CLASSES}/page`,
     { params },
-    {      // Optional callbacks
+    {
+      // Optional callbacks
       onSuccess: (_data) => {
         // Success handling
       },
@@ -123,7 +140,7 @@ export const useCreateClassRegistrationSchedule = () => {
 export const useCreateClassRegistrationScheduleWithCustomHook = () => {
   return useApiPost<void, ClassRegistrationScheduleDto>(
     courseClient,
-    `${API_ENDPOINTS.CLASSES}/registration/schedule-with-times`, 
+    `${API_ENDPOINTS.CLASSES}/registration/schedule-with-times`,
     {},
     {
       onSuccess: (_data) => {

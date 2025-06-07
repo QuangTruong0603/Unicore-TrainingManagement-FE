@@ -24,8 +24,14 @@ import {
   Tooltip,
 } from "@heroui/react";
 
-import { useCoursesByMajorId } from "@/services/course/course.hooks";
-import { useCourseGroupsByMajorId } from "@/services/training-roadmap/training-roadmap.hooks";
+import {
+  useCoursesByMajorId,
+  useCourses,
+} from "@/services/course/course.hooks";
+import {
+  useCourseGroupsByMajorId,
+  useOpenForAllCourseGroups,
+} from "@/services/training-roadmap/training-roadmap.hooks";
 import useConfirmDialog from "@/hooks/useConfirmDialog";
 import {
   TrainingRoadmap,
@@ -48,16 +54,21 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
   onUpdate,
 }) => {
   const [courseGroups, setCourseGroups] = useState<CoursesGroup[]>([]);
+  const [openForAllCourseGroups, setOpenForAllCourseGroups] = useState<
+    CoursesGroup[]
+  >([]);
   const [draftCourseGroups, setDraftCourseGroups] = useState<CoursesGroup[]>(
     []
   );
+  const [draftOpenForAllCourseGroups, setDraftOpenForAllCourseGroups] =
+    useState<CoursesGroup[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Group editing state
   const [currentGroupName, setCurrentGroupName] = useState("");
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [isEditingOpenForAll, setIsEditingOpenForAll] = useState(false);
   const [courseSearchQuery, setCourseSearchQuery] = useState("");
 
   // Modal controls
@@ -66,23 +77,30 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
     onOpen: onGroupModalOpen,
     onClose: onGroupModalClose,
   } = useDisclosure();
-
   // Fetch all available courses
-  // const { data: coursesData } = useCourses({
-  //   pageNumber: 1,
-  //   itemsPerpage: 1000,
-  //   isDesc: false,
-  //   filters: {
-  //     majorIds: [roadmap.majorId],
-  //   },
-  // });
+  // For major-specific course groups, use courses by major
+  const { data: majorCoursesData } = useCoursesByMajorId(roadmap.majorId);
 
-  const { data: coursesData } = useCoursesByMajorId(roadmap.majorId);
+  // For open-for-all course groups, fetch all courses
+  const { data: allCoursesData } = useCourses({
+    pageNumber: 1,
+    itemsPerpage: 1000,
+    isDesc: false,
+  });
 
-  const availableCourses = coursesData?.data || [];
+  // Use appropriate course data based on editing context
+  const availableCourses = isEditingOpenForAll
+    ? allCoursesData?.data || []
+    : majorCoursesData?.data || [];
   // Fetch course groups by major ID
   const { data: courseGroupsData, refetch: refetchCourseGroups } =
     useCourseGroupsByMajorId(roadmap?.majorId);
+
+  // Fetch open-for-all course groups
+  const {
+    data: openForAllCourseGroupsData,
+    refetch: refetchOpenForAllCourseGroups,
+  } = useOpenForAllCourseGroups();
 
   useEffect(() => {
     if (courseGroupsData?.data) {
@@ -90,10 +108,23 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
     }
   }, [courseGroupsData]);
 
+  useEffect(() => {
+    if (openForAllCourseGroupsData?.data) {
+      setOpenForAllCourseGroups(openForAllCourseGroupsData.data);
+    }
+  }, [openForAllCourseGroupsData]);
   // Check if a course is already used in any group (except the current editing group)
   const isCourseUsedInOtherGroup = (courseId: string): boolean => {
     // Check in existing course groups
     for (const group of courseGroups) {
+      if (editingGroupId === group.id) continue; // Skip the group being edited
+      if (group.courses?.some((course) => course.id === courseId)) {
+        return true;
+      }
+    }
+
+    // Check in existing open-for-all course groups
+    for (const group of openForAllCourseGroups) {
       if (editingGroupId === group.id) continue; // Skip the group being edited
       if (group.courses?.some((course) => course.id === courseId)) {
         return true;
@@ -108,9 +139,16 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
       }
     }
 
+    // Check in draft open-for-all course groups
+    for (const group of draftOpenForAllCourseGroups) {
+      if (editingGroupId === group.id) continue; // Skip the group being edited
+      if (group.courses?.some((course) => course.id === courseId)) {
+        return true;
+      }
+    }
+
     return false;
   };
-
   // Handle adding or updating a course group
   const handleSaveCourseGroup = () => {
     if (!currentGroupName || selectedCourseIds.length === 0) return;
@@ -123,6 +161,9 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
     if (editingGroupId) {
       // Update existing group
       const isExistingGroup = courseGroups.some(
+        (group) => group.id === editingGroupId
+      );
+      const isExistingOpenForAllGroup = openForAllCourseGroups.some(
         (group) => group.id === editingGroupId
       );
 
@@ -141,9 +182,9 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
               : group
           )
         );
-      } else {
-        // Update draft group
-        setDraftCourseGroups((groups) =>
+      } else if (isExistingOpenForAllGroup) {
+        // Update existing open-for-all group
+        setOpenForAllCourseGroups((groups) =>
           groups.map((group) =>
             group.id === editingGroupId
               ? {
@@ -151,11 +192,44 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                   groupName: currentGroupName,
                   courses: selectedCourses,
                   updatedAt: new Date().toISOString(),
-                  majorId: roadmap?.majorId,
                 }
               : group
           )
         );
+      } else {
+        // Update draft group
+        const isDraftMajorGroup = draftCourseGroups.some(
+          (group) => group.id === editingGroupId
+        );
+
+        if (isDraftMajorGroup) {
+          setDraftCourseGroups((groups) =>
+            groups.map((group) =>
+              group.id === editingGroupId
+                ? {
+                    ...group,
+                    groupName: currentGroupName,
+                    courses: selectedCourses,
+                    updatedAt: new Date().toISOString(),
+                    majorId: roadmap?.majorId,
+                  }
+                : group
+            )
+          );
+        } else {
+          setDraftOpenForAllCourseGroups((groups) =>
+            groups.map((group) =>
+              group.id === editingGroupId
+                ? {
+                    ...group,
+                    groupName: currentGroupName,
+                    courses: selectedCourses,
+                    updatedAt: new Date().toISOString(),
+                  }
+                : group
+            )
+          );
+        }
       }
     } else {
       // Create new draft course group
@@ -163,58 +237,85 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
         id: generateDraftId(),
         groupName: currentGroupName,
         courses: selectedCourses,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: null,
-        updatedBy: null,
-        majorId: roadmap?.majorId,
+        majorId: isEditingOpenForAll ? null : roadmap?.majorId,
         credit: selectedCourses[0]?.credit || 0,
       };
 
-      setDraftCourseGroups((prevGroups) => [...prevGroups, newGroup]);
+      if (isEditingOpenForAll) {
+        setDraftOpenForAllCourseGroups((prevGroups) => [
+          ...prevGroups,
+          newGroup,
+        ]);
+      } else {
+        setDraftCourseGroups((prevGroups) => [...prevGroups, newGroup]);
+      }
     }
 
     setHasUnsavedChanges(true);
     resetForm();
     onGroupModalClose();
   };
-
   // Handle editing a course group
   const handleEditGroup = (group: CoursesGroup) => {
     setEditingGroupId(group.id);
     setCurrentGroupName(group.groupName);
     setSelectedCourseIds((group.courses || []).map((course) => course.id));
+
+    // Determine if this is an open-for-all group
+    const isOpenForAllGroup =
+      openForAllCourseGroups.some((g) => g.id === group.id) ||
+      draftOpenForAllCourseGroups.some((g) => g.id === group.id);
+
+    setIsEditingOpenForAll(isOpenForAllGroup);
+
     onGroupModalOpen();
   };
-
   // Handle deleting a course group
   const handleDeleteGroup = (groupId: string) => {
     const isExistingGroup = courseGroups.some((group) => group.id === groupId);
+    const isExistingOpenForAllGroup = openForAllCourseGroups.some(
+      (group) => group.id === groupId
+    );
+    const isDraftGroup = draftCourseGroups.some(
+      (group) => group.id === groupId
+    );
+    const isDraftOpenForAllGroup = draftOpenForAllCourseGroups.some(
+      (group) => group.id === groupId
+    );
 
     if (isExistingGroup) {
       setCourseGroups((groups) =>
         groups.filter((group) => group.id !== groupId)
       );
-    } else {
+    } else if (isExistingOpenForAllGroup) {
+      setOpenForAllCourseGroups((groups) =>
+        groups.filter((group) => group.id !== groupId)
+      );
+    } else if (isDraftGroup) {
       setDraftCourseGroups((groups) =>
+        groups.filter((group) => group.id !== groupId)
+      );
+    } else if (isDraftOpenForAllGroup) {
+      setDraftOpenForAllCourseGroups((groups) =>
         groups.filter((group) => group.id !== groupId)
       );
     }
 
     setHasUnsavedChanges(true);
   };
-
   // Reset form state
   const resetForm = () => {
     setCurrentGroupName("");
     setSelectedCourseIds([]);
     setEditingGroupId(null);
+    setIsEditingOpenForAll(false);
     setCourseSearchQuery("");
   };
 
   // Handle opening the modal for creating a new group
-  const handleAddNewGroup = () => {
+  const handleAddNewGroup = (isOpenForAll = false) => {
     resetForm();
+    setIsEditingOpenForAll(isOpenForAll);
     onGroupModalOpen();
   };
 
@@ -260,7 +361,6 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
       0
     );
   };
-
   const { confirmDialog } = useConfirmDialog();
   // Save only the draft course groups to the roadmap
   const handleSaveAllChanges = async () => {
@@ -271,42 +371,66 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
         setIsSubmitting(true);
 
         try {
-          // Only use the draft course groups
-          const draftGroupsToSave = [...draftCourseGroups];
+          // Combine both types of draft course groups
+          const allDraftGroupsToSave = [
+            // Major course groups (with majorId)
+            ...draftCourseGroups.map((group) => ({
+              groupName: group.groupName,
+              courseIds: (group.courses || []).map((course) => course.id),
+              majorId: group.majorId || roadmap.majorId,
+            })),
+            // Open-for-all course groups (with majorId as null)
+            ...draftOpenForAllCourseGroups.map((group) => ({
+              groupName: group.groupName,
+              courseIds: (group.courses || []).map((course) => course.id),
+              majorId: null,
+            })),
+          ];
 
-          // Prepare the payload for the multiple course groups API
-          const courseGroupsPayload = draftGroupsToSave.map((group) => ({
-            groupName: group.groupName,
-            courseIds: (group.courses || []).map((course) => course.id),
-            majorId: group.majorId || roadmap.majorId,
-          }));
+          // Call the create multiple course groups API with all draft groups
+          if (allDraftGroupsToSave.length > 0) {
+            const response =
+              await trainingRoadmapService.createMultipleCourseGroups(
+                allDraftGroupsToSave
+              ); // Update local state based on response
 
-          // Call the create multiple course groups API for draft groups only
-          const response =
-            await trainingRoadmapService.createMultipleCourseGroups(
-              courseGroupsPayload
-            );
+            if (response?.data) {
+              // Separate the response data by type (those with majorId vs null majorId)
+              const majorGroups = response.data.filter(
+                (group: any) => group.majorId !== null
+              );
+              const openForAllGroups = response.data.filter(
+                (group: any) => group.majorId === null
+              );
 
-          // Update the local course groups state with the newly created groups
-          // from the response if available, otherwise merge the draft groups into the existing groups
-          if (response?.data) {
-            setCourseGroups(response.data);
-          } else {
-            // Merge draft groups into the current course groups
-            setCourseGroups((prevGroups) => [
-              ...prevGroups,
-              ...draftCourseGroups,
-            ]);
+              setCourseGroups((prevGroups) => [...prevGroups, ...majorGroups]);
+              setOpenForAllCourseGroups((prevGroups) => [
+                ...prevGroups,
+                ...openForAllGroups,
+              ]);
+            } else {
+              // Fallback: merge draft groups into existing groups
+              setCourseGroups((prevGroups) => [
+                ...prevGroups,
+                ...draftCourseGroups,
+              ]);
+              setOpenForAllCourseGroups((prevGroups) => [
+                ...prevGroups,
+                ...draftOpenForAllCourseGroups,
+              ]);
+            }
           }
 
           // Clear draft groups and reset state
           setDraftCourseGroups([]);
+          setDraftOpenForAllCourseGroups([]);
           setHasUnsavedChanges(false);
 
-          // Refetch the course groups data from the server to ensure we have the latest data
+          // Refetch data from the server
           await refetchCourseGroups();
+          await refetchOpenForAllCourseGroups();
 
-          // Refresh parent component to get updated course groups from server
+          // Refresh parent component
           onUpdate();
         } catch {
           // Handle error silently
@@ -323,60 +447,51 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
       }
     );
   };
-
   // All course groups (existing + draft)
-  const allCourseGroups = [...courseGroups, ...draftCourseGroups];
+  const allMajorCourseGroups = [...courseGroups, ...draftCourseGroups];
+  const allOpenForAllCourseGroups = [
+    ...openForAllCourseGroups,
+    ...draftOpenForAllCourseGroups,
+  ];
 
-  return (
-    <div className="mt-10 mb-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">Course Groups</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage course groups that can be assigned to semesters
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            color="primary"
-            startContent={<Plus size={18} />}
-            onClick={handleAddNewGroup}
-          >
-            Add Course Group
-          </Button>
-
-          {hasUnsavedChanges && (
-            <Button
-              color="success"
-              isLoading={isSubmitting}
-              startContent={<Save size={18} />}
-              onClick={handleSaveAllChanges}
-            >
-              Save Changes
-            </Button>
-          )}
-        </div>
+  // Create a reusable component for rendering course groups
+  const renderCourseGroups = (
+    groups: CoursesGroup[],
+    isDraftArray: CoursesGroup[],
+    title: string,
+    isOpenForAll = false
+  ) => (
+    <div className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">{title}</h3>
+        <Button
+          color="primary"
+          startContent={<Plus size={18} />}
+          onClick={() => handleAddNewGroup(isOpenForAll)}
+        >
+          Add {isOpenForAll ? "Open For All" : "Major"} Course Group
+        </Button>
       </div>
 
-      {allCourseGroups.length === 0 ? (
+      {groups.length === 0 ? (
         <Card>
-          <CardBody className="text-center py-10">
+          <CardBody className="text-center py-8">
             <p className="mb-4 text-gray-500">
-              No course groups have been created yet.
+              No {title.toLowerCase()} have been created yet.
             </p>
             <Button
               color="primary"
               startContent={<Plus size={18} />}
-              onClick={handleAddNewGroup}
+              onClick={() => handleAddNewGroup(isOpenForAll)}
             >
-              Create Course Group
+              Create {isOpenForAll ? "Open For All" : "Major"} Course Group
             </Button>
           </CardBody>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {allCourseGroups.map((group) => {
-            const isDraft = draftCourseGroups.some(
+          {groups.map((group) => {
+            const isDraft = isDraftArray.some(
               (draftGroup) => draftGroup.id === group.id
             );
             const courses = group.courses || [];
@@ -391,7 +506,7 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                 <CardHeader className="flex justify-between items-center px-6 py-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-bold">{group.groupName}</h3>
+                      <h4 className="text-lg font-bold">{group.groupName}</h4>
                       {isDraft && (
                         <Badge color="warning" variant="flat">
                           Draft
@@ -450,6 +565,49 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
           })}
         </div>
       )}
+    </div>
+  );
+
+  return (
+    <div className="mt-10 mb-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold">Course Groups</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage course groups that can be assigned to semesters
+          </p>
+        </div>{" "}
+        <div className="flex gap-2">
+          {(hasUnsavedChanges ||
+            draftCourseGroups.length > 0 ||
+            draftOpenForAllCourseGroups.length > 0) && (
+            <Button
+              color="success"
+              isLoading={isSubmitting}
+              startContent={<Save size={18} />}
+              onClick={handleSaveAllChanges}
+            >
+              Save Changes
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Major Course Groups Section */}
+      {renderCourseGroups(
+        allMajorCourseGroups,
+        draftCourseGroups,
+        "Major Course Groups",
+        false
+      )}
+
+      {/* Open For All Course Groups Section */}
+      {renderCourseGroups(
+        allOpenForAllCourseGroups,
+        draftOpenForAllCourseGroups,
+        "Open For All Student Course Groups",
+        true
+      )}
 
       {/* Course Group Modal */}
       <Modal
@@ -457,9 +615,12 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
         size="2xl"
         onOpenChange={onGroupModalClose}
       >
+        {" "}
         <ModalContent>
           <ModalHeader>
-            {editingGroupId ? "Edit Course Group" : "Create Course Group"}
+            {editingGroupId
+              ? `Edit ${isEditingOpenForAll ? "Open For All" : "Major"} Course Group`
+              : `Create ${isEditingOpenForAll ? "Open For All" : "Major"} Course Group`}
           </ModalHeader>
           <ModalBody>
             <div className="space-y-6">

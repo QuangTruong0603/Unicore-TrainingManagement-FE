@@ -65,6 +65,7 @@ export function CourseModal({
             majorIds: [],
             isOpenForAll: false,
             practicePeriod: 0,
+            theoryPeriod: 0,
             isRequired: true,
             preCourseIds: [],
             parallelCourseId: [],
@@ -79,6 +80,7 @@ export function CourseModal({
             majorIds: course?.majorIds || [],
             isOpenForAll: course?.isOpenForAll || false,
             practicePeriod: course?.practicePeriod || 0,
+            theoryPeriod: course?.theoryPeriod || 0,
             isRequired: course?.isRequired || false,
             minCreditRequired: course?.minCreditRequired || 0,
             preCourseIds: course?.preCourseIds || [],
@@ -127,6 +129,7 @@ export function CourseModal({
         majorIds: course.majorIds || [],
         isOpenForAll: course.isOpenForAll || false,
         practicePeriod: course.practicePeriod || 0,
+        theoryPeriod: course.theoryPeriod || 0,
         isRequired: course.isRequired || false,
         minCreditRequired: course.minCreditRequired || 0,
         preCourseIds: course.preCourseIds || [],
@@ -142,6 +145,7 @@ export function CourseModal({
         majorIds: [],
         isOpenForAll: false,
         practicePeriod: 0,
+        theoryPeriod: 0,
         isRequired: true,
         preCourseIds: [],
         parallelCourseId: [],
@@ -218,96 +222,118 @@ export function CourseModal({
                     placeholder="Enter course description"
                     rows={4}
                   />
-                </div>{" "}
-                <div>
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="majorIds"
-                  >
-                    Majors
-                  </label>
-                  <Controller
-                    control={control}
-                    name="majorIds"
-                    render={({ field }) => (
-                      <>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {field.value &&
-                            field.value.map((majorId) => {
-                              const selectedMajor = majors.find(
-                                (m) => m.id === majorId
-                              );
-
-                              return (
-                                selectedMajor && (
-                                  <Chip
-                                    key={majorId}
-                                    className="bg-primary-100 text-primary-700"
-                                    size="sm"
-                                    onClose={() => {
-                                      setValue(
-                                        "majorIds",
-                                        field.value!.filter(
-                                          (id) => id !== majorId
-                                        )
-                                      );
-                                    }}
-                                  >
-                                    {selectedMajor.code}
-                                  </Chip>
-                                )
-                              );
-                            })}
-                        </div>
-                        <Autocomplete
-                          allowsCustomValue={false}
-                          className="w-full"
-                          defaultItems={majors.filter(
-                            (m) => !field.value || !field.value.includes(m.id)
-                          )}
-                          id="majorIds"
-                          placeholder="Search and select majors"
-                          onSelectionChange={(key) => {
-                            if (
-                              key &&
-                              (!field.value ||
-                                !field.value.includes(key.toString()))
-                            ) {
-                              field.onChange([
-                                ...(field.value || []),
-                                key.toString(),
-                              ]);
-                            }
-                          }}
-                        >
-                          {(major) => (
-                            <AutocompleteItem
-                              key={major.id}
-                              textValue={`${major.name} - ${major.code}`}
-                            >
-                              <div className="flex flex-col">
-                                <span className="text-sm font-semibold">
-                                  {major.name}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {major.code}
-                                </span>
-                              </div>
-                            </AutocompleteItem>
-                          )}
-                        </Autocomplete>
-                      </>
-                    )}
-                  />
-                  {errors.majorIds && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.majorIds.message}
-                    </p>
-                  )}
                 </div>
+
                 {mode === "create" && (
                   <>
+                    {/* Majors and Min Credit Required inline */}
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                          htmlFor="majorIds"
+                        >
+                          Majors
+                        </label>
+                        <Controller
+                          control={control}
+                          name="majorIds"
+                          render={({ field }) => (
+                            <>
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {field.value &&
+                                  field.value.map((majorId) => {
+                                    const selectedMajor = majors.find(
+                                      (m) => m.id === majorId
+                                    );
+
+                                    return (
+                                      selectedMajor && (
+                                        <Chip
+                                          key={majorId}
+                                          className="bg-primary-100 text-primary-700"
+                                          size="sm"
+                                          onClose={() => {
+                                            setValue(
+                                              "majorIds",
+                                              field.value!.filter(
+                                                (id) => id !== majorId
+                                              )
+                                            );
+                                          }}
+                                        >
+                                          {selectedMajor.code}
+                                        </Chip>
+                                      )
+                                    );
+                                  })}
+                              </div>
+                              <Autocomplete
+                                allowsCustomValue={false}
+                                className="w-full"
+                                defaultItems={majors.filter(
+                                  (m) =>
+                                    !field.value || !field.value.includes(m.id)
+                                )}
+                                id="majorIds"
+                                placeholder="Search and select majors"
+                                onSelectionChange={(key) => {
+                                  if (
+                                    key &&
+                                    (!field.value ||
+                                      !field.value.includes(key.toString()))
+                                  ) {
+                                    field.onChange([
+                                      ...(field.value || []),
+                                      key.toString(),
+                                    ]);
+                                  }
+                                }}
+                              >
+                                {(major) => (
+                                  <AutocompleteItem
+                                    key={major.id}
+                                    textValue={`${major.name} - ${major.code}`}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-semibold">
+                                        {major.name}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        {major.code}
+                                      </span>
+                                    </div>
+                                  </AutocompleteItem>
+                                )}
+                              </Autocomplete>
+                            </>
+                          )}
+                        />
+                        {errors.majorIds && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {errors.majorIds.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                          htmlFor="credit"
+                        >
+                          Credits
+                        </label>
+                        <Input
+                          id="credit"
+                          type="number"
+                          {...register("credit", {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={errors.credit?.message}
+                          placeholder="Enter minimum credits required"
+                        />
+                      </div>
                       <div>
                         <label
                           className="block text-sm font-medium text-gray-700 mb-1"
@@ -323,6 +349,26 @@ export function CourseModal({
                           })}
                           errorMessage={errors.minCreditRequired?.message}
                           placeholder="Enter minimum credits required"
+                        />
+                      </div>
+                    </div>
+                    {/* Theory and Practice Period inline */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          className="block text-sm font-medium text-gray-700 mb-1"
+                          htmlFor="theoryPeriod"
+                        >
+                          Theory Period
+                        </label>
+                        <Input
+                          id="theoryPeriod"
+                          type="number"
+                          {...register("theoryPeriod", {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={errors.theoryPeriod?.message}
+                          placeholder="Enter theory periods"
                         />
                       </div>
                       <div>

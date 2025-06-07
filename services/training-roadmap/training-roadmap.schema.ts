@@ -1,4 +1,3 @@
-import { batch } from "react-redux";
 import { z } from "zod";
 
 // Basic course reference schema (to avoid circular dependencies)
@@ -22,7 +21,7 @@ export const majorReferenceSchema = z.object({
 export const coursesGroupSchema = z.object({
   id: z.string(),
   groupName: z.string(),
-  majorId: z.string(),
+  majorId: z.string().nullable(),
   courses: z.array(courseReferenceSchema),
   credit: z.number(),
 });
@@ -35,7 +34,6 @@ export const coursesGroupSemesterSchema = z.object({
   semesterNumber: z.number(),
   coursesGroupId: z.string(),
   trainingRoadmapId: z.string(),
-  // coursesGroup: coursesGroupSchema.optional(),
   coursesGroupName: z.string(),
   credit: z.number(),
 });

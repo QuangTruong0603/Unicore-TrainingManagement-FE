@@ -29,7 +29,10 @@ import {
   SelectItem,
 } from "@heroui/react";
 
-import { useAddComponentsToTrainingRoadmap } from "@/services/training-roadmap/training-roadmap.hooks";
+import {
+  useAddComponentsToTrainingRoadmap,
+  useOpenForAllCourseGroups,
+} from "@/services/training-roadmap/training-roadmap.hooks";
 import { useCoursesByMajorId } from "@/services/course/course.hooks";
 import { useCourseGroupsByMajorId } from "@/services/training-roadmap/training-roadmap.hooks";
 import {
@@ -113,9 +116,16 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
 
   // Fetch courses by major ID instead of all courses
   const { data: coursesByMajorData } = useCoursesByMajorId(roadmap?.majorId);
-
   // Fetch course groups
   const { data: courseGroupsData } = useCourseGroupsByMajorId(roadmap?.majorId);
+  
+  // Fetch open-for-all course groups
+  const { data: openForAllCourseGroupsData } = useOpenForAllCourseGroups();
+  // Combine both major-specific and open-for-all course groups
+  const allCourseGroups = [
+    ...(courseGroupsData?.data || []),
+    ...(openForAllCourseGroupsData?.data || []),
+  ];
 
   const availableCourses = coursesByMajorData?.data || [];
 
@@ -293,12 +303,11 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
     setSelectedCourseId("");
     setCourseSearchQuery("");
   };
-
   // Handler for adding a course group to a semester
   const handleAddCourseGroup = () => {
     if (!selectedCourseGroupId) return;
 
-    const selectedGroup = courseGroupsData?.data?.find(
+    const selectedGroup = allCourseGroups?.find(
       (group: CoursesGroup) => group.id === selectedCourseGroupId
     );
 
@@ -375,12 +384,11 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
     setSelectedCourseId("");
     setCourseSearchQuery("");
   };
-
   // Handler for completing the course group replacement
   const handleReplaceCourseGroup = () => {
     if (!replacingCourseGroup || !selectedCourseGroupId) return;
 
-    const newCourseGroup = courseGroupsData?.data?.find(
+    const newCourseGroup = allCourseGroups?.find(
       (group: CoursesGroup) => group.id === selectedCourseGroupId
     );
 
@@ -888,7 +896,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                 selectedKeys={[selectedCourseGroupId]}
                 onChange={(e) => setSelectedCourseGroupId(e.target.value)}
               >
-                {courseGroupsData?.data?.map((group: CoursesGroup) => (
+                {allCourseGroups?.map((group: CoursesGroup) => (
                   <SelectItem key={group.id}>
                     {group.groupName} ({(group.courses || []).length} courses,{" "}
                     {(group.courses || []).reduce(
@@ -906,7 +914,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                     Courses in this group:
                   </h4>
                   <div className="max-h-[200px] overflow-y-auto border rounded-md p-2">
-                    {courseGroupsData?.data
+                    {allCourseGroups
                       ?.find(
                         (group: CoursesGroup) =>
                           group.id === selectedCourseGroupId
@@ -964,7 +972,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                 selectedKeys={[selectedCourseGroupId]}
                 onChange={(e) => setSelectedCourseGroupId(e.target.value)}
               >
-                {courseGroupsData?.data?.map((group: CoursesGroup) => (
+                {allCourseGroups?.map((group: CoursesGroup) => (
                   <SelectItem key={group.id}>
                     {group.groupName} ({(group.courses || []).length} courses,{" "}
                     {(group.courses || []).reduce(
@@ -982,7 +990,7 @@ const CourseAssignment: React.FC<CourseAssignmentProps> = ({
                     Courses in this group:
                   </h4>
                   <div className="max-h-[200px] overflow-y-auto border rounded-md p-2">
-                    {courseGroupsData?.data
+                    {allCourseGroups
                       ?.find(
                         (group: CoursesGroup) =>
                           group.id === selectedCourseGroupId

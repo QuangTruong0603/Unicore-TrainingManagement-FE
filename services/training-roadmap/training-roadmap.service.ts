@@ -114,9 +114,12 @@ export const trainingRoadmapService = {
       }
     );
   },
-
   createMultipleCourseGroups: async (
-    courseGroups: { groupName: string; courseIds: string[]; majorId: string }[]
+    courseGroups: {
+      groupName: string;
+      courseIds: string[];
+      majorId: string | null;
+    }[]
   ): Promise<any> => {
     return courseClient.post(
       `${API_ENDPOINTS.COURSES_GROUP}/multiple`,
@@ -131,6 +134,13 @@ export const trainingRoadmapService = {
 
   getCourseGroupsByMajorId: async (majorId: string): Promise<any> => {
     return courseClient.get(`${API_ENDPOINTS.COURSES_GROUP}/major/${majorId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+  getOpenForAllCourseGroups: async (): Promise<any> => {
+    return courseClient.get(`${API_ENDPOINTS.COURSES_GROUP}/open-for-all`, {
       headers: {
         accept: "text/plain",
       },

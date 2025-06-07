@@ -9,6 +9,7 @@ export const API_URLS = {
   MAJOR: "https://localhost:7001/api",
   BATCH: "https://localhost:5001/api",
   LOCATION: "https://localhost:7001/api", // Added location service URL
+  ENROLLMENT: "https://localhost:8001/api", // Added enrollment service URL
 };
 
 // Default request timeout (in milliseconds)
@@ -28,10 +29,10 @@ export const API_ENDPOINTS = {
   MAJOR_GROUPS: "/m/MajorGroup",
   SHIFTS: "/c/Shifts", // Added shifts endpoint
   LOCATIONS: "/m/Location", // Added location endpoint
-  DEPARTMENTS: "/m/Deption", // Added location endpoint
-  BUILDINGS: "/m/Building", // Added building endpoint
+  DEPARTMENTS: "/m/Department", // Added department endpoint  BUILDINGS: "/m/Building", // Added building endpoint
   FLOORS: "/m/Floor", // Added floor endpoint
   ROOMS: "/m/Room", // Added room endpoint
+  ENROLLMENTS: "/e/Enrollments", // Added enrollment endpoint
 };
 
 // Common headers

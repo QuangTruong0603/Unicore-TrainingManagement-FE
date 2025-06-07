@@ -440,7 +440,6 @@ export default function ClassesPage() {
         </div>
         {/* Classes Table */}
         <div className="bg-white rounded-lg shadow">
-          {" "}
           <ClassTable
             allowMultiSelect={true}
             classes={classes}
