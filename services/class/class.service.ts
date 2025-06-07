@@ -166,6 +166,20 @@ export const classService = {
     });
   },
 
+  getClassesByMajorAndBatch: async (
+    majorId: string,
+    batchId: string
+  ): Promise<{ data: AcademicClassResponse[] }> => {
+    return courseClient.get(
+      `${API_ENDPOINTS.CLASSES}/major/${majorId}/batch/${batchId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
   createClassRegistrationSchedule: async (
     scheduleData: ClassRegistrationScheduleDto
   ): Promise<void> => {

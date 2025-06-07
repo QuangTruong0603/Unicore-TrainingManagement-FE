@@ -51,6 +51,7 @@ export const academicClassBasic = z.object({
   scheduleInDays: z.array(scheduleInDaySchema),
   registrationOpenTime: z.date().optional(),
   registrationCloseTime: z.date().optional(),
+  enrollmentCount: z.number(),
 });
 
 export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
@@ -72,6 +73,7 @@ export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
     scheduleInDays: z.array(scheduleInDaySchema),
     registrationOpenTime: z.date().optional(),
     registrationCloseTime: z.date().optional(),
+    enrollmentCount: z.number(),
   })
 );
 

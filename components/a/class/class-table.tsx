@@ -153,6 +153,39 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       render: (academicClass: AcademicClass) => academicClass.groupNumber,
     },
     {
+      key: "enrollment",
+      title: "Enrollment",
+      sortable: true,
+      render: (academicClass: AcademicClass) => (
+        <div className="text-center">
+          <span className="text-sm font-medium">
+            {academicClass.enrollmentCount} / {academicClass.capacity}
+          </span>
+          <div className="mt-1">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full ${
+                  academicClass.enrollmentCount >= academicClass.capacity
+                    ? "bg-red-500"
+                    : academicClass.enrollmentCount / academicClass.capacity >
+                        0.8
+                      ? "bg-yellow-500"
+                      : "bg-green-500"
+                }`}
+                style={{
+                  width: `${Math.min(
+                    (academicClass.enrollmentCount / academicClass.capacity) *
+                      100,
+                    100
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
       key: "course",
       title: "Course",
       sortable: false,
@@ -172,9 +205,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       sortable: false,
       render: (academicClass: AcademicClass) => (
         <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-          {academicClass.parentTheoryAcademicClassId === null
-            ? "Theory"
-            : "Practice"}
+          {academicClass.parentTheoryAcademicClassId ? "Practice" : "Theory"}
         </span>
       ),
     },

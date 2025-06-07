@@ -4,7 +4,6 @@ import {
   Users,
   Settings,
   BarChart,
-  Mail,
   HelpCircle,
   LogOut,
   ChevronLeft,
@@ -19,6 +18,10 @@ import {
   Map,
   MapPin,
   School,
+  UserPlus,
+  DollarSign,
+  ClipboardList,
+  Bell,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -120,12 +123,11 @@ const Sidebar: React.FC<ISidebarProps> = ({
       ],
     },
     {
-      key: "/a/messages",
-      title: "Messages",
-      icon: <Mail size={20} />,
+      key: "/a/notifications",
+      title: "Notifications",
+      icon: <Bell size={20} />,
     },
   ];
-
   // Student menu items
   const studentMenuItems: IMenuItem[] = [
     {
@@ -135,19 +137,19 @@ const Sidebar: React.FC<ISidebarProps> = ({
       isExpanded: true,
       children: [
         {
-          key: "/s/academic/semesters",
-          title: "Semesters",
-          icon: <Calendar size={20} />,
-        },
-        {
-          key: "/s/academic/courses",
-          title: "My Courses",
-          icon: <BookOpen size={20} />,
+          key: "/s/academic/enrollment",
+          title: "Enrollment",
+          icon: <UserPlus size={20} />,
         },
         {
           key: "/s/academic/roadmap",
           title: "My Roadmap",
           icon: <Map size={20} />,
+        },
+        {
+          key: "/s/academic/tuition",
+          title: "Tuition",
+          icon: <DollarSign size={20} />,
         },
       ],
     },
@@ -168,16 +170,16 @@ const Sidebar: React.FC<ISidebarProps> = ({
           icon: <CalendarRange size={20} />,
         },
         {
-          key: "/s/training/documents",
-          title: "Documents",
-          icon: <FileText size={20} />,
+          key: "/s/training/class-result",
+          title: "Class Result",
+          icon: <ClipboardList size={20} />,
         },
       ],
     },
     {
-      key: "/s/messages",
-      title: "Messages",
-      icon: <Mail size={20} />,
+      key: "/s/notifications",
+      title: "Notifications",
+      icon: <Bell size={20} />,
     },
   ];
 

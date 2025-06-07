@@ -1,0 +1,61 @@
+.container {
+    height: calc(100vh - 64px);
+    overflow-y: scroll;
+}
+
+.enrollment-page {
+  .class-card {
+    transition: all 0.2s ease-in-out;
+    border-left: 4px solid #ea580c; // Orange border for all cards
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+  
+  .expand-button {
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .practice-classes-container {
+    border-top: 1px dashed #e5e7eb;
+    
+    .practice-class-label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.75rem;
+    }
+  }
+  
+  .class-type-badge {
+    &.theory {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    
+    &.practice {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+  }  // Tab navigation styles
+  .tab-navigation {
+    .tab-button {
+      transition: all 0.2s ease-in-out;
+      
+      &:hover {
+        background-color: #f9fafb;
+      }
+      
+      &.active {
+        background-color: white !important;
+        color: black !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+    }
+  }
+}

@@ -53,10 +53,6 @@ export const useTrainingRoadmapsWithCustomHook = (
     { params },
     {
       // Optional callbacks
-      onSuccess: (data) =>
-        console.log("Training roadmaps fetched successfully", data),
-      onError: (error) =>
-        console.error("Failed to fetch training roadmaps", error),
     }
   );
 };
@@ -101,6 +97,14 @@ export const useCourseGroupsByMajorId = (majorId: string) => {
     queryKey: ["courseGroups", majorId],
     queryFn: () => trainingRoadmapService.getCourseGroupsByMajorId(majorId),
     enabled: !!majorId,
+  });
+};
+
+// Fetch open-for-all course groups
+export const useOpenForAllCourseGroups = () => {
+  return useQuery({
+    queryKey: ["openForAllCourseGroups"],
+    queryFn: () => trainingRoadmapService.getOpenForAllCourseGroups(),
   });
 };
 

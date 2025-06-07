@@ -260,38 +260,52 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             </h4>
             <p className="text-gray-600">Credit: {course.credit}</p>
             <p className="text-gray-600">
-              Is Open For All: {course.isOpenForAll ? "Yes" : "No"}
-            </p>
-            <p className="text-gray-600">
-              Majors:{" "}
-              {course.isOpenForAll
-                ? "All Majors"
-                : course.majors?.map((m) => m.name).join(", ") || "None"}
-            </p>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {course.isOpenForAll ? (
-                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                  All
-                </span>
-              ) : course.majors && course.majors.length > 0 ? (
-                course.majors.map((major) => (
-                  <span
-                    key={major.id}
-                    className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
-                  >
-                    {major.code}
-                  </span>
-                ))
-              ) : (
-                <span className="text-gray-500 text-xs">None</span>
-              )}
-            </div>
-            <p className="text-gray-600">
               Minimum Credit Required: {course.minCreditRequired || 0}
             </p>
             <p className="text-gray-600">
               Practice Period: {course.practicePeriod}
             </p>
+            <p className="text-gray-600">
+              Theory Period: {course.theoryPeriod}
+            </p>
+          </div>
+          {/* Parallel Courses */}
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">
+              Parallel Courses
+            </h4>
+            {course.parallelCourseIds && course.parallelCourseIds.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {course.parallelCourseIds.map((courseId) => (
+                  <span
+                    key={courseId}
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs"
+                  >
+                    {courseId}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">No parallel courses</p>
+            )}
+          </div>
+          {/* Pre Courses */}
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">Pre Courses</h4>
+            {course.preCourseIds && course.preCourseIds.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {course.preCourseIds.map((courseId) => (
+                  <span
+                    key={courseId}
+                    className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs"
+                  >
+                    {courseId}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">No prerequisite courses</p>
+            )}
           </div>
           {/* Course Certificates */}
           <div>

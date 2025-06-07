@@ -27,6 +27,7 @@ export const courseSchema = z.object({
   isActive: z.boolean(),
   credit: z.number(),
   practicePeriod: z.number(),
+  theoryPeriod: z.number(),
   isRequired: z.boolean(),
   isOpenForAll: z.boolean(),
   majorIds: z.array(z.string()).nullable(),

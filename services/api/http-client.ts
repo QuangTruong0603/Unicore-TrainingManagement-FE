@@ -68,7 +68,7 @@ class HttpClient {
         // Add request ID to headers for logging/tracking
         config.headers = config.headers || {};
         config.headers["X-Request-ID"] = requestId;
-        
+
         // Don't set Content-Type for FormData (will be set automatically with boundary)
         if (config.data instanceof FormData) {
           delete config.headers["Content-Type"];
@@ -309,3 +309,4 @@ export const locationClient = new HttpClient(API_URLS.LOCATION);
 export const buildingClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
 export const floorClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
 export const roomClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
+export const enrollmentClient = new HttpClient(API_URLS.ENROLLMENT); // Using same base URL as enrollment
