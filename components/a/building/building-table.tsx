@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowUp, Power, PowerOff, Edit } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Power,
+  PowerOff,
+  Edit,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
 import {
   Button,
   Chip,
@@ -8,6 +16,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 
 import styles from "./building-table.module.scss";
@@ -50,7 +62,12 @@ export const BuildingTable = ({
   };
 
   return (
-    <Table aria-label="Building table" className={styles.table}>
+    <Table
+      isHeaderSticky
+      isStriped
+      aria-label="Building table"
+      className={styles.table}
+    >
       <TableHeader>
         <TableColumn
           className={`cursor-pointer ${sortKey === "name" ? "text-primary" : ""}`}
@@ -106,38 +123,52 @@ export const BuildingTable = ({
               </Chip>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <Button
-                  className="flex items-center gap-1 h-8 px-3 font-medium"
-                  color={building.isActive ? "danger" : "success"}
-                  size="sm"
-                  startContent={
-                    building.isActive ? (
-                      <PowerOff size={16} />
-                    ) : (
-                      <Power size={16} />
-                    )
-                  }
-                  variant="flat"
-                  onPress={(e) => {
-                    onActiveToggle && onActiveToggle(building);
-                  }}
-                >
-                  {building.isActive ? "Deactivate" : "Activate"}
-                </Button>
-                <Button
-                  className="flex items-center gap-1 h-8 px-3 font-medium"
-                  color="primary"
-                  size="sm"
-                  startContent={<Edit size={16} />}
-                  variant="flat"
-                  onPress={(e) => {
-                    onEdit && onEdit(building);
-                  }}
-                >
-                  Edit
-                </Button>
-              </div>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    aria-label="Actions"
+                    size="sm"
+                    variant="light"
+                  >
+                    <MoreVertical size={16} />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Building Actions">
+                  <DropdownItem
+                    key="edit"
+                    isDisabled={!onEdit}
+                    startContent={<Edit size={16} />}
+                    onPress={() => onEdit?.(building)}
+                  >
+                    Edit
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    startContent={<Trash2 size={16} />}
+                    onPress={() => {
+                      // eslint-disable-next-line no-console
+                      console.log("Delete building:", building);
+                    }}
+                  >
+                    Delete
+                  </DropdownItem>
+                  <DropdownItem
+                    key="toggle-active"
+                    isDisabled={!onActiveToggle}
+                    startContent={
+                      building.isActive ? (
+                        <PowerOff size={16} />
+                      ) : (
+                        <Power size={16} />
+                      )
+                    }
+                    onPress={() => onActiveToggle?.(building)}
+                  >
+                    {building.isActive ? "Deactivate" : "Activate"}
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </TableCell>
           </TableRow>
         )}

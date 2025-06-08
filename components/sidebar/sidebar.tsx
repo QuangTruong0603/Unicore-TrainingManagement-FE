@@ -142,6 +142,11 @@ const Sidebar: React.FC<ISidebarProps> = ({
           icon: <UserPlus size={20} />,
         },
         {
+          key: "/s/academic/enrollment-result",
+          title: "Enrollment Result",
+          icon: <ClipboardList size={20} />,
+        },
+        {
           key: "/s/academic/roadmap",
           title: "My Roadmap",
           icon: <Map size={20} />,

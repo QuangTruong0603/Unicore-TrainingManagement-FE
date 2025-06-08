@@ -1,5 +1,11 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { Room, RoomQuery, RoomCreateDto, RoomUpdateDto } from "@/services/room/room.schema";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+import {
+  Room,
+  RoomQuery,
+  RoomCreateDto,
+  RoomUpdateDto,
+} from "@/services/room/room.schema";
 import { roomService } from "@/services/room/room.service";
 
 interface RoomState {
@@ -64,6 +70,7 @@ const roomSlice = createSlice({
     },
     updateRoomInList: (state, action: PayloadAction<Room>) => {
       const updatedRoom = action.payload;
+
       state.rooms = state.rooms.map((room) =>
         room.id === updatedRoom.id ? updatedRoom : room
       );
@@ -94,7 +101,7 @@ export const {
 export default roomSlice.reducer;
 
 // Thunk actions
-export const fetchRooms = (query: RoomQuery) => async (dispatch) => {
+export const fetchRooms = (query: RoomQuery) => async (dispatch: any) => {
   try {
     dispatch(setLoading(true));
     dispatch(setError(null));
@@ -107,9 +114,7 @@ export const fetchRooms = (query: RoomQuery) => async (dispatch) => {
     return response.data;
   } catch (error) {
     dispatch(
-      setError(
-        error instanceof Error ? error.message : "Failed to fetch rooms"
-      )
+      setError(error instanceof Error ? error.message : "Failed to fetch rooms")
     );
     throw error;
   } finally {
@@ -117,7 +122,7 @@ export const fetchRooms = (query: RoomQuery) => async (dispatch) => {
   }
 };
 
-export const createRoom = (data: RoomCreateDto) => async (dispatch) => {
+export const createRoom = (data: RoomCreateDto) => async (dispatch: any) => {
   try {
     dispatch(setSubmitting(true));
     dispatch(setError(null));
@@ -129,9 +134,7 @@ export const createRoom = (data: RoomCreateDto) => async (dispatch) => {
     return newRoom;
   } catch (error) {
     dispatch(
-      setError(
-        error instanceof Error ? error.message : "Failed to create room"
-      )
+      setError(error instanceof Error ? error.message : "Failed to create room")
     );
     throw error;
   } finally {
@@ -139,29 +142,30 @@ export const createRoom = (data: RoomCreateDto) => async (dispatch) => {
   }
 };
 
-export const updateRoom = (id: string, data: RoomUpdateDto) => async (dispatch) => {
-  try {
-    dispatch(setSubmitting(true));
-    dispatch(setError(null));
+export const updateRoom =
+  (id: string, data: RoomUpdateDto) => async (dispatch: any) => {
+    try {
+      dispatch(setSubmitting(true));
+      dispatch(setError(null));
 
-    const updatedRoom = await roomService.updateRoom(id, data);
+      const updatedRoom = await roomService.updateRoom(id, data);
 
-    dispatch(updateRoomInList(updatedRoom));
+      dispatch(updateRoomInList(updatedRoom));
 
-    return updatedRoom;
-  } catch (error) {
-    dispatch(
-      setError(
-        error instanceof Error ? error.message : "Failed to update room"
-      )
-    );
-    throw error;
-  } finally {
-    dispatch(setSubmitting(false));
-  }
-};
+      return updatedRoom;
+    } catch (error) {
+      dispatch(
+        setError(
+          error instanceof Error ? error.message : "Failed to update room"
+        )
+      );
+      throw error;
+    } finally {
+      dispatch(setSubmitting(false));
+    }
+  };
 
-export const toggleRoomStatus = (room: Room) => async (dispatch) => {
+export const toggleRoomStatus = (room: Room) => async (dispatch: any) => {
   try {
     dispatch(setSubmitting(true));
     dispatch(setError(null));
@@ -174,9 +178,7 @@ export const toggleRoomStatus = (room: Room) => async (dispatch) => {
   } catch (error) {
     dispatch(
       setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to toggle room status"
+        error instanceof Error ? error.message : "Failed to toggle room status"
       )
     );
     throw error;

@@ -32,6 +32,7 @@ export const API_ENDPOINTS = {
   DEPARTMENTS: "/m/Department", // Added department endpoint  BUILDINGS: "/m/Building", // Added building endpoint
   FLOORS: "/m/Floor", // Added floor endpoint
   ROOMS: "/m/Room", // Added room endpoint
+  BUILDINGS: "/m/Building", // Added building endpoint
   ENROLLMENTS: "/e/Enrollments", // Added enrollment endpoint
   LECTURERS: "/u/Lecturer", // Added lecturer endpoint
 };

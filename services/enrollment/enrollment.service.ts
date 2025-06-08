@@ -1,7 +1,8 @@
 import { enrollmentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { BaseResponse } from "../api";
 
-import { EnrollmentQuery } from "./enrollment.schema";
+import { Enrollment, EnrollmentQuery } from "./enrollment.schema";
 import {
   EnrollmentListResponse,
   EnrollmentResponse,
@@ -133,6 +134,40 @@ export const enrollmentService = {
         headers: {
           accept: "text/plain",
           "Content-Type": "application/json",
+        },
+      }
+    );
+  },
+
+  getStudentEnrollments: async (
+    studentId: string,
+    semesterId?: string
+  ): Promise<BaseResponse<Enrollment[]>> => {
+    const params: Record<string, string> = {};
+
+    if (semesterId) {
+      params.semesterId = semesterId;
+    }
+
+    return enrollmentClient.get(
+      `${API_ENDPOINTS.ENROLLMENTS}/student/${studentId}`,
+      {
+        params: Object.keys(params).length > 0 ? params : undefined,
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  deleteEnrollment: async (
+    enrollmentId: string
+  ): Promise<BaseResponse<boolean>> => {
+    return enrollmentClient.delete(
+      `${API_ENDPOINTS.ENROLLMENTS}/${enrollmentId}`,
+      {
+        headers: {
+          accept: "text/plain",
         },
       }
     );

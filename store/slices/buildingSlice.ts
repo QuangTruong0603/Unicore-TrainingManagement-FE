@@ -133,7 +133,7 @@ export const createBuilding =
 
       const newBuilding = await buildingService.createBuilding(data);
 
-      dispatch(addBuilding(newBuilding));
+      dispatch(addBuilding(newBuilding.data));
 
       return newBuilding;
     } catch (error) {
@@ -157,7 +157,7 @@ export const updateBuilding =
 
       const updatedBuilding = await buildingService.updateBuilding(id, data);
 
-      dispatch(updateBuildingInList(updatedBuilding));
+      dispatch(updateBuildingInList(updatedBuilding.data));
 
       return updatedBuilding;
     } catch (error) {
@@ -181,7 +181,7 @@ export const toggleBuildingStatus =
 
       const updatedBuilding = await buildingService.toggleStatus(building.id);
 
-      dispatch(updateBuildingInList(updatedBuilding));
+      dispatch(updateBuildingInList(updatedBuilding.data));
 
       return updatedBuilding;
     } catch (error) {

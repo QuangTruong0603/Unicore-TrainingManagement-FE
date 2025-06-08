@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import {
-  Table as HeroTable,
+  Table,
   TableHeader,
   TableColumn,
   TableBody,
@@ -181,7 +181,6 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
               key="edit"
               startContent={<Edit size={16} />}
               onPress={() => {
-                console.log("Edit roadmap:", roadmap);
                 onEdit(roadmap);
               }}
             >
@@ -193,10 +192,6 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
                 roadmap.isActive ? <PowerOff size={16} /> : <Power size={16} />
               }
               onPress={() => {
-                console.log(
-                  `${roadmap.isActive ? "Deactivate" : "Activate"} roadmap:`,
-                  roadmap
-                );
                 onActiveToggle(roadmap);
               }}
             >
@@ -204,11 +199,8 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
             </DropdownItem>
             <DropdownItem
               key="delete"
-              className="text-danger"
-              color="danger"
               startContent={<Trash2 size={16} />}
               onPress={() => {
-                console.log("Delete roadmap:", roadmap);
                 onDelete(roadmap);
               }}
             >
@@ -306,7 +298,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
 
   return (
     <div className={styles.tableWrapper}>
-      <HeroTable aria-label="Training Roadmaps Table">
+      <Table isHeaderSticky isStriped aria-label="Training Roadmaps Table">
         <TableHeader>
           {columns.map((column) => (
             <TableColumn
@@ -333,7 +325,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
             </TableRow>
           )}
         </TableBody>
-      </HeroTable>
+      </Table>
     </div>
   );
 };

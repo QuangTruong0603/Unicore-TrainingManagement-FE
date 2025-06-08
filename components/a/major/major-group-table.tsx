@@ -48,7 +48,12 @@ export const MajorGroupTable = ({
   };
 
   return (
-    <Table aria-label="Major Group table" className={styles.table}>
+    <Table
+      isHeaderSticky
+      isStriped
+      aria-label="Major Group table"
+      className={styles.table}
+    >
       <TableHeader>
         <TableColumn
           className={`cursor-pointer ${sortKey === "code" ? "text-primary" : ""}`}

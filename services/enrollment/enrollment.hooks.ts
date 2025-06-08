@@ -28,3 +28,24 @@ export const useCreateMultipleEnrollments = () => {
       enrollmentService.createMultipleEnrollments(enrollmentData),
   });
 };
+
+// Hook for getting student enrollments with optional semester filter
+export const useStudentEnrollments = (
+  studentId: string,
+  semesterId?: string
+) => {
+  return useQuery({
+    queryKey: ["student-enrollments", studentId, semesterId],
+    queryFn: () =>
+      enrollmentService.getStudentEnrollments(studentId, semesterId),
+    enabled: !!studentId,
+  });
+};
+
+// Mutation for deleting enrollment
+export const useDeleteEnrollment = () => {
+  return useMutation({
+    mutationFn: (enrollmentId: string) =>
+      enrollmentService.deleteEnrollment(enrollmentId),
+  });
+};

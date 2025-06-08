@@ -82,7 +82,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   }
 
   return (
-    <Table aria-label="Student table">
+    <Table isHeaderSticky isStriped aria-label="Student table">
       <TableHeader>
         <TableColumn
           key="studentCode"

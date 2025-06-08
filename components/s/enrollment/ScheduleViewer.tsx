@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { addToast } from "@heroui/react";
 
 import { useAllShifts } from "../../../services/shift/shift.hooks";
 import { Shift } from "../../../services/shift/shift.schema";
@@ -12,15 +13,18 @@ interface EnrolledClass {
   shiftId: string; // Use shift ID instead of shift time number
   room?: string;
   instructor?: string;
+  listOfWeeks?: number[]; // Add weeks information
 }
 
 interface ScheduleViewerProps {
   enrolledClasses: EnrolledClass[];
+  existingEnrollmentIds?: Set<string>; // Add this to track existing enrollments
   onCompleteEnrollment?: () => void; // Callback after successful enrollment
 }
 
 const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
   enrolledClasses,
+  existingEnrollmentIds = new Set(),
   onCompleteEnrollment,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +33,7 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
   const { studentInfo } = useAuth();
 
   const createMultipleEnrollmentsMutation = useCreateMultipleEnrollments();
+
   // Handle enrollment completion
   const handleCompleteEnrollment = async () => {
     if (!studentInfo?.id) {
@@ -38,7 +43,28 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
     }
 
     if (enrolledClasses.length === 0) {
-      alert("No classes selected for enrollment.");
+      addToast({
+        title: "No classes selected",
+        description: "Please select at least one class to enroll.",
+        color: "danger",
+      });
+
+      return;
+    }
+
+    // Filter out classes that are already enrolled
+    const newEnrollments = enrolledClasses.filter(
+      (cls) => !existingEnrollmentIds.has(cls.id)
+    );
+
+    // Check if there are any new enrollments to process
+    if (newEnrollments.length === 0) {
+      addToast({
+        title: "No changes detected",
+        description:
+          "All selected classes are already enrolled. No new enrollments to process.",
+        color: "warning",
+      });
 
       return;
     }
@@ -46,8 +72,8 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
     try {
       setIsSubmitting(true);
 
-      // Extract class IDs from enrolled classes
-      const academicClassIds = enrolledClasses.map((cls) => cls.id);
+      // Extract class IDs from new enrollments only
+      const academicClassIds = newEnrollments.map((cls) => cls.id);
 
       // Call the enrollment API
       await createMultipleEnrollmentsMutation.mutateAsync({
@@ -63,10 +89,18 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
         onCompleteEnrollment();
       }
 
-      alert(`Successfully enrolled in ${enrolledClasses.length} classes!`);
+      addToast({
+        title: "Enrollment Successful",
+        description: `Successfully enrolled in ${newEnrollments.length} new classes!`,
+        color: "success",
+      });
     } catch {
-      // Error handled with alert only
-      alert("Failed to complete enrollment. Please try again.");
+      addToast({
+        title: "Enrollment Failed",
+        description:
+          "Your enrollment could not be completed due to capacity issues. Please refresh to see the latest class availability.",
+        color: "danger",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -204,21 +238,76 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
     );
   };
 
-  const getClassForSlot = (
+  const getClassesForSlot = (
     dayIndex: number,
     shiftId: string
-  ): EnrolledClass | null => {
-    // Check for exact match first
-    const exactMatch = enrolledClasses.find(
+  ): EnrolledClass[] => {
+    // Find all classes that match the day and shift
+    const exactMatches = enrolledClasses.filter(
       (cls) => cls.dayOfWeek === dayIndex && cls.shiftId === shiftId
     );
 
-    if (exactMatch) return exactMatch;
-
-    // Check if there's a full shift covering this time slot
+    // Also check for full shift classes that might cover this slot
     const fullShiftClass = isShiftCoveredByFullShift(dayIndex, shiftId);
 
-    return fullShiftClass;
+    if (
+      fullShiftClass &&
+      !exactMatches.find((cls) => cls.id === fullShiftClass.id)
+    ) {
+      exactMatches.push(fullShiftClass);
+    }
+
+    return exactMatches;
+  };
+
+  // Component to render a schedule cell with multiple classes
+  const ScheduleCell: React.FC<{
+    classes: EnrolledClass[];
+    dayIndex: number;
+    shiftName: string;
+  }> = ({ classes }) => {
+    const hasClasses = classes.length > 0;
+
+    return (
+      <td
+        className={`border border-gray-300 p-2 text-sm min-h-[80px] ${
+          hasClasses ? "bg-blue-100 border-blue-300" : "bg-white"
+        }`}
+      >
+        {hasClasses && (
+          <div className="space-y-2">
+            {classes.map((enrolledClass, index) => (
+              <div
+                key={enrolledClass.id}
+                className={`${
+                  index > 0 ? "border-t border-blue-200 pt-2" : ""
+                }`}
+              >
+                <div className="font-semibold text-blue-800 text-xs">
+                  {enrolledClass.name}
+                </div>
+                {enrolledClass.room && (
+                  <div className="text-xs text-gray-600">
+                    Room: {enrolledClass.room}
+                  </div>
+                )}
+                {enrolledClass.instructor && (
+                  <div className="text-xs text-gray-600">
+                    {enrolledClass.instructor}
+                  </div>
+                )}
+                {enrolledClass.listOfWeeks &&
+                  enrolledClass.listOfWeeks.length > 0 && (
+                    <div className="text-xs text-purple-600 font-medium">
+                      Weeks: {enrolledClass.listOfWeeks.join(", ")}
+                    </div>
+                  )}
+              </div>
+            ))}
+          </div>
+        )}
+      </td>
+    );
   };
 
   if (isLoading) {
@@ -329,9 +418,13 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                                   {morningFullClass.instructor}
                                 </div>
                               )}
-                              <div className="text-xs italic text-blue-600">
-                                Morning Full
-                              </div>
+                              {morningFullClass.listOfWeeks &&
+                                morningFullClass.listOfWeeks.length > 0 && (
+                                  <div className="text-xs text-purple-600 font-medium">
+                                    Weeks:{" "}
+                                    {morningFullClass.listOfWeeks.join(", ")}
+                                  </div>
+                                )}
                             </div>
                           </td>
                         );
@@ -344,37 +437,17 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                           s.name.toLowerCase().includes("morning1")
                       );
 
-                      const enrolledClass = morning1Shift
-                        ? getClassForSlot(dayIndex, morning1Shift.id)
-                        : null;
+                      const classesForSlot = morning1Shift
+                        ? getClassesForSlot(dayIndex, morning1Shift.id)
+                        : [];
 
                       return (
-                        <td
+                        <ScheduleCell
                           key={dayIndex}
-                          className={`border border-gray-300 p-2 text-sm min-h-[80px] ${
-                            enrolledClass
-                              ? "bg-blue-100 border-blue-300"
-                              : "bg-white"
-                          }`}
-                        >
-                          {enrolledClass && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-blue-800">
-                                {enrolledClass.name}
-                              </div>
-                              {enrolledClass.room && (
-                                <div className="text-xs text-gray-600">
-                                  Room: {enrolledClass.room}
-                                </div>
-                              )}
-                              {enrolledClass.instructor && (
-                                <div className="text-xs text-gray-600">
-                                  {enrolledClass.instructor}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </td>
+                          classes={classesForSlot}
+                          dayIndex={dayIndex}
+                          shiftName={morning1Shift?.name || "Morning 1"}
+                        />
                       );
                     })}
                   </tr>
@@ -404,37 +477,17 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                           s.name.toLowerCase().includes("morning2")
                       );
 
-                      const enrolledClass = morning2Shift
-                        ? getClassForSlot(dayIndex, morning2Shift.id)
-                        : null;
+                      const classesForSlot = morning2Shift
+                        ? getClassesForSlot(dayIndex, morning2Shift.id)
+                        : [];
 
                       return (
-                        <td
+                        <ScheduleCell
                           key={dayIndex}
-                          className={`border border-gray-300 p-2 text-sm min-h-[80px] ${
-                            enrolledClass
-                              ? "bg-blue-100 border-blue-300"
-                              : "bg-white"
-                          }`}
-                        >
-                          {enrolledClass && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-blue-800">
-                                {enrolledClass.name}
-                              </div>
-                              {enrolledClass.room && (
-                                <div className="text-xs text-gray-600">
-                                  Room: {enrolledClass.room}
-                                </div>
-                              )}
-                              {enrolledClass.instructor && (
-                                <div className="text-xs text-gray-600">
-                                  {enrolledClass.instructor}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </td>
+                          classes={classesForSlot}
+                          dayIndex={dayIndex}
+                          shiftName={morning2Shift?.name || "Morning 2"}
+                        />
                       );
                     })}
                   </tr>
@@ -475,9 +528,13 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                                   {afternoonFullClass.instructor}
                                 </div>
                               )}
-                              <div className="text-xs italic text-blue-600">
-                                Afternoon Full
-                              </div>
+                              {afternoonFullClass.listOfWeeks &&
+                                afternoonFullClass.listOfWeeks.length > 0 && (
+                                  <div className="text-xs text-purple-600 font-medium">
+                                    Weeks:{" "}
+                                    {afternoonFullClass.listOfWeeks.join(", ")}
+                                  </div>
+                                )}
                             </div>
                           </td>
                         );
@@ -490,37 +547,17 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                           s.name.toLowerCase().includes("afternoon1")
                       );
 
-                      const enrolledClass = afternoon1Shift
-                        ? getClassForSlot(dayIndex, afternoon1Shift.id)
-                        : null;
+                      const classesForSlot = afternoon1Shift
+                        ? getClassesForSlot(dayIndex, afternoon1Shift.id)
+                        : [];
 
                       return (
-                        <td
+                        <ScheduleCell
                           key={dayIndex}
-                          className={`border border-gray-300 p-2 text-sm min-h-[80px] ${
-                            enrolledClass
-                              ? "bg-blue-100 border-blue-300"
-                              : "bg-white"
-                          }`}
-                        >
-                          {enrolledClass && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-blue-800">
-                                {enrolledClass.name}
-                              </div>
-                              {enrolledClass.room && (
-                                <div className="text-xs text-gray-600">
-                                  Room: {enrolledClass.room}
-                                </div>
-                              )}
-                              {enrolledClass.instructor && (
-                                <div className="text-xs text-gray-600">
-                                  {enrolledClass.instructor}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </td>
+                          classes={classesForSlot}
+                          dayIndex={dayIndex}
+                          shiftName={afternoon1Shift?.name || "Afternoon 1"}
+                        />
                       );
                     })}
                   </tr>
@@ -550,37 +587,17 @@ const ScheduleViewer: React.FC<ScheduleViewerProps> = ({
                           s.name.toLowerCase().includes("afternoon2")
                       );
 
-                      const enrolledClass = afternoon2Shift
-                        ? getClassForSlot(dayIndex, afternoon2Shift.id)
-                        : null;
+                      const classesForSlot = afternoon2Shift
+                        ? getClassesForSlot(dayIndex, afternoon2Shift.id)
+                        : [];
 
                       return (
-                        <td
+                        <ScheduleCell
                           key={dayIndex}
-                          className={`border border-gray-300 p-2 text-sm min-h-[80px] ${
-                            enrolledClass
-                              ? "bg-blue-100 border-blue-300"
-                              : "bg-white"
-                          }`}
-                        >
-                          {enrolledClass && (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-blue-800">
-                                {enrolledClass.name}
-                              </div>
-                              {enrolledClass.room && (
-                                <div className="text-xs text-gray-600">
-                                  Room: {enrolledClass.room}
-                                </div>
-                              )}
-                              {enrolledClass.instructor && (
-                                <div className="text-xs text-gray-600">
-                                  {enrolledClass.instructor}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </td>
+                          classes={classesForSlot}
+                          dayIndex={dayIndex}
+                          shiftName={afternoon2Shift?.name || "Afternoon 2"}
+                        />
                       );
                     })}
                   </tr>
