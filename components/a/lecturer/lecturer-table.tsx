@@ -13,10 +13,10 @@ import {
 import { ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
-import { PaginatedResponse } from "@/store/slices/lecturerSlice";
+import { PaginatedResponse } from "@/services/dto";
 
 interface LecturerTableProps {
-  lecturers: PaginatedResponse;
+  lecturers: PaginatedResponse<Lecturer>;
   isLoading: boolean;
   sortKey: string;
   sortDirection: "asc" | "desc";
@@ -61,11 +61,7 @@ export function LecturerTable({
 
   return (
     <div className="lecturer-table">
-      <Table
-        aria-label="Lecturer table"
-        className="min-w-full"
-        removeWrapper
-      >
+      <Table aria-label="Lecturer table" className="min-w-full" removeWrapper>
         <TableHeader>
           <TableColumn
             className="cursor-pointer"
@@ -219,4 +215,4 @@ export function LecturerTable({
       </Table>
     </div>
   );
-} 
+}

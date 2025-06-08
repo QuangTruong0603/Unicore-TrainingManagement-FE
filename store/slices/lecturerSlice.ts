@@ -19,6 +19,7 @@ const initialState: LecturerState = {
     total: 0,
     itemsPerpage: 10,
     searchQuery: "",
+    departmentId: undefined,
     by: undefined,
     isDesc: false,
   },

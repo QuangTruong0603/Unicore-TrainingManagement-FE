@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -16,6 +17,7 @@ import { LecturerTable } from "@/components/a/lecturer/lecturer-table";
 import { LecturerModal } from "@/components/a/lecturer/lecturer-modal";
 import { LecturerFilter } from "@/components/a/lecturer/lecturer-filter";
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
+import { Department } from "@/services/department/department.schema";
 import { RootState } from "@/store";
 import {
   setQuery,
@@ -25,6 +27,7 @@ import {
   setError,
 } from "@/store/slices/lecturerSlice";
 import { lecturerService } from "@/services/lecturer/lecturer.service";
+import { departmentService } from "@/services/department/department.service";
 
 import "./index.scss";
 
@@ -42,7 +45,7 @@ export default function LecturersPage() {
   const [selectedLecturer, setSelectedLecturer] = useState<
     Lecturer | undefined
   >(undefined);
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
     fetchLecturers();
@@ -68,8 +71,9 @@ export default function LecturersPage() {
   const fetchDepartments = async () => {
     try {
       // Fetch departments from your API
-      // const response = await departmentService.getDepartments();
-      // setDepartments(response.data.data);
+      const response = await departmentService.getDepartments();
+
+      setDepartments(response.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
     }
@@ -80,6 +84,16 @@ export default function LecturersPage() {
       setQuery({
         ...query,
         searchQuery,
+        pageNumber: 1,
+      })
+    );
+  };
+
+  const handleDepartmentChange = (departmentId: string) => {
+    dispatch(
+      setQuery({
+        ...query,
+        departmentId: departmentId === "" ? undefined : departmentId,
         pageNumber: 1,
       })
     );
@@ -159,7 +173,7 @@ export default function LecturersPage() {
           <div className="flex items-center gap-2">
             <Dropdown>
               <DropdownTrigger>
-                <Button variant="flat" isIconOnly>
+                <Button isIconOnly variant="flat">
                   <MoreVertical size={20} />
                 </Button>
               </DropdownTrigger>
@@ -186,41 +200,42 @@ export default function LecturersPage() {
         </div>
 
         <LecturerFilter
+          departmentId={query.departmentId}
+          departments={departments}
           searchQuery={query.searchQuery || ""}
+          onDepartmentChange={handleDepartmentChange}
           onSearchChange={handleSearchChange}
         />
 
         <div className="bg-white rounded-lg shadow">
           {lecturers && (
             <LecturerTable
-              lecturers={lecturers}
-              isLoading={isLoading}
-              sortKey={query.by || ""}
-              sortDirection={query.isDesc ? "desc" : "asc"}
               expandedRows={expandedRows}
-              onSort={handleSort}
-              onEdit={handleEditLecturer}
+              isLoading={isLoading}
+              lecturers={lecturers}
+              sortDirection={query.isDesc ? "desc" : "asc"}
+              sortKey={query.by || ""}
               onDelete={handleDeleteLecturer}
+              onEdit={handleEditLecturer}
               onRowToggle={handleRowToggle}
+              onSort={handleSort}
             />
           )}
         </div>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex justify-end">
-            <Pagination
-              page={query.pageNumber}
-              total={totalPages}
-              onChange={handlePageChange}
-            />
-          </div>
-        )}
+        <div className="mt-4 flex justify-end">
+          <Pagination
+            page={query.pageNumber}
+            total={totalPages}
+            onChange={handlePageChange}
+          />
+        </div>
 
         <LecturerModal
-          isOpen={isModalOpen}
-          isEdit={isEdit}
-          lecturer={selectedLecturer}
           departments={departments}
+          isEdit={isEdit}
+          isOpen={isModalOpen}
+          lecturer={selectedLecturer}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleModalSubmit}
         />
