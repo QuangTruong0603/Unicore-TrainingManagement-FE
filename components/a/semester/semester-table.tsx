@@ -1,16 +1,29 @@
 import React, { useEffect } from "react";
-import { Button } from "@heroui/react";
-import { ArrowDown, ArrowUp, Power, PowerOff } from "lucide-react";
 import {
-  Table as HeroTable,
+  Button,
+  Chip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Power,
+  PowerOff,
+  Edit,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
+import {
+  Table,
   TableHeader,
   TableColumn,
   TableBody,
   TableRow,
   TableCell,
 } from "@heroui/react";
-
-import styles from "./semester-table.module.scss";
 
 import { Semester } from "@/services/semester/semester.schema";
 
@@ -78,15 +91,13 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
       title: "Status",
       sortable: true,
       render: (semester: Semester) => (
-        <span
-          className={`px-2 py-1 rounded text-sm ${
-            semester.isActive
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
+        <Chip
+          color={semester.isActive ? "success" : "danger"}
+          size="sm"
+          variant="flat"
         >
           {semester.isActive ? "Active" : "Inactive"}
-        </span>
+        </Chip>
       ),
     },
     {
@@ -113,28 +124,46 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
       key: "actions",
       title: "Actions",
       render: (semester: Semester) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            className="flex items-center gap-1 h-8 px-3 font-medium"
-            color="primary"
-            size="sm"
-            variant="flat"
-            onPress={() => onEdit(semester)}
-          >
-            Edit
-          </Button>
-          <Button
-            className="flex items-center gap-1 h-8 px-3 font-medium"
-            color={semester.isActive ? "danger" : "success"}
-            size="sm"
-            startContent={
-              semester.isActive ? <PowerOff size={16} /> : <Power size={16} />
-            }
-            variant="flat"
-            onPress={() => onActiveToggle(semester)}
-          >
-            {semester.isActive ? "Deactivate" : "Activate"}
-          </Button>
+        <div className="flex justify-end">
+          <Dropdown>
+            <DropdownTrigger>
+              <Button isIconOnly aria-label="Actions" size="sm" variant="light">
+                <MoreVertical size={16} />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Semester Actions">
+              <DropdownItem
+                key="edit"
+                startContent={<Edit size={16} />}
+                onPress={() => onEdit(semester)}
+              >
+                Edit
+              </DropdownItem>
+              <DropdownItem
+                key="delete"
+                startContent={<Trash2 size={16} />}
+                onPress={() => {
+                  // eslint-disable-next-line no-console
+                  console.log("Delete semester:", semester);
+                }}
+              >
+                Delete
+              </DropdownItem>
+              <DropdownItem
+                key="toggle-active"
+                startContent={
+                  semester.isActive ? (
+                    <PowerOff size={16} />
+                  ) : (
+                    <Power size={16} />
+                  )
+                }
+                onPress={() => onActiveToggle(semester)}
+              >
+                {semester.isActive ? "Deactivate" : "Activate"}
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
       ),
     },
@@ -142,7 +171,7 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
 
   return (
     <div className="w-full">
-      <HeroTable isHeaderSticky aria-label="Semester table">
+      <Table isHeaderSticky isStriped aria-label="Semester table">
         <TableHeader>
           {columns.map((column) => (
             <TableColumn
@@ -169,10 +198,7 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
         >
           {semesters.map((semester) => (
             <React.Fragment key={semester.id}>
-              <TableRow
-                className={styles.expandableRow}
-                onClick={() => onRowToggle(semester.id)}
-              >
+              <TableRow onClick={() => onRowToggle(semester.id)}>
                 {columns.map((column) => (
                   <TableCell
                     key={`${semester.id}_${column.key}`}
@@ -185,7 +211,7 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
             </React.Fragment>
           ))}
         </TableBody>
-      </HeroTable>
+      </Table>
     </div>
   );
 };

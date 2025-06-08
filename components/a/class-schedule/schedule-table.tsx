@@ -51,7 +51,7 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
         </Button>
       </div>
 
-      <Table aria-label="Class schedule table">
+      <Table isHeaderSticky isStriped aria-label="Class schedule table">
         <TableHeader>
           <TableColumn>CLASS</TableColumn>
           <TableColumn>SUBJECT</TableColumn>

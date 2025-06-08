@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowUp, Power, PowerOff, MoreVertical, Edit, Trash } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Power,
+  PowerOff,
+  MoreVertical,
+  Edit,
+  Trash,
+} from "lucide-react";
 import {
   Button,
   Chip,
@@ -56,7 +64,12 @@ export const MajorTable = ({
   };
 
   return (
-    <Table aria-label="Major table" className={styles.table}>
+    <Table
+      isHeaderSticky
+      isStriped
+      aria-label="Major table"
+      className={styles.table}
+    >
       <TableHeader>
         <TableColumn
           className={`cursor-pointer ${sortKey === "code" ? "text-primary" : ""}`}

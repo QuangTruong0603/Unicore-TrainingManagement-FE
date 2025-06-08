@@ -603,19 +603,15 @@ export default function LocationDetailPage() {
                   />
                 </div>
                 {/* Room table */}
-                <Card>
-                  <CardBody>
-                    <RoomTable
-                      isLoading={isRoomsLoading}
-                      rooms={rooms}
-                      sortDirection={roomQuery.isDesc ? "desc" : "asc"}
-                      sortKey={roomQuery.orderBy}
-                      onActiveToggle={toggleRoomActive}
-                      onEdit={handleEditRoom}
-                      onSort={handleRoomSort}
-                    />
-                  </CardBody>
-                </Card>
+                <RoomTable
+                  isLoading={isRoomsLoading}
+                  rooms={rooms}
+                  sortDirection={roomQuery.isDesc ? "desc" : "asc"}
+                  sortKey={roomQuery.orderBy}
+                  onActiveToggle={toggleRoomActive}
+                  onEdit={handleEditRoom}
+                  onSort={handleRoomSort}
+                />
                 {/* Pagination */}
                 {roomsTotal > 0 && (
                   <div className="mt-4 flex justify-end">
@@ -649,19 +645,15 @@ export default function LocationDetailPage() {
                   />
                 </div>
                 {/* Floor table */}
-                <Card>
-                  <CardBody>
-                    <FloorTable
-                      floors={floors}
-                      isLoading={isFloorsLoading}
-                      sortDirection={floorQuery.isDesc ? "desc" : "asc"}
-                      sortKey={floorQuery.orderBy}
-                      onActiveToggle={toggleFloorActive}
-                      onEdit={handleEditFloor}
-                      onSort={handleFloorSort}
-                    />
-                  </CardBody>
-                </Card>
+                <FloorTable
+                  floors={floors}
+                  isLoading={isFloorsLoading}
+                  sortDirection={floorQuery.isDesc ? "desc" : "asc"}
+                  sortKey={floorQuery.orderBy}
+                  onActiveToggle={toggleFloorActive}
+                  onEdit={handleEditFloor}
+                  onSort={handleFloorSort}
+                />
                 {/* Pagination */}
                 {floorsTotal > 0 && (
                   <div className="mt-4 flex justify-end">
@@ -696,19 +688,15 @@ export default function LocationDetailPage() {
                 </div>
 
                 {/* Building table */}
-                <Card>
-                  <CardBody>
-                    <BuildingTable
-                      buildings={buildings}
-                      isLoading={isBuildingsLoading}
-                      sortDirection={buildingQuery.isDesc ? "desc" : "asc"}
-                      sortKey={buildingQuery.orderBy}
-                      onActiveToggle={toggleBuildingActive}
-                      onEdit={handleEditBuilding}
-                      onSort={handleBuildingSort}
-                    />
-                  </CardBody>
-                </Card>
+                <BuildingTable
+                  buildings={buildings}
+                  isLoading={isBuildingsLoading}
+                  sortDirection={buildingQuery.isDesc ? "desc" : "asc"}
+                  sortKey={buildingQuery.orderBy}
+                  onActiveToggle={toggleBuildingActive}
+                  onEdit={handleEditBuilding}
+                  onSort={handleBuildingSort}
+                />
 
                 {/* Pagination */}
                 {buildingsTotal > 0 && (

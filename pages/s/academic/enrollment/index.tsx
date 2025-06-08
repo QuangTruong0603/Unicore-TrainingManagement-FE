@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { ChevronDown, ChevronRight, X, RefreshCw } from "lucide-react";
-import { addToast } from "@heroui/react";
+import {
+  addToast,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@heroui/react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { classService } from "@/services/class/class.service";
 import { AcademicClass } from "@/services/class/class.schema";
 import { enrollmentService } from "@/services/enrollment/enrollment.service";
+import { useDeleteEnrollment } from "@/services/enrollment/enrollment.hooks";
 import DefaultLayout from "@/layouts/default";
 import {
   ScheduleViewer,
@@ -35,6 +44,8 @@ interface EnrolledClass {
     code?: string;
   };
   scheduleInDays: ScheduleInDay[];
+  listOfWeeks: number[];
+  enrollmentId?: string; // Add enrollment ID for deletion
 }
 
 // Define days of week for mapping
@@ -51,6 +62,7 @@ const DAYS_OF_WEEK = [
 const EnrollmentPage: React.FC = () => {
   const router = useRouter();
   const { user, isLoading: authLoading, studentInfo } = useAuth();
+  const deleteEnrollmentMutation = useDeleteEnrollment();
   const [error, setError] = useState<string | null>(null);
   const [academicClasses, setAcademicClasses] = useState<AcademicClass[]>([]);
   const [enrolledClasses, setEnrolledClasses] = useState<EnrolledClass[]>([]);
@@ -60,17 +72,23 @@ const EnrollmentPage: React.FC = () => {
   const [showSchedule, setShowSchedule] = useState(false);
 
   const [loadingClasses, setLoadingClasses] = useState(false);
+  const [loadingEnrollments, setLoadingEnrollments] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [expandedClasses, setExpandedClasses] = useState<Set<string>>(
     new Set()
   );
-
   const [activeTab, setActiveTab] = useState<"forMajor" | "openForAll">(
     "forMajor"
   );
-
   // Search state for filtering classes by name
   const [searchTerm, setSearchTerm] = useState<string>("");
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [classToDelete, setClassToDelete] = useState<{
+    id: string;
+    name: string;
+    isPractice: boolean;
+  } | null>(null);
 
   useEffect(() => {
     // Wait for auth to finish loading before checking user
@@ -82,11 +100,13 @@ const EnrollmentPage: React.FC = () => {
       return;
     }
 
-    // If studentInfo is available, fetch academic classes
+    // If studentInfo is available, fetch academic classes and existing enrollments
     if (studentInfo?.majorId && studentInfo?.batchId) {
       fetchAcademicClasses(studentInfo.majorId, studentInfo.batchId);
+      loadExistingEnrollments();
     }
   }, [user, router, authLoading, studentInfo]);
+
   const fetchAcademicClasses = async (majorId: string, batchId: string) => {
     try {
       setLoadingClasses(true);
@@ -106,7 +126,6 @@ const EnrollmentPage: React.FC = () => {
       setLoadingClasses(false);
     }
   };
-
   const checkEnrollmentStatus = async (classes: AcademicClass[]) => {
     if (!studentInfo?.id) return;
 
@@ -145,6 +164,76 @@ const EnrollmentPage: React.FC = () => {
       // Failed to check enrollment status - will fall back to local state
     }
   };
+
+  const loadExistingEnrollments = async () => {
+    if (!studentInfo?.id) {
+      setLoadingEnrollments(false);
+
+      return;
+    }
+
+    try {
+      setLoadingEnrollments(true);
+      const response = await enrollmentService.getStudentEnrollments(
+        studentInfo.id
+      );
+
+      if (response.data) {
+        // Convert API enrollments to our EnrolledClass format
+        const existingEnrolledClasses: EnrolledClass[] = response.data
+          .filter((enrollment) => enrollment.academicClass) // Filter out any null academic classes
+          .map((enrollment) => ({
+            id: enrollment.academicClass!.id,
+            name: enrollment.academicClass!.name || "",
+            course: {
+              id: enrollment.academicClass!.course?.id || "",
+              name: enrollment.academicClass!.course?.name || "",
+              code: enrollment.academicClass!.course?.code || "",
+            },
+            scheduleInDays:
+              enrollment.academicClass!.scheduleInDays?.map((schedule) => ({
+                dayOfWeek: schedule.dayOfWeek || "",
+                shift: schedule.shift
+                  ? {
+                      id: schedule.shift.id,
+                      name: schedule.shift.name || "",
+                    }
+                  : undefined,
+                room: schedule.room
+                  ? {
+                      name: schedule.room.name || "",
+                    }
+                  : undefined,
+              })) || [],
+            listOfWeeks: enrollment.academicClass!.listOfWeeks || [],
+            enrollmentId: enrollment.id, // Store enrollment ID for deletion
+          }));
+
+        // Set the existing enrolled classes to the schedule
+        setEnrolledClasses(existingEnrolledClasses);
+        // Also update the enrolled class IDs set for button state management
+        const enrolledIds = new Set(
+          response.data
+            .filter((enrollment) => enrollment.academicClass)
+            .map((enrollment) => enrollment.academicClass!.id)
+        );
+
+        setEnrolledClassIds(enrolledIds);
+      } else {
+        // No enrollments found, set empty array
+        setEnrolledClasses([]);
+        setEnrolledClassIds(new Set());
+      }
+    } catch {
+      // Don't show error to user as this is initial loading
+      // Set empty state on error
+      setEnrolledClasses([]);
+      setEnrolledClassIds(new Set());
+    } finally {
+      setLoadingEnrollments(false);
+    }
+  };
+
   const handleRefresh = async () => {
     if (!studentInfo?.majorId || !studentInfo?.batchId) return;
 
@@ -160,6 +249,8 @@ const EnrollmentPage: React.FC = () => {
         setAcademicClasses(response.data);
         // Check enrollment status for all classes
         await checkEnrollmentStatus(response.data);
+        // Reload existing enrollments to keep schedule in sync
+        await loadExistingEnrollments();
         addToast({
           title: "Refreshed Successfully",
           description: "Class list has been updated.",
@@ -333,7 +424,7 @@ const EnrollmentPage: React.FC = () => {
                 </div>
               )}
           </div>
-          <div className="ml-4">
+          <div className="ml-4 flex gap-2">
             <button
               className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
                 isClassActuallyEnrolled(academicClass.id)
@@ -367,6 +458,16 @@ const EnrollmentPage: React.FC = () => {
                       ? "Requires Practice"
                       : "Add"}
             </button>
+            {/* Delete button for actually enrolled classes */}
+            {isClassActuallyEnrolled(academicClass.id) &&
+              (isPractice || !hasChildPracticeClasses) && (
+                <button
+                  className="px-4 py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  onClick={() => handleDeleteEnrollment(academicClass.id)}
+                >
+                  Delete
+                </button>
+              )}
           </div>
         </div>
         {/* Expand button for theory classes with practice classes */}
@@ -440,7 +541,6 @@ const EnrollmentPage: React.FC = () => {
 
     return "other";
   };
-
   // Check if two shift types conflict
   const doShiftsConflict = (type1: string, type2: string): boolean => {
     // Exact match is obvious conflict
@@ -477,14 +577,14 @@ const EnrollmentPage: React.FC = () => {
 
     return false;
   };
-
+  // Helper function to check if two arrays of weeks have any intersection
+  const doWeeksIntersect = (weeks1: number[], weeks2: number[]): boolean => {
+    return weeks1.some((week) => weeks2.includes(week));
+  };
   // Function to check for schedule conflicts
   const checkScheduleConflicts = (
     academicClass: AcademicClass
-  ): {
-    hasConflict: boolean;
-    conflictMessage: string;
-  } => {
+  ): { hasConflict: boolean; conflictMessage: string } => {
     if (
       !academicClass.scheduleInDays ||
       academicClass.scheduleInDays.length === 0
@@ -499,6 +599,7 @@ const EnrollmentPage: React.FC = () => {
       shiftName: string;
       shiftType: string;
       className: string;
+      listOfWeeks: number[];
     }> = [];
 
     enrolledClasses.forEach((enrolledClass) => {
@@ -510,6 +611,7 @@ const EnrollmentPage: React.FC = () => {
             shiftName: schedule.shift.name,
             shiftType: getShiftType(schedule.shift.name),
             className: enrolledClass.name,
+            listOfWeeks: enrolledClass.listOfWeeks,
           });
         }
       });
@@ -527,13 +629,22 @@ const EnrollmentPage: React.FC = () => {
       // Check against existing slots
       for (const existingSlot of existingSlots) {
         if (existingSlot.dayOfWeek === schedule.dayOfWeek) {
-          // Same day, check for time conflicts
-          if (doShiftsConflict(newShiftType, existingSlot.shiftType)) {
-            hasConflict = true;
-            conflictMessage = `Schedule conflict with ${existingSlot.className} on ${schedule.dayOfWeek}. 
-              You cannot have ${schedule.shift.name} when you already have ${existingSlot.shiftName} scheduled.`;
-            break;
+          // Same day - first check if the weeks intersect
+          if (
+            doWeeksIntersect(
+              academicClass.listOfWeeks || [],
+              existingSlot.listOfWeeks || []
+            )
+          ) {
+            // Weeks intersect, now check for time conflicts
+            if (doShiftsConflict(newShiftType, existingSlot.shiftType)) {
+              hasConflict = true;
+              conflictMessage = `Schedule conflict with ${existingSlot.className} on ${schedule.dayOfWeek}. 
+                You cannot have ${schedule.shift.name} when you already have ${existingSlot.shiftName} scheduled in overlapping weeks.`;
+              break;
+            }
           }
+          // If weeks don't intersect, no conflict even if same day/time
         }
       }
 
@@ -690,6 +801,7 @@ const EnrollmentPage: React.FC = () => {
 
           return;
         }
+
         // Add practice class
         classesToEnroll.push({
           id: academicClass.id,
@@ -700,6 +812,7 @@ const EnrollmentPage: React.FC = () => {
             code: academicClass.course!.code,
           },
           scheduleInDays: academicClass.scheduleInDays || [],
+          listOfWeeks: academicClass.listOfWeeks || [],
         });
 
         // Add parent theory class if not already enrolled
@@ -713,6 +826,7 @@ const EnrollmentPage: React.FC = () => {
               code: parentTheoryClass.course!.code,
             },
             scheduleInDays: parentTheoryClass.scheduleInDays || [],
+            listOfWeeks: parentTheoryClass.listOfWeeks || [],
           });
         }
 
@@ -757,6 +871,7 @@ const EnrollmentPage: React.FC = () => {
 
           return;
         }
+
         // Create enrolled class object
         const enrolledClass: EnrolledClass = {
           id: academicClass.id,
@@ -767,6 +882,7 @@ const EnrollmentPage: React.FC = () => {
             code: academicClass.course!.code,
           },
           scheduleInDays: academicClass.scheduleInDays || [],
+          listOfWeeks: academicClass.listOfWeeks || [],
         };
 
         setEnrolledClasses((prev) => [...prev, enrolledClass]);
@@ -776,6 +892,116 @@ const EnrollmentPage: React.FC = () => {
           color: "success",
         });
       }
+    }
+  };
+
+  // Handle deletion of enrollment - shows confirmation modal
+  const handleDeleteEnrollment = (classId: string) => {
+    // Find the enrolled class to get basic info for the modal
+    const enrolledClass = enrolledClasses.find((cls) => cls.id === classId);
+
+    if (!enrolledClass) {
+      addToast({
+        title: "Delete Failed",
+        description: "Cannot find the class to delete.",
+        color: "danger",
+      });
+
+      return;
+    }
+
+    // Check if this is a practice class
+    const isPractice = isPracticeClass(classId);
+
+    // Set the class to delete and open modal
+    setClassToDelete({
+      id: classId,
+      name: enrolledClass.name,
+      isPractice,
+    });
+    setDeleteModalOpen(true);
+  };
+
+  // Confirm and execute deletion
+  const confirmDeleteEnrollment = async () => {
+    if (!classToDelete) return;
+
+    try {
+      const { id: classId, isPractice } = classToDelete;
+
+      // Find the enrolled class to get the enrollment ID
+      const enrolledClass = enrolledClasses.find((cls) => cls.id === classId);
+
+      if (!enrolledClass?.enrollmentId) {
+        addToast({
+          title: "Delete Failed",
+          description: "Cannot find enrollment ID for this class.",
+          color: "danger",
+        });
+
+        return;
+      }
+
+      const classesToDelete: {
+        id: string;
+        name: string;
+        enrollmentId: string;
+      }[] = [];
+
+      // Add the current class to deletion list
+      classesToDelete.push({
+        id: enrolledClass.id,
+        name: enrolledClass.name,
+        enrollmentId: enrolledClass.enrollmentId,
+      });
+
+      // If this is a practice class, also find and add the parent theory class
+      if (isPractice) {
+        const parentTheoryClass = getParentTheoryClass(classId);
+
+        if (parentTheoryClass) {
+          const enrolledTheoryClass = enrolledClasses.find(
+            (cls) => cls.id === parentTheoryClass.id
+          );
+
+          if (enrolledTheoryClass?.enrollmentId) {
+            classesToDelete.push({
+              id: enrolledTheoryClass.id,
+              name: enrolledTheoryClass.name,
+              enrollmentId: enrolledTheoryClass.enrollmentId,
+            });
+          }
+        }
+      }
+
+      // Delete all related enrollments
+      for (const classToDelete of classesToDelete) {
+        await deleteEnrollmentMutation.mutateAsync(classToDelete.enrollmentId);
+      }
+
+      // Close modal
+      setDeleteModalOpen(false);
+      setClassToDelete(null);
+
+      const classNames = classesToDelete.map((cls) => cls.name).join(" and ");
+
+      addToast({
+        title: "Enrollment(s) Deleted",
+        description: `Successfully removed enrollment for ${classNames}.`,
+        color: "success",
+      });
+
+      // Refetch data instead of refreshing the page
+      await loadExistingEnrollments();
+      if (studentInfo?.majorId && studentInfo?.batchId) {
+        await fetchAcademicClasses(studentInfo.majorId, studentInfo.batchId);
+      }
+    } catch {
+      addToast({
+        title: "Delete Failed",
+        description: "Failed to delete the enrollment. Please try again.",
+        color: "danger",
+      });
     }
   };
 
@@ -798,6 +1024,7 @@ const EnrollmentPage: React.FC = () => {
             shiftId: schedule.shift.id,
             room: schedule.room?.name,
             instructor: enrolledClass.course.name,
+            listOfWeeks: enrolledClass.listOfWeeks,
           });
         }
       });
@@ -917,22 +1144,15 @@ const EnrollmentPage: React.FC = () => {
                     </button>
                   )}
                 </div>
-                <button
-                  className={`px-4 py-2 border border-gray-300 rounded-md flex items-center gap-2 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-primary ${
-                    isRefreshing ? "cursor-not-allowed opacity-50" : ""
-                  }`}
-                  disabled={isRefreshing}
-                  title="Refresh class list"
-                  onClick={handleRefresh}
+                <Button
+                  color="primary"
+                  isLoading={isRefreshing}
+                  startContent={<RefreshCw size={16} />}
+                  variant="ghost"
+                  onPress={handleRefresh}
                 >
-                  <RefreshCw
-                    className={isRefreshing ? "animate-spin" : ""}
-                    size={16}
-                  />
-                  <span className="text-sm font-medium">
-                    {isRefreshing ? "Refreshing..." : "Refresh"}
-                  </span>
-                </button>
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </Button>
               </div>
             </div>
           </div>
@@ -1034,21 +1254,90 @@ const EnrollmentPage: React.FC = () => {
         )}
 
         {/* Schedule Viewer Component */}
-        <ScheduleViewer
-          enrolledClasses={convertToScheduleFormat(enrolledClasses)}
-          onCompleteEnrollment={async () => {
-            // Clear enrolled classes from state
-            setEnrolledClasses([]);
+        {loadingEnrollments ? (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <span className="ml-2 text-gray-600">
+                Loading your enrolled classes...
+              </span>
+            </div>
+          </div>
+        ) : (
+          <ScheduleViewer
+            enrolledClasses={convertToScheduleFormat(enrolledClasses)}
+            existingEnrollmentIds={enrolledClassIds}
+            onCompleteEnrollment={async () => {
+              // Clear enrolled classes from state
+              setEnrolledClasses([]);
 
-            // Refresh enrollment status first
-            await refreshEnrollmentStatus();
+              // Refresh enrollment status and reload existing enrollments
+              await refreshEnrollmentStatus();
+              await loadExistingEnrollments();
 
-            // Refresh the academic classes list to get updated enrollment counts
-            if (studentInfo?.majorId && studentInfo?.batchId) {
-              await handleRefresh();
-            }
-          }}
-        />
+              // Refresh the academic classes list to get updated enrollment counts
+              if (studentInfo?.majorId && studentInfo?.batchId) {
+                await handleRefresh();
+              }
+            }}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={deleteModalOpen}
+          placement="center"
+          onOpenChange={setDeleteModalOpen}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <h3 className="text-lg font-semibold text-red-600">
+                    Confirm Deletion
+                  </h3>
+                </ModalHeader>
+                <ModalBody>
+                  {classToDelete && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">
+                        Are you sure you want to delete the enrollment for:
+                      </p>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="font-semibold text-gray-800">
+                          {classToDelete.name}
+                        </p>
+                        {classToDelete.isPractice && (
+                          <p className="text-sm text-orange-600 mt-1">
+                            ⚠️ This will also delete the associated theory class
+                            enrollment.
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        This action cannot be undone.
+                      </p>
+                    </div>
+                  )}
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="default" variant="light" onPress={onClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    color="danger"
+                    onPress={async () => {
+                      await confirmDeleteEnrollment();
+                      onClose();
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
     </DefaultLayout>
   );

@@ -114,7 +114,7 @@ export const fetchFloors = (): AppThunk => async (dispatch, getState) => {
 
     const { query } = getState().floor;
     const { selectedLocation } = getState().location;
-    
+
     // Use selectedLocation if available
     if (selectedLocation && !query.filter?.locationId) {
       const updatedQuery = {
@@ -156,7 +156,7 @@ export const createFloor =
 
       const newFloor = await floorService.createFloor(data);
 
-      dispatch(addFloor(newFloor));
+      dispatch(addFloor(newFloor.data));
 
       return newFloor;
     } catch (error) {
@@ -180,7 +180,7 @@ export const updateFloor =
 
       const updatedFloor = await floorService.updateFloor(id, data);
 
-      dispatch(updateFloorInList(updatedFloor));
+      dispatch(updateFloorInList(updatedFloor.data));
 
       return updatedFloor;
     } catch (error) {
@@ -204,7 +204,7 @@ export const toggleFloorStatus =
 
       const updatedFloor = await floorService.toggleStatus(floor.id);
 
-      dispatch(updateFloorInList(updatedFloor));
+      dispatch(updateFloorInList(updatedFloor.data));
 
       return updatedFloor;
     } catch (error) {

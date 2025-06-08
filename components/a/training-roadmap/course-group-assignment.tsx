@@ -539,7 +539,12 @@ const CourseGroupAssignment: React.FC<CourseGroupAssignmentProps> = ({
                 </CardHeader>
                 <Divider />
                 <CardBody className="px-6 py-4">
-                  <Table removeWrapper aria-label="Courses in group">
+                  <Table
+                    isHeaderSticky
+                    isStriped
+                    removeWrapper
+                    aria-label="Courses in group"
+                  >
                     <TableHeader>
                       <TableColumn>CODE</TableColumn>
                       <TableColumn>NAME</TableColumn>

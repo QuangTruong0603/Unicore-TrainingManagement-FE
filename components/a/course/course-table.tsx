@@ -20,7 +20,7 @@ import {
   Trash,
 } from "lucide-react";
 import {
-  Table as HeroTable,
+  Table,
   TableHeader,
   TableColumn,
   TableBody,
@@ -397,7 +397,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
 
   return (
     <div className={styles.tableWrapper}>
-      <HeroTable aria-label="Courses Table">
+      <Table isHeaderSticky isStriped aria-label="Courses Table">
         <TableHeader>
           {columns.map((column) => (
             <TableColumn
@@ -424,7 +424,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             </TableRow>
           )}
         </TableBody>
-      </HeroTable>
+      </Table>
     </div>
   );
 };
