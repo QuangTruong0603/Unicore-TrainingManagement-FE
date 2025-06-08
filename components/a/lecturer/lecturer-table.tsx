@@ -9,8 +9,18 @@ import {
   Button,
   Chip,
   Spinner,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
-import { ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
 
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
 import { PaginatedResponse } from "@/services/dto";
@@ -59,6 +69,19 @@ export function LecturerTable({
     }
   };
 
+  const handleAction = (key: string, lecturer: Lecturer) => {
+    if (key === "edit") {
+      onEdit(lecturer);
+    } else if (key === "delete") {
+      onDelete(
+        lecturer.id,
+        `${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`
+      );
+    } else if (key === "details") {
+      onRowToggle(lecturer.id);
+    }
+  };
+
   return (
     <div className="lecturer-table">
       <Table removeWrapper aria-label="Lecturer table" className="min-w-full">
@@ -81,18 +104,34 @@ export function LecturerTable({
           </TableColumn>
           <TableColumn
             className="cursor-pointer"
-            onClick={() => onSort("degree")}
+            onClick={() => onSort("applicationUser.email")}
           >
             <div className="flex items-center">
-              Degree {renderSortIcon("degree")}
+              Email {renderSortIcon("applicationUser.email")}
             </div>
           </TableColumn>
           <TableColumn
             className="cursor-pointer"
-            onClick={() => onSort("mainMajor")}
+            onClick={() => onSort("applicationUser.phoneNumber")}
           >
             <div className="flex items-center">
-              Main Major {renderSortIcon("mainMajor")}
+              Phone {renderSortIcon("applicationUser.phoneNumber")}
+            </div>
+          </TableColumn>
+          <TableColumn
+            className="cursor-pointer"
+            onClick={() => onSort("applicationUser.dob")}
+          >
+            <div className="flex items-center">
+              Date of Birth {renderSortIcon("applicationUser.dob")}
+            </div>
+          </TableColumn>
+          <TableColumn
+            className="cursor-pointer"
+            onClick={() => onSort("degree")}
+          >
+            <div className="flex items-center">
+              Degree {renderSortIcon("degree")}
             </div>
           </TableColumn>
           <TableColumn
@@ -119,8 +158,16 @@ export function LecturerTable({
                 <TableCell>
                   {`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`}
                 </TableCell>
+                <TableCell>{lecturer.applicationUser.email}</TableCell>
+                <TableCell>{lecturer.applicationUser.phoneNumber}</TableCell>
+                <TableCell>
+                  {lecturer.applicationUser.dob
+                    ? new Date(
+                        lecturer.applicationUser.dob
+                      ).toLocaleDateString()
+                    : "N/A"}
+                </TableCell>
                 <TableCell>{lecturer.degree}</TableCell>
-                <TableCell>{lecturer.mainMajor}</TableCell>
                 <TableCell>
                   <Chip
                     className={`status-badge ${
@@ -132,70 +179,60 @@ export function LecturerTable({
                   </Chip>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onPress={() => onRowToggle(lecturer.id)}
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button isIconOnly size="sm" variant="light">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                      aria-label="Lecturer Actions"
+                      onAction={(key) => handleAction(key.toString(), lecturer)}
                     >
-                      {expandedRows[lecturer.id] ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onPress={() => onEdit(lecturer)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      size="sm"
-                      variant="light"
-                      onPress={() =>
-                        onDelete(
-                          lecturer.id,
-                          `${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`
-                        )
-                      }
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                      <DropdownItem
+                        key="edit"
+                        startContent={<Pencil className="w-4 h-4" />}
+                      >
+                        Edit
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete"
+                        className="text-danger"
+                        color="danger"
+                        startContent={<Trash2 className="w-4 h-4" />}
+                      >
+                        Delete
+                      </DropdownItem>
+                      <DropdownItem
+                        key="details"
+                        startContent={
+                          expandedRows[lecturer.id] ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )
+                        }
+                      >
+                        {expandedRows[lecturer.id]
+                          ? "Hide Details"
+                          : "Show Details"}
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
                 </TableCell>
               </TableRow>
               {expandedRows[lecturer.id] && (
                 <TableRow className="expanded-row">
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={8}>
                     <div className="p-4 grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm font-semibold">Email</p>
-                        <p className="text-sm">
-                          {lecturer.applicationUser.email}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">Phone</p>
-                        <p className="text-sm">
-                          {lecturer.applicationUser.phoneNumber}
-                        </p>
+                        <p className="text-sm font-semibold">Main Major</p>
+                        <p className="text-sm">{lecturer.mainMajor}</p>
                       </div>
                       <div>
                         <p className="text-sm font-semibold">Person ID</p>
                         <p className="text-sm">
                           {lecturer.applicationUser.personId}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">Date of Birth</p>
-                        <p className="text-sm">
-                          {lecturer.applicationUser.dob}
                         </p>
                       </div>
                       <div>
