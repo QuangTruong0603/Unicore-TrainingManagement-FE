@@ -16,12 +16,10 @@ import {
   MoreVertical,
   Trash,
   Power,
-  Lock,
-  Unlock,
   Edit,
 } from "lucide-react";
 import {
-  Table as HeroTable,
+  Table,
   TableHeader,
   TableColumn,
   TableBody,
@@ -338,20 +336,6 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                 >
                   {true ? "Deactivate" : "Activate"}
                 </DropdownItem>
-                <DropdownItem
-                  key="registration"
-                  startContent={
-                    academicClass.isRegistrable ? (
-                      <Lock className="w-4 h-4" />
-                    ) : (
-                      <Unlock className="w-4 h-4" />
-                    )
-                  }
-                >
-                  {academicClass.isRegistrable
-                    ? "Close Registration"
-                    : "Open Registration"}
-                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
             <Tooltip content="Toggle details">
@@ -455,7 +439,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
 
   return (
     <div className={styles.tableWrapper}>
-      <HeroTable
+      <Table
         isHeaderSticky
         isStriped
         aria-label="Classes table"
@@ -502,7 +486,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             </React.Fragment>
           ))}
         </TableBody>
-      </HeroTable>
+      </Table>
     </div>
   );
 };

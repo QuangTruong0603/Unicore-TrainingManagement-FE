@@ -1,4 +1,12 @@
-import { ArrowDown, ArrowUp, Power, PowerOff, Edit } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Power,
+  PowerOff,
+  Edit,
+  Trash2,
+  MoreVertical,
+} from "lucide-react";
 import {
   Button,
   Chip,
@@ -8,6 +16,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 
 import styles from "./floor-table.module.scss";
@@ -48,8 +60,14 @@ export const FloorTable = ({
       onSort(key);
     }
   };
+
   return (
-    <Table aria-label="Floors table" className={styles.table}>
+    <Table
+      isHeaderSticky
+      isStriped
+      aria-label="Floors table"
+      className={styles.table}
+    >
       <TableHeader>
         <TableColumn
           className={`cursor-pointer ${sortKey === "name" ? "text-primary" : ""}`}
@@ -77,7 +95,7 @@ export const FloorTable = ({
         items={floors}
       >
         {(floor) => (
-          <TableRow key={floor.id} className={styles.tableRow}>
+          <TableRow key={floor.id}>
             <TableCell>
               <div className="font-medium">{floor.name}</div>
             </TableCell>
@@ -93,24 +111,39 @@ export const FloorTable = ({
               </Chip>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                {onEdit && (
+              <Dropdown>
+                <DropdownTrigger>
                   <Button
-                    className="flex items-center gap-1 h-8 px-3 font-medium"
-                    color="primary"
+                    isIconOnly
+                    aria-label="Actions"
                     size="sm"
+                    variant="light"
+                  >
+                    <MoreVertical size={16} />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Floor Actions">
+                  <DropdownItem
+                    key="edit"
+                    isDisabled={!onEdit}
                     startContent={<Edit size={16} />}
-                    variant="flat"
-                    onPress={() => onEdit(floor)}
+                    onPress={() => onEdit?.(floor)}
                   >
                     Edit
-                  </Button>
-                )}
-                {onActiveToggle && (
-                  <Button
-                    className="flex items-center gap-1 h-8 px-3 font-medium"
-                    color={floor.isActive ? "danger" : "success"}
-                    size="sm"
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    startContent={<Trash2 size={16} />}
+                    onPress={() => {
+                      // eslint-disable-next-line no-console
+                      console.log("Delete floor:", floor);
+                    }}
+                  >
+                    Delete
+                  </DropdownItem>
+                  <DropdownItem
+                    key="toggle-active"
+                    isDisabled={!onActiveToggle}
                     startContent={
                       floor.isActive ? (
                         <PowerOff size={16} />
@@ -118,13 +151,12 @@ export const FloorTable = ({
                         <Power size={16} />
                       )
                     }
-                    variant="flat"
-                    onPress={() => onActiveToggle(floor)}
+                    onPress={() => onActiveToggle?.(floor)}
                   >
                     {floor.isActive ? "Deactivate" : "Activate"}
-                  </Button>
-                )}
-              </div>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </TableCell>
           </TableRow>
         )}

@@ -56,7 +56,12 @@ export const RoomTable = ({
   };
 
   return (
-    <Table aria-label="Rooms table" className={styles.table}>
+    <Table
+      isHeaderSticky
+      isStriped
+      aria-label="Rooms table"
+      className={styles.table}
+    >
       <TableHeader>
         <TableColumn
           className={`cursor-pointer ${sortKey === "name" ? "text-primary" : ""}`}

@@ -71,7 +71,12 @@ export const DepartmentTable = ({
 
   return (
     <>
-      <Table aria-label="Department table" className={styles.table}>
+      <Table
+        isHeaderSticky
+        isStriped
+        aria-label="Department table"
+        className={styles.table}
+      >
         <TableHeader>
           <TableColumn
             className={`cursor-pointer ${sortKey === "code" ? "text-primary" : ""}`}
