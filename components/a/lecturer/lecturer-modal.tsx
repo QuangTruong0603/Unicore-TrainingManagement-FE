@@ -1,4 +1,5 @@
-import React from "react";
+/* eslint-disable react/jsx-sort-props */
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -25,23 +26,24 @@ interface LecturerModalProps {
   lecturer?: Lecturer;
   departments: Department[];
   onClose: () => void;
-  onSubmit: (data: Partial<Lecturer>) => Promise<void>;
+  onSubmit: (data: any) => Promise<void>;
 }
 
+// Updated schema to match API requirements
 const lecturerFormSchema = z.object({
-  lecturerCode: z.string().min(1, "Lecturer code is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  personEmail: z.string().email("Invalid email format"),
+  personId: z.string().min(1, "Person ID is required"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  dob: z.string().min(1, "Date of birth is required"),
   degree: z.string().min(1, "Degree is required"),
   salary: z.number().min(0, "Salary must be a positive number"),
   departmentId: z.string().min(1, "Department is required"),
+  mainMajor: z.string().min(1, "Main major is required"),
+  lecturerCode: z.string().optional(),
   workingStatus: z.number().min(0).max(1),
   joinDate: z.string().min(1, "Join date is required"),
-  mainMajor: z.string().min(1, "Main major is required"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  personId: z.string().min(1, "Person ID is required"),
-  dob: z.string().min(1, "Date of birth is required"),
-  phoneNumber: z.string().min(1, "Phone number is required"),
-  email: z.string().email("Invalid email format"),
 });
 
 type LecturerFormValues = z.infer<typeof lecturerFormSchema>;
@@ -59,9 +61,11 @@ export function LecturerModal({
     handleSubmit,
     control,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, touchedFields },
+    trigger,
   } = useForm<LecturerFormValues>({
     resolver: zodResolver(lecturerFormSchema),
+    mode: "onChange",
     defaultValues: {
       lecturerCode: lecturer?.lecturerCode || "",
       degree: lecturer?.degree || "",
@@ -77,13 +81,13 @@ export function LecturerModal({
       personId: lecturer?.applicationUser?.personId || "",
       dob: lecturer?.applicationUser?.dob || "",
       phoneNumber: lecturer?.applicationUser?.phoneNumber || "",
-      email: lecturer?.applicationUser?.email || "",
+      personEmail: lecturer?.applicationUser?.email || "",
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      reset({
+      const defaultValues = {
         lecturerCode: lecturer?.lecturerCode || "",
         degree: lecturer?.degree || "",
         salary: lecturer?.salary || 0,
@@ -98,25 +102,42 @@ export function LecturerModal({
         personId: lecturer?.applicationUser?.personId || "",
         dob: lecturer?.applicationUser?.dob || "",
         phoneNumber: lecturer?.applicationUser?.phoneNumber || "",
-        email: lecturer?.applicationUser?.email || "",
-      });
+        personEmail: lecturer?.applicationUser?.email || "",
+      };
+
+      reset(defaultValues);
+
+      // Validate form after reset to clear any errors
+      setTimeout(() => {
+        trigger();
+      }, 100);
     }
-  }, [isOpen, lecturer, reset]);
+  }, [isOpen, lecturer, reset, trigger]);
 
   const onFormSubmit = async (data: LecturerFormValues) => {
     try {
+      // Format data according to API requirements
       const payload = {
-        ...data,
-        applicationUser: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          personId: data.personId,
-          dob: data.dob,
-          phoneNumber: data.phoneNumber,
-          email: data.email,
-          status: 1,
-        },
+        firstName: data.firstName,
+        lastName: data.lastName,
+        personEmail: data.personEmail,
+        personId: data.personId,
+        phoneNumber: data.phoneNumber,
+        dob: data.dob,
+        degree: data.degree,
+        salary: data.salary,
+        departmentId: data.departmentId,
+        mainMajor: data.mainMajor,
       };
+
+      // Add optional fields for edit mode
+      if (isEdit) {
+        Object.assign(payload, {
+          lecturerCode: data.lecturerCode,
+          workingStatus: data.workingStatus,
+          joinDate: data.joinDate,
+        });
+      }
 
       await onSubmit(payload);
     } catch (error) {
@@ -124,8 +145,13 @@ export function LecturerModal({
     }
   };
 
+  // Helper function to determine if a field should show error
+  const shouldShowError = (fieldName: keyof LecturerFormValues) => {
+    return !!errors[fieldName] && touchedFields[fieldName];
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl">
+    <Modal isOpen={isOpen} size="3xl" onClose={onClose}>
       <ModalContent>
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <ModalHeader>
@@ -134,174 +160,167 @@ export function LecturerModal({
           <ModalBody>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="firstName"
+                >
+                  First Name *
                 </label>
                 <Input
-                  id="firstName"
-                  isInvalid={!!errors.firstName}
                   errorMessage={errors.firstName?.message}
+                  id="firstName"
+                  isInvalid={shouldShowError("firstName")}
                   {...register("firstName")}
                 />
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="lastName"
+                >
+                  Last Name *
                 </label>
                 <Input
-                  id="lastName"
-                  isInvalid={!!errors.lastName}
                   errorMessage={errors.lastName?.message}
+                  id="lastName"
+                  isInvalid={shouldShowError("lastName")}
                   {...register("lastName")}
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="personEmail"
+                >
+                  Email *
                 </label>
                 <Input
-                  id="email"
+                  errorMessage={errors.personEmail?.message}
+                  id="personEmail"
+                  isInvalid={shouldShowError("personEmail")}
                   type="email"
-                  isInvalid={!!errors.email}
-                  errorMessage={errors.email?.message}
-                  {...register("email")}
+                  {...register("personEmail")}
                 />
               </div>
 
               <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="phoneNumber"
+                >
+                  Phone Number *
                 </label>
                 <Input
-                  id="phoneNumber"
-                  isInvalid={!!errors.phoneNumber}
                   errorMessage={errors.phoneNumber?.message}
+                  id="phoneNumber"
+                  isInvalid={shouldShowError("phoneNumber")}
                   {...register("phoneNumber")}
                 />
               </div>
 
               <div>
-                <label htmlFor="personId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Person ID
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="personId"
+                >
+                  Person ID *
                 </label>
                 <Input
-                  id="personId"
-                  isInvalid={!!errors.personId}
                   errorMessage={errors.personId?.message}
+                  id="personId"
+                  isInvalid={shouldShowError("personId")}
                   {...register("personId")}
                 />
               </div>
 
               <div>
-                <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="dob"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Date of Birth
                 </label>
                 <Input
                   id="dob"
                   type="date"
-                  isInvalid={!!errors.dob}
+                  isInvalid={shouldShowError("dob")}
                   errorMessage={errors.dob?.message}
                   {...register("dob")}
                 />
               </div>
 
-              <div>
-                <label htmlFor="lecturerCode" className="block text-sm font-medium text-gray-700 mb-1">
-                  Lecturer Code
-                </label>
-                <Input
-                  id="lecturerCode"
-                  isInvalid={!!errors.lecturerCode}
-                  errorMessage={errors.lecturerCode?.message}
-                  {...register("lecturerCode")}
-                  isDisabled={isEdit}
-                />
-              </div>
+              {isEdit && (
+                <div>
+                  <label
+                    htmlFor="lecturerCode"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Lecturer Code
+                  </label>
+                  <Input
+                    id="lecturerCode"
+                    isInvalid={shouldShowError("lecturerCode")}
+                    errorMessage={errors.lecturerCode?.message}
+                    {...register("lecturerCode")}
+                    isDisabled={isEdit}
+                  />
+                </div>
+              )}
 
               <div>
-                <label htmlFor="degree" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="degree"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Degree
                 </label>
                 <Input
                   id="degree"
-                  isInvalid={!!errors.degree}
+                  isInvalid={shouldShowError("degree")}
                   errorMessage={errors.degree?.message}
                   {...register("degree")}
                 />
               </div>
 
               <div>
-                <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="salary"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Salary
                 </label>
                 <Input
                   id="salary"
                   type="number"
-                  isInvalid={!!errors.salary}
+                  isInvalid={shouldShowError("salary")}
                   errorMessage={errors.salary?.message}
                   {...register("salary", { valueAsNumber: true })}
                 />
               </div>
 
               <div>
-                <label htmlFor="mainMajor" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="mainMajor"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Main Major
                 </label>
                 <Input
                   id="mainMajor"
-                  isInvalid={!!errors.mainMajor}
+                  isInvalid={shouldShowError("mainMajor")}
                   errorMessage={errors.mainMajor?.message}
                   {...register("mainMajor")}
                 />
               </div>
 
               <div>
-                <label htmlFor="joinDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Join Date
-                </label>
-                <Input
-                  id="joinDate"
-                  type="date"
-                  isInvalid={!!errors.joinDate}
-                  errorMessage={errors.joinDate?.message}
-                  {...register("joinDate")}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="workingStatus" className="block text-sm font-medium text-gray-700 mb-1">
-                  Working Status
-                </label>
-                <Controller
-                  control={control}
-                  name="workingStatus"
-                  render={({ field }) => (
-                    <Select
-                      id="workingStatus"
-                      selectedKeys={[field.value.toString()]}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                    >
-                      <SelectItem key="1" value="1">
-                        Active
-                      </SelectItem>
-                      <SelectItem key="0" value="0">
-                        Inactive
-                      </SelectItem>
-                    </Select>
-                  )}
-                />
-                {errors.workingStatus && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.workingStatus.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="departmentId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Department
+                <label
+                  htmlFor="departmentId"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Department *
                 </label>
                 <Controller
                   control={control}
@@ -312,7 +331,9 @@ export function LecturerModal({
                       allowsCustomValue={false}
                       defaultItems={departments}
                       selectedKey={field.value}
-                      onSelectionChange={(key) => field.onChange(key?.toString() || "")}
+                      onSelectionChange={(key) =>
+                        field.onChange(key?.toString() || "")
+                      }
                     >
                       {(department) => (
                         <AutocompleteItem
@@ -332,27 +353,69 @@ export function LecturerModal({
                     </Autocomplete>
                   )}
                 />
-                {errors.departmentId && (
+                {errors.departmentId && touchedFields.departmentId && (
                   <p className="text-sm text-red-500 mt-1">
                     {errors.departmentId.message}
                   </p>
                 )}
               </div>
+
+              {isEdit && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="joinDate"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Join Date
+                    </label>
+                    <Input
+                      errorMessage={errors.joinDate?.message}
+                      id="joinDate"
+                      isInvalid={shouldShowError("joinDate")}
+                      type="date"
+                      {...register("joinDate")}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                      htmlFor="workingStatus"
+                    >
+                      Working Status
+                    </label>
+                    <Controller
+                      control={control}
+                      name="workingStatus"
+                      render={({ field }) => (
+                        <Select
+                          id="workingStatus"
+                          selectedKeys={[field.value.toString()]}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value, 10))
+                          }
+                        >
+                          <SelectItem key="1">Active</SelectItem>
+                          <SelectItem key="0">Inactive</SelectItem>
+                        </Select>
+                      )}
+                    />
+                    {errors.workingStatus && touchedFields.workingStatus && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.workingStatus.message}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              color="danger"
-              variant="light"
-              onPress={onClose}
-            >
+            <Button color="danger" variant="light" onPress={onClose}>
               Cancel
             </Button>
-            <Button
-              color="primary"
-              isLoading={isSubmitting}
-              type="submit"
-            >
+            <Button color="primary" isLoading={isSubmitting} type="submit">
               {isEdit ? "Update" : "Create"}
             </Button>
           </ModalFooter>
@@ -360,4 +423,4 @@ export function LecturerModal({
       </ModalContent>
     </Modal>
   );
-} 
+}
