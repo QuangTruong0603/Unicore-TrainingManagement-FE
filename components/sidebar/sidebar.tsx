@@ -57,7 +57,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
   const adminMenuItems: IMenuItem[] = [
     { key: "/a/students", title: "Students", icon: <Users size={20} /> },
     { key: "/a/analytics", title: "Analytics", icon: <BarChart size={20} /> },
-    { key: "/a/lectures", title: "Lectures", icon: <User size={20} /> },
+    { key: "/a/lecturers", title: "Lecturers", icon: <User size={20} /> },
     {
       key: "/a/facilities",
       title: "Facilities",
