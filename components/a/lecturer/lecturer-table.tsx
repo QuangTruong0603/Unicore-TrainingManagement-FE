@@ -23,7 +23,7 @@ interface LecturerTableProps {
   expandedRows: Record<string, boolean>;
   onSort: (key: string) => void;
   onEdit: (lecturer: Lecturer) => void;
-  onDelete: (lecturerId: string) => void;
+  onDelete: (lecturerId: string, lecturerName: string) => void;
   onRowToggle: (lecturerId: string) => void;
 }
 
@@ -61,7 +61,7 @@ export function LecturerTable({
 
   return (
     <div className="lecturer-table">
-      <Table aria-label="Lecturer table" className="min-w-full" removeWrapper>
+      <Table removeWrapper aria-label="Lecturer table" className="min-w-full">
         <TableHeader>
           <TableColumn
             className="cursor-pointer"
@@ -158,7 +158,12 @@ export function LecturerTable({
                       color="danger"
                       size="sm"
                       variant="light"
-                      onPress={() => onDelete(lecturer.id)}
+                      onPress={() =>
+                        onDelete(
+                          lecturer.id,
+                          `${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`
+                        )
+                      }
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

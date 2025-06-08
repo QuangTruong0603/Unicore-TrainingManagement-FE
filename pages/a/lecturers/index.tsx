@@ -8,6 +8,7 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  addToast,
 } from "@heroui/react";
 import { Plus, Upload, Download, MoreVertical } from "lucide-react";
 
@@ -28,6 +29,8 @@ import {
 } from "@/store/slices/lecturerSlice";
 import { lecturerService } from "@/services/lecturer/lecturer.service";
 import { departmentService } from "@/services/department/department.service";
+import { openConfirmDialog } from "@/store/slices/confirmDialogSlice";
+import ConfirmDialog from "@/components/ui/confirm-dialog/confirm-dialog";
 
 import "./index.scss";
 
@@ -47,10 +50,15 @@ export default function LecturersPage() {
   >(undefined);
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  // Fetch lecturers when query changes
   useEffect(() => {
     fetchLecturers();
-    fetchDepartments();
   }, [query]);
+
+  // Fetch departments only once when component mounts
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   const fetchLecturers = async () => {
     try {
@@ -137,13 +145,33 @@ export default function LecturersPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteLecturer = async (lecturerId: string) => {
-    try {
-      await lecturerService.deleteLecturer(lecturerId);
-      fetchLecturers();
-    } catch (error) {
-      console.error("Error deleting lecturer:", error);
-    }
+  const handleDeleteLecturer = (lecturerId: string, lecturerName: string) => {
+    dispatch(
+      openConfirmDialog({
+        title: "Delete Lecturer",
+        message: `Are you sure you want to delete lecturer "${lecturerName}"?`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          try {
+            await lecturerService.deleteLecturer(lecturerId);
+            addToast({
+              title: "Success",
+              description: `Lecturer "${lecturerName}" has been deleted successfully.`,
+              color: "success",
+            });
+            fetchLecturers();
+          } catch (error) {
+            console.error("Error deleting lecturer:", error);
+            addToast({
+              title: "Error",
+              description: "Failed to delete lecturer. Please try again.",
+              color: "danger",
+            });
+          }
+        },
+      })
+    );
   };
 
   const handleModalSubmit = async (data: Partial<Lecturer>) => {
@@ -153,13 +181,29 @@ export default function LecturersPage() {
           selectedLecturer.lecturerCode,
           data
         );
+        addToast({
+          title: "Success",
+          description: "Lecturer has been updated successfully.",
+          color: "success",
+        });
       } else {
         await lecturerService.createLecturer(data);
+        addToast({
+          title: "Success",
+          description: "New lecturer has been created successfully.",
+          color: "success",
+        });
       }
       setIsModalOpen(false);
       fetchLecturers();
     } catch (error) {
       console.error("Error submitting lecturer data:", error);
+      addToast({
+        title: "Error",
+        description:
+          "Failed to save lecturer. Please check your input and try again.",
+        color: "danger",
+      });
     }
   };
 
@@ -239,6 +283,8 @@ export default function LecturersPage() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleModalSubmit}
         />
+
+        <ConfirmDialog />
       </div>
     </DefaultLayout>
   );
