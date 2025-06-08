@@ -1,0 +1,34 @@
+/* Lecturer page styles */
+.expanded-row {
+  background-color: #f9fafb;
+}
+
+.lecturer-table {
+  th {
+    white-space: nowrap;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
+}
+
+.status-badge {
+  &.active {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  
+  &.inactive {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+.sort-icon {
+  transition: transform 0.2s ease;
+  
+  &.desc {
+    transform: rotate(180deg);
+  }
+} 
