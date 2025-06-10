@@ -139,10 +139,24 @@ export default function LecturersPage() {
     setIsModalOpen(true);
   };
 
-  const handleEditLecturer = (lecturer: Lecturer) => {
-    setIsEdit(true);
-    setSelectedLecturer(lecturer);
-    setIsModalOpen(true);
+  const handleEditLecturer = async (lecturer: Lecturer) => {
+    try {
+      dispatch(setLoading(true));
+      // Fetch the full lecturer data by ID
+      const response = await lecturerService.getLecturerById(lecturer.id);
+      setIsEdit(true);
+      setSelectedLecturer(response.data);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching lecturer details:", error);
+      addToast({
+        title: "Error",
+        description: "Failed to fetch lecturer details. Please try again.",
+        color: "danger",
+      });
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
 
   const handleDeleteLecturer = (lecturerId: string, lecturerName: string) => {

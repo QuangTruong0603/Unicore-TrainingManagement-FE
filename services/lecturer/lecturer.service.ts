@@ -39,7 +39,11 @@ export const lecturerService = {
     });
   },
   getLecturerById: async (lecturerId: string): Promise<any> => {
-    return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`);
+    return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
   },
   updateLecturer: async (
     lecturerCode: string,

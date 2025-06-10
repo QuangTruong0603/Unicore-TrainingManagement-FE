@@ -35,15 +35,15 @@ const lecturerFormSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   personEmail: z.string().email("Invalid email format"),
   personId: z.string().min(1, "Person ID is required"),
-  phoneNumber: z.string().min(1, "Phone number is required"),
-  dob: z.string().min(1, "Date of birth is required"),
-  degree: z.string().min(1, "Degree is required"),
-  salary: z.number().min(0, "Salary must be a positive number"),
+  phoneNumber: z.string().optional(),
+  dob: z.string().optional(),
+  degree: z.string().optional(),
+  salary: z.number().min(0, "Salary must be a positive number").optional(),
   departmentId: z.string().min(1, "Department is required"),
-  mainMajor: z.string().min(1, "Main major is required"),
+  mainMajor: z.string().optional(),
   lecturerCode: z.string().optional(),
-  workingStatus: z.number().min(0).max(1),
-  joinDate: z.string().min(1, "Join date is required"),
+  workingStatus: z.number().min(0).max(1).optional(),
+  joinDate: z.string().optional(),
 });
 
 type LecturerFormValues = z.infer<typeof lecturerFormSchema>;
@@ -117,26 +117,27 @@ export function LecturerModal({
   const onFormSubmit = async (data: LecturerFormValues) => {
     try {
       // Format data according to API requirements
-      const payload = {
+      const payload: any = {
         firstName: data.firstName,
         lastName: data.lastName,
         personEmail: data.personEmail,
         personId: data.personId,
-        phoneNumber: data.phoneNumber,
-        dob: data.dob,
-        degree: data.degree,
-        salary: data.salary,
-        departmentId: data.departmentId,
-        mainMajor: data.mainMajor,
       };
+
+      // Add optional fields if they exist
+      if (data.phoneNumber) payload.phoneNumber = data.phoneNumber;
+      if (data.dob) payload.dob = data.dob;
+      if (data.degree) payload.degree = data.degree;
+      if (data.salary !== undefined) payload.salary = data.salary;
+      if (data.departmentId) payload.departmentId = data.departmentId;
+      if (data.mainMajor) payload.mainMajor = data.mainMajor;
 
       // Add optional fields for edit mode
       if (isEdit) {
-        Object.assign(payload, {
-          lecturerCode: data.lecturerCode,
-          workingStatus: data.workingStatus,
-          joinDate: data.joinDate,
-        });
+        if (data.lecturerCode) payload.lecturerCode = data.lecturerCode;
+        if (data.workingStatus !== undefined)
+          payload.workingStatus = data.workingStatus;
+        if (data.joinDate) payload.joinDate = data.joinDate;
       }
 
       await onSubmit(payload);
@@ -210,7 +211,7 @@ export function LecturerModal({
                   className="block text-sm font-medium text-gray-700 mb-1"
                   htmlFor="phoneNumber"
                 >
-                  Phone Number *
+                  Phone Number
                 </label>
                 <Input
                   errorMessage={errors.phoneNumber?.message}
@@ -391,7 +392,11 @@ export function LecturerModal({
                       render={({ field }) => (
                         <Select
                           id="workingStatus"
-                          selectedKeys={[field.value.toString()]}
+                          selectedKeys={
+                            field.value !== undefined
+                              ? [field.value.toString()]
+                              : []
+                          }
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value, 10))
                           }
