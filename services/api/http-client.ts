@@ -310,3 +310,4 @@ export const buildingClient = new HttpClient(API_URLS.LOCATION); // Using same b
 export const floorClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
 export const roomClient = new HttpClient(API_URLS.LOCATION); // Using same base URL as location
 export const enrollmentClient = new HttpClient(API_URLS.ENROLLMENT); // Using same base URL as enrollment
+export const lecturerClient = new HttpClient(API_URLS.AUTH);

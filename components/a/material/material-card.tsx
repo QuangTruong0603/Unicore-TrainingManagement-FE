@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Card, CardHeader, CardBody, CardFooter } from "@heroui/react";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Download } from "lucide-react";
 
 import { MaterialType } from "@/services/material-type/material-type.schema";
 import { Material } from "@/services/material/material.schema";
@@ -40,6 +40,20 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
         )}
       </CardBody>
       <CardFooter className="flex justify-end gap-2">
+        {material.fileUrl && (
+          <Button
+            download
+            isIconOnly
+            as="a"
+            color="primary"
+            href={material.fileUrl}
+            size="sm"
+            target="_blank"
+            variant="flat"
+          >
+            <Download size={16} />
+          </Button>
+        )}
         <Button
           isIconOnly
           color="warning"

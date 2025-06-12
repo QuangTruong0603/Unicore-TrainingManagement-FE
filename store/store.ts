@@ -6,6 +6,7 @@ import coursesByMajorReducer from "./slices/coursesByMajorSlice";
 import semesterReducer from "./slices/semesterSlice";
 import classReducer from "./slices/classSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
+import lecturerReducer from "./slices/lecturerSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     semester: semesterReducer,
     class: classReducer,
     enrollment: enrollmentReducer,
+    lecturer: lecturerReducer,
   },
 });
 
