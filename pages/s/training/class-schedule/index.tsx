@@ -35,7 +35,7 @@ const ClassSchedulePage: React.FC = () => {
   // Fetch student enrollments for the selected semester
   const { data: enrollmentsData, isLoading: isLoadingEnrollments } =
     useStudentEnrollments(studentInfo?.id || "", selectedSemesterId);
-  
+
   const semesters = semestersData?.data?.data || [];
   const enrollments = enrollmentsData?.data || [];
   const shifts: Shift[] = shiftsData?.data || []; // Get the selected semester to show number of weeks
@@ -84,7 +84,7 @@ const ClassSchedulePage: React.FC = () => {
           (a, b) =>
             new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
         );
-      
+
       if (upcomingSemesters.length > 0) {
         currentSemester = upcomingSemesters[0];
         currentWeek = 1;
@@ -109,7 +109,7 @@ const ClassSchedulePage: React.FC = () => {
   useEffect(() => {
     if (semesters.length > 0 && !selectedSemesterId) {
       const { currentSemester, currentWeek } = getCurrentSemesterAndWeek();
-      
+
       if (currentSemester) {
         setSelectedSemesterId(currentSemester.id);
         setSelectedWeek(currentWeek);

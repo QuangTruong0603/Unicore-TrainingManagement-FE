@@ -73,11 +73,13 @@ const EnrollmentResultPage = () => {
 
   const getEnrollmentStatusColor = (status: number) => {
     switch (status) {
-      case 0: // Pending
+      case 1:
         return "warning";
-      case 1: // Approved
+      case 3:
         return "success";
-      case 2: // Rejected
+      case 2:
+        return "secondary";
+      case 4:
         return "danger";
       default:
         return "default";
@@ -86,12 +88,14 @@ const EnrollmentResultPage = () => {
 
   const getEnrollmentStatusText = (status: number) => {
     switch (status) {
-      case 0:
-        return "Pending";
       case 1:
         return "Approved";
       case 2:
-        return "Rejected";
+        return "Started";
+      case 3:
+        return "Passed";
+      case 4:
+        return "Failed";
       default:
         return "Unknown";
     }

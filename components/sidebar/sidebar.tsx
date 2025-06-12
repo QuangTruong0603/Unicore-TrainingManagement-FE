@@ -11,7 +11,6 @@ import {
   BookOpen,
   Calendar,
   CalendarRange,
-  FileText,
   User,
   GraduationCap,
   Book,
@@ -111,14 +110,14 @@ const Sidebar: React.FC<ISidebarProps> = ({
           icon: <Calendar size={20} />,
         },
         {
+          key: "/a/training/enrollments",
+          title: "Enrollments",
+          icon: <UserPlus size={20} />,
+        },
+        {
           key: "/a/training/exam-schedule",
           title: "Exam schedule",
           icon: <CalendarRange size={20} />,
-        },
-        {
-          key: "/a/training/documents",
-          title: "Documents",
-          icon: <FileText size={20} />,
         },
       ],
     },

@@ -16,6 +16,7 @@ import semesterReducer from "./slices/semesterSlice";
 import materialReducer from "./slices/materialSlice";
 import classReducer from "./slices/classSlice";
 import shiftReducer from "./slices/shiftSlice";
+import enrollmentReducer from "./slices/enrollmentSlice";
 import lecturerReducer from "./slices/lecturerSlice";
 
 export const store = configureStore({
@@ -36,6 +37,7 @@ export const store = configureStore({
     material: materialReducer,
     class: classReducer,
     shift: shiftReducer,
+    enrollment: enrollmentReducer,
     lecturer: lecturerReducer,
   },
 });
