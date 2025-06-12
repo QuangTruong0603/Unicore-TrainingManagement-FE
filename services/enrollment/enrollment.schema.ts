@@ -116,12 +116,12 @@ export type GrpcAcademicClassData = z.infer<typeof grpcAcademicClassDataSchema>;
 // Enrollment Filter Schema
 export const enrollmentFilterSchema = z.object({
   status: z.number().optional(),
-  studentId: z.string().optional(),
   academicClassId: z.string().optional(),
   semesterId: z.string().optional(),
   courseId: z.string().optional(),
   studentCode: z.string().optional(),
-  createdDateRange: z.tuple([z.string(), z.string()]).optional(),
+  fromDate: z.date().optional(),
+  toDate: z.date().optional(),
 });
 
 export type EnrollmentFilter = z.infer<typeof enrollmentFilterSchema>;

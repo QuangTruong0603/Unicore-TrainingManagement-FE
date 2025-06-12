@@ -37,10 +37,6 @@ export const enrollmentService = {
       params["Filter.Status"] = query.filters.status.toString();
     }
 
-    if (query.filters?.studentId) {
-      params["Filter.StudentId"] = query.filters.studentId;
-    }
-
     if (query.filters?.academicClassId) {
       params["Filter.AcademicClassId"] = query.filters.academicClassId;
     }
@@ -57,6 +53,14 @@ export const enrollmentService = {
       params["Filter.StudentCode"] = query.filters.studentCode;
     }
 
+    if (query.filters?.fromDate) {
+      params["Filter.FromDate"] = query.filters.fromDate.toISOString();
+    }
+
+    if (query.filters?.toDate) {
+      params["Filter.ToDate"] = query.filters.toDate.toISOString();
+    }
+
     // Create URLSearchParams object to handle multiple values for the same parameter
     const searchParams = new URLSearchParams();
 
@@ -64,15 +68,6 @@ export const enrollmentService = {
     Object.entries(params).forEach(([key, value]) => {
       searchParams.append(key, value);
     });
-
-    // Add date range if provided
-    if (query.filters?.createdDateRange?.length === 2) {
-      searchParams.append(
-        "Filter.StartDate",
-        query.filters.createdDateRange[0]
-      );
-      searchParams.append("Filter.EndDate", query.filters.createdDateRange[1]);
-    }
 
     return enrollmentClient.get(`${API_ENDPOINTS.ENROLLMENTS}/page`, {
       params: searchParams,
@@ -104,6 +99,7 @@ export const enrollmentService = {
       }
     );
   },
+
   checkEnrollmentExists: async (
     studentId: string,
     academicClassId: string
@@ -118,6 +114,7 @@ export const enrollmentService = {
       },
     });
   },
+
   checkMultipleEnrollments: async (
     studentId: string,
     academicClassIds: string[]
