@@ -59,7 +59,6 @@ export const trainingRoadmapSchema = z.object({
   name: z.string(),
   description: z.string(),
   code: z.string(),
-  startYear: z.number(),
   coursesGroupSemesters: z.array(coursesGroupSemesterSchema),
   trainingRoadmapCourses: z.array(trainingRoadmapCourseSchema),
   batchIds: z.array(z.string()),
@@ -80,7 +79,6 @@ export type TrainingRoadmap = z.infer<typeof trainingRoadmapSchema>;
 // TrainingRoadmap filter schema
 export const trainingRoadmapFilterSchema = z.object({
   majorIds: z.array(z.string()).optional(),
-  startYearRange: z.tuple([z.number(), z.number()]).optional(),
   code: z.string().optional(),
 });
 

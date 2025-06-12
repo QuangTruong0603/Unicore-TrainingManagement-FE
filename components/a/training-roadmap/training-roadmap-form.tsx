@@ -168,36 +168,6 @@ export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
         />
       </div>
 
-      {/* Start Year */}
-      <div className="form-group">
-        <label
-          className="block text-sm font-medium text-gray-700 mb-1"
-          htmlFor="startYear"
-        >
-          Start Year <span className="text-red-500">*</span>
-        </label>
-        <Controller
-          control={control}
-          name="startYear"
-          render={({ field: { onChange, value, ...rest } }) => (
-            <Input
-              className="w-full"
-              errorMessage={errors.startYear?.message}
-              id="startYear"
-              isDisabled={isSubmitting}
-              isInvalid={!!errors.startYear}
-              max={currentYear + 10}
-              min={2000}
-              placeholder="Enter start year"
-              type="number"
-              value={value?.toString()}
-              onChange={(e) => onChange(e.target.value)}
-              {...rest}
-            />
-          )}
-        />
-      </div>
-
       {/* Batch Selection */}
       <div className="form-group">
         <label

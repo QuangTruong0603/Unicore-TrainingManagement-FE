@@ -54,8 +54,8 @@ const Sidebar: React.FC<ISidebarProps> = ({
 
   // Training Manager menu items
   const adminMenuItems: IMenuItem[] = [
-    { key: "/a/students", title: "Students", icon: <Users size={20} /> },
     { key: "/a/analytics", title: "Analytics", icon: <BarChart size={20} /> },
+    { key: "/a/students", title: "Students", icon: <Users size={20} /> },
     { key: "/a/lecturers", title: "Lecturers", icon: <User size={20} /> },
     {
       key: "/a/facilities",
@@ -93,7 +93,7 @@ const Sidebar: React.FC<ISidebarProps> = ({
         },
         {
           key: "/a/academic/training-roadmap",
-          title: "Training Roadmaps",
+          title: "Roadmaps",
           icon: <Map size={20} />,
         },
       ],
@@ -193,7 +193,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
 
   const bottomMenuItems: IMenuItem[] = [
     { key: "settings", title: "Settings", icon: <Settings size={20} /> },
-    { key: "help", title: "Help", icon: <HelpCircle size={20} /> },
     {
       key: "logout",
       title: "Logout",
@@ -243,19 +242,24 @@ const Sidebar: React.FC<ISidebarProps> = ({
           </Button>
         </div>
 
-        <div className="p-4 menu-item">
-          {mainMenuItems.map((item) => (
-            <MenuItem
-              key={item.key}
-              active={activeKey === item.key}
-              activeKey={activeKey}
-              collapsed={collapsed}
-              item={item}
-              onChildClick={(key) => handleItemClick(key)}
-              onClick={() => !item.children && handleItemClick(item.key)}
-            />
-          ))}
+        {/* Scrollable menu area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 menu-item">
+            {mainMenuItems.map((item) => (
+              <MenuItem
+                key={item.key}
+                active={activeKey === item.key}
+                activeKey={activeKey}
+                collapsed={collapsed}
+                item={item}
+                onChildClick={(key) => handleItemClick(key)}
+                onClick={() => !item.children && handleItemClick(item.key)}
+              />
+            ))}
+          </div>
         </div>
+
+        {/* Fixed bottom menu */}
         <div className="p-3 mt-auto">
           {bottomMenuItems.map((item) => (
             <MenuItem

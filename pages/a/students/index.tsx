@@ -1,20 +1,14 @@
 /* eslint-disable padding-line-between-statements */
 import React, { useEffect } from "react";
-import {
-  Button,
-  Pagination,
-  Autocomplete,
-  AutocompleteItem,
-  addToast,
-} from "@heroui/react";
-import { Plus, Upload } from "lucide-react";
+import { Button, Pagination, Input, addToast } from "@heroui/react";
+import { Plus, Upload, Search } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { StudentTable } from "@/components/a/student/student-table";
 import { StudentFilter } from "@/components/a/student/student-filter";
 import { StudentModal } from "@/components/a/student/student-modal";
 import { StudentImportModal } from "@/components/a/student/student-import-modal";
-import { Student } from "@/services/student/student.schema";
+import { Student, StudentQuery } from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
 import { Batch } from "@/services/batch/batch.schema";
 import { batchService } from "@/services/batch/batch.service";
@@ -32,22 +26,6 @@ import {
 } from "@/store/slices/studentSlice";
 import { studentService } from "@/services/student/student.service";
 import "./index.scss";
-// Add useDebounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export default function StudentsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -65,47 +43,7 @@ export default function StudentsPage() {
   >({});
   const [majors, setMajors] = React.useState<Major[]>([]);
   const [batches, setBatches] = React.useState<Batch[]>([]);
-
-  // Add local states for immediate UI updates
-  const [localBatchId, setLocalBatchId] = React.useState(query.batchId || "");
-  const [localMajorId, setLocalMajorId] = React.useState(query.majorId || "");
-  const [localSearch, setLocalSearch] = React.useState(query.searchQuery || "");
-
-  // Debounce the values
-  const debouncedBatchId = useDebounce(localBatchId, 300);
-  const debouncedMajorId = useDebounce(localMajorId, 300);
-  const debouncedSearch = useDebounce(localSearch, 300);
-
-  // Update query when debounced values change
-  React.useEffect(() => {
-    dispatch(
-      setQuery({
-        ...query,
-        batchId: debouncedBatchId || undefined,
-        pageNumber: 1,
-      })
-    );
-  }, [debouncedBatchId]);
-
-  React.useEffect(() => {
-    dispatch(
-      setQuery({
-        ...query,
-        majorId: debouncedMajorId || undefined,
-        pageNumber: 1,
-      })
-    );
-  }, [debouncedMajorId]);
-
-  React.useEffect(() => {
-    dispatch(
-      setQuery({
-        ...query,
-        searchQuery: debouncedSearch,
-        pageNumber: 1,
-      })
-    );
-  }, [debouncedSearch]);
+  const [searchQuery, setSearchQuery] = React.useState(query.searchQuery || "");
 
   const fetchStudents = React.useCallback(async () => {
     try {
@@ -124,9 +62,34 @@ export default function StudentsPage() {
   React.useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
+  // New handlers for unified filter
+  const handleFilterChange = (newQuery: StudentQuery) => {
+    dispatch(setQuery(newQuery));
+  };
 
-  const handleSearch = (searchQuery: string) => {
-    setLocalSearch(searchQuery);
+  const handleFilterClear = () => {
+    setSearchQuery("");
+    dispatch(
+      setQuery({
+        pageNumber: 1,
+        pageSize: query.pageSize,
+        total: 0,
+        itemsPerpage: query.itemsPerpage,
+        by: undefined,
+        isDesc: false,
+      })
+    );
+  };
+
+  const handleSearchChange = (search: string) => {
+    setSearchQuery(search);
+    dispatch(
+      setQuery({
+        ...query,
+        pageNumber: 1,
+        searchQuery: search || undefined,
+      })
+    );
   };
 
   useEffect(() => {
@@ -316,75 +279,28 @@ export default function StudentsPage() {
               Add Student
             </Button>
           </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="md:w-1/4 w-full">
-            <Autocomplete
-              allowsCustomValue={false}
+        </div>{" "}
+        <div className="flex flex-col md:flex-row gap-4 mb-6 w-full">
+          <div className="flex-1 relative">
+            <Input
               className="w-full"
-              defaultItems={batches}
-              placeholder="Search and select a batch"
-              selectedKey={localBatchId}
-              variant="bordered"
-              onSelectionChange={(key) => {
-                setLocalBatchId(key?.toString() || "");
-              }}
-            >
-              {(batch) => (
-                <AutocompleteItem
-                  key={batch.id}
-                  textValue={
-                    batch.title
-                      ? `${batch.title} - ${batch.startYear}`
-                      : batch.title
-                  }
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold">
-                      {batch.title || "No title"}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {batch.startYear}
-                    </span>
-                  </div>
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
+              placeholder="Search students by name, email, or student code..."
+              startContent={<Search className="w-4 h-4 text-gray-400" />}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+            />
           </div>
-          <div className="md:w-1/4 w-full">
-            <Autocomplete
-              allowsCustomValue={false}
-              className="w-full"
-              defaultItems={majors}
-              placeholder="Search and select a major"
-              selectedKey={localMajorId}
-              variant="bordered"
-              onSelectionChange={(key) => {
-                setLocalMajorId(key?.toString() || "");
-              }}
-            >
-              {(major) => (
-                <AutocompleteItem
-                  key={major.id}
-                  textValue={`${major.name} - ${major.code}`}
-                >
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold">{major.name}</span>
-                    <span className="text-xs text-gray-500">{major.code}</span>
-                  </div>
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
-          </div>
-          <div className="md:w-2/4 w-full">
+          <div className="flex justify-end">
             <StudentFilter
-              searchQuery={localSearch || ""}
-              onSearchChange={handleSearch}
+              batches={batches}
+              majors={majors}
+              query={query}
+              onFilterChange={handleFilterChange}
+              onFilterClear={handleFilterClear}
             />
           </div>
         </div>
-
         <StudentTable
           expandedRows={expandedRows}
           isLoading={isLoading}
@@ -405,15 +321,13 @@ export default function StudentsPage() {
           onRowToggle={handleRowToggle}
           onSort={handleSort}
         />
-
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex justify-end">
           <Pagination
             page={query.pageNumber}
             total={Math.ceil(total / query.pageSize)}
             onChange={handlePageChange}
           />
         </div>
-
         <StudentModal
           batches={batches}
           isEdit={!!selectedStudent}
@@ -423,7 +337,6 @@ export default function StudentsPage() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
         />
-
         <StudentImportModal
           batches={batches}
           isOpen={isImportModalOpen}
@@ -431,7 +344,6 @@ export default function StudentsPage() {
           onClose={() => setIsImportModalOpen(false)}
           onSubmit={handleImport}
         />
-
         <ConfirmDialog />
       </div>
     </DefaultLayout>

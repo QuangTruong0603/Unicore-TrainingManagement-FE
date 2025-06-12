@@ -24,6 +24,7 @@ import {
 } from "@/store/slices/classSlice";
 import "./index.scss";
 import { useDebounce } from "@/hooks/useDebounce";
+import useConfirmDialog from "@/hooks/useConfirmDialog";
 import { Course } from "@/services/course/course.schema";
 import { courseService } from "@/services/course/course.service";
 import { Semester } from "@/services/semester/semester.schema";
@@ -65,13 +66,14 @@ export default function ClassesPage() {
   // Update modal
   const { isOpen: isUpdateOpen, onOpenChange: onUpdateOpenChange } =
     useDisclosure();
-
   // Registration schedule modal
   const {
     isOpen: isRegistrationOpen,
     onOpen: onRegistrationOpen,
     onOpenChange: onRegistrationOpenChange,
   } = useDisclosure();
+
+  const { confirmDialog } = useConfirmDialog();
 
   // Effect for handling debounced search
   useEffect(() => {
@@ -373,6 +375,35 @@ export default function ClassesPage() {
     }
   };
 
+  const handleDeleteClass = (academicClass: AcademicClass) => {
+    confirmDialog(
+      async () => {
+        try {
+          dispatch(setLoading(true));
+          await classService.deleteClass(academicClass.id);
+          
+          // Refresh the classes list after successful deletion
+          const response = await classService.getClasses(query);
+
+          dispatch(setClasses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        } catch (error) {
+          dispatch(setError("Failed to delete class"));
+          // eslint-disable-next-line no-console
+          console.error("Error deleting class:", error);
+        } finally {
+          dispatch(setLoading(false));
+        }
+      },
+      {
+        title: "Confirm Delete",
+        message: `Are you sure you want to delete the class "${academicClass.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
   return (
     <DefaultLayout>
       <div className="container mx-auto px-4 py-8">
@@ -448,6 +479,7 @@ export default function ClassesPage() {
             selectedClasses={selectedClasses}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
+            onDeleteClass={handleDeleteClass}
             onRegistrationToggle={handleRegistrationToggle}
             onRowToggle={toggleRow}
             onSelectedClassesChange={setSelectedClasses}

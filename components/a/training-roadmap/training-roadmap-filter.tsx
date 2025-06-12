@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import {
   Button,
   Input,
-  Select,
-  SelectItem,
+  Autocomplete,
+  AutocompleteItem,
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@heroui/react";
-import { Filter, X } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
 import {
   TrainingRoadmapFilter as FilterType,
@@ -34,71 +34,83 @@ export const TrainingRoadmapFilter: React.FC<FilterProps> = ({
   onFilterClear,
 }) => {
   const dispatch = useAppDispatch();
-  const [isOpen, setIsOpen] = useState(false);
-  const [tempFilter, setTempFilter] = useState<FilterType>(query.filters || {});
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(query.searchQuery || "");
+  const [majorSearchValue, setMajorSearchValue] = useState("");
 
-  // When popover opens, initialize temp filter with current filter
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      setTempFilter(query.filters || {});
-    }
-    setIsOpen(open);
+  // Get display value for selected major
+  const getSelectedMajorDisplay = () => {
+    if (!query.filters?.majorIds?.length) return "";
+
+    const selectedMajor = majors.find(
+      (major) => major.id === query.filters?.majorIds?.[0]
+    );
+
+    return selectedMajor ? `${selectedMajor.code} - ${selectedMajor.name}` : "";
   };
+
+  // Filter majors based on search input
+  const filteredMajors = React.useMemo(() => {
+    if (!majorSearchValue) return majors;
+
+    return majors.filter(
+      (major) =>
+        major.code.toLowerCase().includes(majorSearchValue.toLowerCase()) ||
+        major.name.toLowerCase().includes(majorSearchValue.toLowerCase())
+    );
+  }, [majors, majorSearchValue]);
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
     onSearchChange(e.target.value);
   };
-
-  // Handle major selection
+  // Handle major selection with immediate filter application
   const handleMajorChange = (selectedMajorIds: Set<string>) => {
-    setTempFilter({
-      ...tempFilter,
-      majorIds: Array.from(selectedMajorIds),
-    });
+    const newFilter = {
+      ...query.filters,
+      majorIds:
+        Array.from(selectedMajorIds).length > 0
+          ? Array.from(selectedMajorIds)
+          : undefined,
+    };
+
+    dispatch(setFilter(newFilter));
+    onFilterChange(newFilter);
   };
 
-  // Handle code filter change
+  // Handle code filter change with immediate application
   const handleCodeChange = (value: string) => {
-    setTempFilter({
-      ...tempFilter,
+    const newFilter = {
+      ...query.filters,
       code: value || undefined,
-    });
+    };
+
+    dispatch(setFilter(newFilter));
+    onFilterChange(newFilter);
+  };
+  // Check if any filters are active
+  const hasActiveFilters = () => {
+    return query.filters?.majorIds?.length || query.filters?.code;
   };
 
-  // Handle start year range change
-  const handleYearRangeChange = (index: number, value: number) => {
-    const currentRange = tempFilter.startYearRange || [
-      2020,
-      new Date().getFullYear(),
-    ];
-    const newRange = [...currentRange] as [number, number];
+  // Get active filters count
+  const getActiveFiltersCount = () => {
+    let count = 0;
 
-    newRange[index] = value;
+    if (query.filters?.majorIds?.length) count++;
+    if (query.filters?.code) count++;
 
-    setTempFilter({
-      ...tempFilter,
-      startYearRange: newRange as [number, number],
-    });
+    return count;
   };
 
-  // Apply filters
-  const handleApplyFilter = () => {
-    dispatch(setFilter(tempFilter));
-    onFilterChange(tempFilter);
-    setIsOpen(false);
-  };
-
-  // Reset filters
-  const handleResetFilter = () => {
+  // Clear all filters
+  const handleClearAll = () => {
     const emptyFilter: FilterType = {};
 
-    setTempFilter(emptyFilter);
     dispatch(setFilter(emptyFilter));
     onFilterClear();
-    setIsOpen(false);
+    setIsFilterOpen(false);
   };
 
   return (
@@ -110,121 +122,77 @@ export const TrainingRoadmapFilter: React.FC<FilterProps> = ({
           value={searchValue}
           onChange={handleSearchChange}
         />
-        <Filter
+        <Search
           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
           size={18}
         />
       </div>
 
-      <Popover isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <Popover
+        isOpen={isFilterOpen}
+        placement="bottom-end"
+        onOpenChange={setIsFilterOpen}
+      >
         <PopoverTrigger>
           <Button
-            className="min-w-[100px] h-11 px-4"
-            color="default"
-            startContent={<Filter size={18} />}
-            variant="bordered"
+            color={hasActiveFilters() ? "primary" : "default"}
+            startContent={<Filter size={16} />}
+            variant={hasActiveFilters() ? "solid" : "bordered"}
           >
-            Filter
+            Filter {hasActiveFilters() && `(${getActiveFiltersCount()})`}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0">
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Filter Roadmaps</h3>
-              <Button
-                isIconOnly
-                className="h-8 w-8"
-                color="default"
-                size="sm"
-                variant="flat"
-                onPress={() => setIsOpen(false)}
-              >
-                <X size={16} />
-              </Button>
-            </div>
-          </div>
+        <PopoverContent className="w-full">
+          <div className="px-1 py-2">
+            <div className="text-small font-bold mb-3">Filter Roadmaps</div>
 
-          <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
-            {/* Major Filter */}
-            <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="major-select"
-              >
-                Major
-              </label>
-              <Select
-                className="w-full"
-                id="major-select"
-                placeholder="Select a major"
-                selectedKeys={tempFilter.majorIds || []}
-                selectionMode="single"
-                onSelectionChange={(keys) =>
-                  handleMajorChange(keys as Set<string>)
-                }
-              >
-                {majors.map((major) => (
-                  <SelectItem key={major.id}>
-                    {major.name} ({major.code})
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
+            <div className="space-y-4 w-full">
+              {/* Major Filter */}
+              <div>
+                <div className="text-sm font-medium mb-2">Major</div>
+                <Autocomplete
+                  allowsCustomValue
+                  className="w-full"
+                  inputValue={majorSearchValue || getSelectedMajorDisplay()}
+                  items={filteredMajors}
+                  placeholder="Search for a major..."
+                  selectedKey={query.filters?.majorIds?.[0] || null}
+                  onInputChange={(value) => setMajorSearchValue(value)}
+                  onSelectionChange={(key) => {
+                    const selectedKey = key as string;
 
-            {/* Code Filter */}
-            <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="roadmap-code"
-              >
-                Roadmap Code
-              </label>
-              <Input
-                id="roadmap-code"
-                placeholder="Filter by code"
-                value={tempFilter.code || ""}
-                onChange={(e) => handleCodeChange(e.target.value)}
-              />
-            </div>
+                    handleMajorChange(
+                      selectedKey ? new Set([selectedKey]) : new Set()
+                    );
+                    setMajorSearchValue("");
+                  }}
+                >
+                  {(major) => (
+                    <AutocompleteItem key={major.id}>
+                      {`${major.code} - ${major.name}`}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+              </div>
 
-            {/* Year Range Filter */}
-            <div>
-              <label
-                className="block text-sm font-medium text-gray-700 mb-1"
-                htmlFor="start-year-range"
-              >
-                Start Year Range
-              </label>
-              <div className="flex gap-2 items-center">
+              {/* Code Filter */}
+              <div>
+                <div className="text-sm font-medium mb-2">Roadmap Code</div>
                 <Input
-                  id="start-year-range"
-                  placeholder="From year"
-                  type="number"
-                  value={tempFilter.startYearRange?.[0]?.toString() || ""}
-                  onChange={(e) =>
-                    handleYearRangeChange(0, parseInt(e.target.value))
-                  }
-                />
-                <span>to</span>
-                <Input
-                  placeholder="To year"
-                  type="number"
-                  value={tempFilter.startYearRange?.[1]?.toString() || ""}
-                  onChange={(e) =>
-                    handleYearRangeChange(1, parseInt(e.target.value))
-                  }
+                  className="w-full w-min-[200px]"
+                  placeholder="Filter by code"
+                  size="sm"
+                  value={query.filters?.code || ""}
+                  onChange={(e) => handleCodeChange(e.target.value)}
                 />
               </div>
             </div>
-          </div>
 
-          <div className="p-4 border-t flex justify-end gap-2">
-            <Button color="danger" variant="flat" onPress={handleResetFilter}>
-              Reset
-            </Button>
-            <Button color="primary" onPress={handleApplyFilter}>
-              Apply Filters
-            </Button>
+            <div className="flex justify-end gap-2 mt-4 pt-3 border-t">
+              <Button color="primary" size="sm" onPress={handleClearAll}>
+                Clear All
+              </Button>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

@@ -1,5 +1,6 @@
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { BaseResponse } from "../api";
 
 import { Course, CourseQuery } from "./course.schema";
 import {
@@ -140,6 +141,13 @@ export const courseService = {
   },
   getCoursesByMajorId: async (majorId: string): Promise<{ data: Course[] }> => {
     return courseClient.get(`${API_ENDPOINTS.COURSES}/major/${majorId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+  deleteCourse: async (courseId: string): Promise<BaseResponse<boolean>> => {
+    return courseClient.delete(`${API_ENDPOINTS.COURSES}/${courseId}`, {
       headers: {
         accept: "text/plain",
       },

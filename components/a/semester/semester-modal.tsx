@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Button,
   Input,
@@ -9,7 +9,9 @@ import {
   ModalFooter,
   ModalHeader,
   Switch,
+  DatePicker,
 } from "@heroui/react";
+import { parseDate } from "@internationalized/date";
 
 import { Semester } from "@/services/semester/semester.schema";
 import {
@@ -41,6 +43,7 @@ export function SemesterModal({
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<CreateSemesterData | UpdateSemesterData>({
     defaultValues:
       mode === "create"
@@ -62,6 +65,43 @@ export function SemesterModal({
   });
 
   const isActive = watch("isActive");
+  const startDate = watch("startDate");
+  const numberOfWeeks = watch("numberOfWeeks");
+
+  // Helper function to get next Monday from a given date
+  const getNextMonday = (date: Date): Date => {
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysUntilMonday =
+      dayOfWeek === 1 ? 0 : dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    const monday = new Date(date);
+
+    monday.setDate(date.getDate() + daysUntilMonday);
+
+    return monday;
+  };
+
+  // Helper function to calculate end Sunday based on start Monday and number of weeks
+  const calculateEndSunday = (startMonday: Date, weeks: number): Date => {
+    const endSunday = new Date(startMonday);
+    // Add (weeks * 7 - 1) days to get the Sunday of the last week
+
+    endSunday.setDate(startMonday.getDate() + (weeks * 7 - 1));
+
+    return endSunday;
+  };
+
+  // Auto-calculate endDate when startDate or numberOfWeeks changes
+  useEffect(() => {
+    if (startDate && numberOfWeeks && numberOfWeeks > 0) {
+      const startDateObj = new Date(startDate);
+      const mondayStart = getNextMonday(startDateObj);
+      const sundayEnd = calculateEndSunday(mondayStart, numberOfWeeks);
+
+      // Don't auto-adjust the startDate display, just calculate endDate based on the Monday
+      // Set endDate without validation since it's calculated
+      setValue("endDate", sundayEnd, { shouldValidate: false });
+    }
+  }, [startDate, numberOfWeeks, setValue, getNextMonday, calculateEndSunday]);
 
   // Reset form when modal opens/closes or semester changes
   useEffect(() => {
@@ -92,10 +132,19 @@ export function SemesterModal({
     data: CreateSemesterData | UpdateSemesterData
   ) => {
     try {
-      await onSubmit(data);
+      // Ensure we send the Monday start date to the backend
+      const adjustedData = {
+        ...data,
+        startDate: data.startDate
+          ? getNextMonday(new Date(data.startDate))
+          : data.startDate,
+      };
+
+      await onSubmit(adjustedData);
       onOpenChange(); // Close the modal on success
     } catch (error) {
-      console.error("Error submitting semester:", error);
+      // Error handling is managed by the parent component
+      throw error;
     }
   };
 
@@ -166,37 +215,49 @@ export function SemesterModal({
 
               <div>
                 <label className="block mb-1" htmlFor="startDate">
-                  Start Date*
+                  Start Date* (semester will start on the Monday of this week)
                 </label>
-                <Input
-                  errorMessage={errors.startDate?.message}
-                  id="startDate"
-                  isInvalid={!!errors.startDate}
-                  label="Start Date"
-                  placeholder="Select start date"
-                  type="date"
-                  {...register("startDate", {
-                    required: "Start date is required",
-                    valueAsDate: true,
-                  })}
-                />
-              </div>
+                <Controller
+                  control={control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <DatePicker
+                      errorMessage={errors.startDate?.message}
+                      isInvalid={!!errors.startDate}
+                      label="Start Date"
+                      value={
+                        field.value
+                          ? parseDate(
+                              `${field.value.getFullYear()}-${String(
+                                field.value.getMonth() + 1
+                              ).padStart(2, "0")}-${String(
+                                field.value.getDate()
+                              ).padStart(2, "0")}`
+                            )
+                          : null
+                      }
+                      onChange={(date) => {
+                        if (date) {
+                          // Create date in local timezone to avoid timezone conversion issues
+                          const jsDate = new Date(
+                            date.year,
+                            date.month - 1,
+                            date.day,
+                            12,
+                            0,
+                            0
+                          );
 
-              <div>
-                <label className="block mb-1" htmlFor="endDate">
-                  End Date*
-                </label>
-                <Input
-                  errorMessage={errors.endDate?.message}
-                  id="endDate"
-                  isInvalid={!!errors.endDate}
-                  label="End Date"
-                  placeholder="Select end date"
-                  type="date"
-                  {...register("endDate", {
-                    required: "End date is required",
-                    valueAsDate: true,
-                  })}
+                          field.onChange(jsDate);
+                        } else {
+                          field.onChange(null);
+                        }
+                      }}
+                    />
+                  )}
+                  rules={{
+                    required: "Start date is required",
+                  }}
                 />
               </div>
 

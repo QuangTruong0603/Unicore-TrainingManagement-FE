@@ -181,7 +181,7 @@ export const useAuth = () => {
       } else if (userData.role === "TrainingManager") {
         router.push("/t");
       } else if (userData.role === "Admin") {
-        router.push("/a");
+        router.push("/a/analytics");
       } else {
         router.push("/");
       }

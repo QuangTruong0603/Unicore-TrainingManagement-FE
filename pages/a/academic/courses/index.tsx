@@ -11,6 +11,7 @@ import { courseService } from "@/services/course/course.service";
 import { Major } from "@/services/major/major.schema";
 import { majorService } from "@/services/major/major.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import useConfirmDialog from "@/hooks/useConfirmDialog";
 import {
   setCourses,
   setError,
@@ -63,13 +64,14 @@ export default function CoursesPage() {
   const debouncedSearchValue = useDebounce<string>(searchInputValue, 600);
   // Add state to track expanded rows
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-
   // Create modal
   const {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
     onOpenChange: onCreateOpenChange,
   } = useDisclosure();
+
+  const { confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     const fetchMajors = async () => {
@@ -296,12 +298,40 @@ export default function CoursesPage() {
       })
     );
   };
-
   const handleRowToggle = (courseId: string) => {
     setExpandedRows((prev) => ({
       ...prev,
       [courseId]: !prev[courseId],
     }));
+  };
+
+  const handleDeleteCourse = (course: Course) => {
+    confirmDialog(
+      async () => {
+        try {
+          dispatch(setLoading(true));
+          await courseService.deleteCourse(course.id);
+
+          // Refresh the courses list after successful deletion
+          const response = await courseService.getCourses(query);
+
+          dispatch(setCourses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        } catch (error) {
+          dispatch(setError("Failed to delete course"));
+          // eslint-disable-next-line no-console
+          console.error("Error deleting course:", error);
+        } finally {
+          dispatch(setLoading(false));
+        }
+      },
+      {
+        title: "Confirm Delete",
+        message: `Are you sure you want to delete the course "${course.name}" (${course.code})?`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
   };
 
   return (
@@ -370,6 +400,7 @@ export default function CoursesPage() {
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
             onActiveToggle={handleActiveToggle}
+            onDeleteCourse={handleDeleteCourse}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
           />

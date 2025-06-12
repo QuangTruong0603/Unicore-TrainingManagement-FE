@@ -452,7 +452,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
           {columns.map((column) => (
             <TableColumn
               key={column.key}
-              className={`${column.sortable ? "cursor-pointer" : ""}`}
+              className={`${column.sortable ? "cursor-pointer" : ""} ${column.sortable && sortKey === column.key ? "text-primary" : ""}`}
               onClick={() => column.sortable && handleSort(column.key)}
             >
               <div className="flex items-center">

@@ -1,5 +1,6 @@
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { BaseResponse } from "../api";
 
 import { AcademicClassQuery } from "./class.schema";
 import {
@@ -114,7 +115,8 @@ export const classService = {
       },
     });
   },
-  deleteClass: async (id: string): Promise<any> => {
+
+  deleteClass: async (id: string): Promise<BaseResponse<boolean>> => {
     return courseClient.delete(`${API_ENDPOINTS.CLASSES}/${id}`, {
       headers: {
         accept: "text/plain",

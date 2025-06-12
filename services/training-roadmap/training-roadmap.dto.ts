@@ -23,7 +23,6 @@ export interface CreateTrainingRoadmapData {
   majorId: string;
   name: string;
   description: string;
-  startYear: number;
   coursesGroups?: {
     groupName: string;
   }[];
@@ -39,7 +38,6 @@ export interface UpdateTrainingRoadmapData {
   name?: string;
   description?: string;
   code?: string;
-  startYear?: number;
   batchIds?: string[];
   trainingRoadmapCourses?: {
     courseId: string;

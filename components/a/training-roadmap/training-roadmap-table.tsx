@@ -99,12 +99,6 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
       ),
     },
     {
-      key: "startYear",
-      title: "Start Year",
-      sortable: true,
-      render: (roadmap: TrainingRoadmap) => roadmap.startYear,
-    },
-    {
       key: "major",
       title: "Major",
       sortable: true,
