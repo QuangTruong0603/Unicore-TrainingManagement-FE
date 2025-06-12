@@ -127,3 +127,17 @@ export const useAddComponentsToTrainingRoadmap = () => {
     },
   });
 };
+
+// Mutation for deleting a training roadmap
+export const useDeleteTrainingRoadmap = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      trainingRoadmapService.deleteTrainingRoadmap(id),
+    onSuccess: () => {
+      // Invalidate the cache for the training roadmap list to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["trainingRoadmaps"] });
+    },
+  });
+};

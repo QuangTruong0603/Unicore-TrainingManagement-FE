@@ -14,8 +14,8 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import {
-  ChevronDown,
-  ChevronUp,
+  ArrowDown,
+  ArrowUp,
   Trash,
   Pencil,
   MoreVertical,
@@ -57,9 +57,9 @@ export const StudentTable: React.FC<StudentTableProps> = ({
     if (sortKey !== columnKey) return null;
 
     return sortDirection === "asc" ? (
-      <ChevronUp className="w-4 h-4" />
+      <ArrowUp className="w-4 h-4 ml-1" />
     ) : (
-      <ChevronDown className="w-4 h-4" />
+      <ArrowDown className="w-4 h-4 ml-1" />
     );
   };
 
@@ -86,7 +86,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       <TableHeader>
         <TableColumn
           key="studentCode"
-          className="cursor-pointer"
+          className={`cursor-pointer ${sortKey === "studentCode" ? "text-primary" : ""}`}
           onClick={() => onSort("studentCode")}
         >
           <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="name"
-          className="cursor-pointer"
+          className={`cursor-pointer ${sortKey === "firstName" ? "text-primary" : ""}`}
           onClick={() => onSort("firstName")}
         >
           <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="email"
-          className="cursor-pointer"
+          className={`cursor-pointer ${sortKey === "email" ? "text-primary" : ""}`}
           onClick={() => onSort("email")}
         >
           <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
         <TableColumn
           key="phoneNumber"
-          className="cursor-pointer"
+          className={`cursor-pointer ${sortKey === "phoneNumber" ? "text-primary" : ""}`}
           onClick={() => onSort("phoneNumber")}
         >
           <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         <TableColumn>Date of Birth</TableColumn>
         <TableColumn
           key="status"
-          className="cursor-pointer text-center"
+          className={`cursor-pointer text-center ${sortKey === "status" ? "text-primary" : ""}`}
           onClick={() => onSort("status")}
         >
           <div className="flex items-center gap-2">

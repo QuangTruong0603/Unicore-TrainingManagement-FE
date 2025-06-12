@@ -1,4 +1,11 @@
-import { ArrowDown, ArrowUp, Power, PowerOff } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Power,
+  PowerOff,
+  MoreVertical,
+  Trash,
+} from "lucide-react";
 import {
   Button,
   Chip,
@@ -8,6 +15,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 
 import styles from "./major-group-table.module.scss";
@@ -21,6 +32,8 @@ interface MajorGroupTableProps {
   sortDirection?: string;
   onSort?: (key: string) => void;
   onActiveToggle?: (majorGroup: MajorGroup) => void;
+  onDeleteMajorGroup?: (majorGroup: MajorGroup) => void;
+  onUpdateMajorGroup?: (majorGroup: MajorGroup) => void;
 }
 
 export const MajorGroupTable = ({
@@ -30,6 +43,8 @@ export const MajorGroupTable = ({
   sortDirection = "asc",
   onSort,
   onActiveToggle,
+  onDeleteMajorGroup,
+  onUpdateMajorGroup,
 }: MajorGroupTableProps) => {
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
@@ -109,22 +124,44 @@ export const MajorGroupTable = ({
               </Chip>
             </TableCell>
             <TableCell>
-              <Button
-                className="flex items-center gap-1 h-8 px-3 font-medium"
-                color={majorGroup.isActive ? "danger" : "success"}
-                size="sm"
-                startContent={
-                  majorGroup.isActive ? (
-                    <PowerOff size={16} />
-                  ) : (
-                    <Power size={16} />
-                  )
-                }
-                variant="flat"
-                onPress={() => onActiveToggle && onActiveToggle(majorGroup)}
-              >
-                {majorGroup.isActive ? "Deactivate" : "Activate"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button isIconOnly size="sm" variant="light">
+                      <MoreVertical size={16} />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu>
+                    <DropdownItem
+                      key="toggle"
+                      startContent={
+                        majorGroup.isActive ? (
+                          <PowerOff size={16} />
+                        ) : (
+                          <Power size={16} />
+                        )
+                      }
+                      onPress={() =>
+                        onActiveToggle && onActiveToggle(majorGroup)
+                      }
+                    >
+                      {majorGroup.isActive ? "Deactivate" : "Activate"}
+                    </DropdownItem>
+                    <DropdownItem
+                      key="delete"
+                      className="text-danger"
+                      color="danger"
+                      isDisabled={!onDeleteMajorGroup}
+                      startContent={<Trash size={16} />}
+                      onPress={() =>
+                        onDeleteMajorGroup && onDeleteMajorGroup(majorGroup)
+                      }
+                    >
+                      Delete
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              </div>
             </TableCell>
           </TableRow>
         )}

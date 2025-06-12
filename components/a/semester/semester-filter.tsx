@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { Input, Select, SelectItem } from "@heroui/react";
+import React, { useState } from "react";
+import {
+  Button,
+  Input,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@heroui/react";
+import { Filter } from "lucide-react";
 
 import {
   SemesterFilter,
@@ -13,214 +20,137 @@ interface SemesterFilterProps {
 }
 
 interface FilterState {
-  semesterNumber: number | null;
   year: number | null;
-  isActive: boolean | null;
-  startDate: Date | null;
-  endDate: Date | null;
   numberOfWeeks: number | null;
 }
 
 export function SemesterFilterComponent({
   query,
   onFilterChange,
+  onFilterClear,
 }: SemesterFilterProps) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>({
-    semesterNumber: null,
-    year: null,
-    isActive: null,
-    startDate: null,
-    endDate: null,
-    numberOfWeeks: null,
+    year: query.filters?.year ?? null,
+    numberOfWeeks: query.filters?.numberOfWeeks ?? null,
   });
-
-  // Initialize filter state based on current query
-  useEffect(() => {
-    if (query.filters) {
-      setFilterState({
-        semesterNumber: query.filters.semesterNumber ?? null,
-        year: query.filters.year ?? null,
-        isActive: query.filters.isActive ?? null,
-        startDate: query.filters.startDate ?? null,
-        endDate: query.filters.endDate ?? null,
-        numberOfWeeks: query.filters.numberOfWeeks ?? null,
-      });
-    }
-  }, [query]);
-
-  // Update filter state based on changed fields
-  const updateFilter = (key: keyof FilterState, value: any) => {
-    const newFilterState = { ...filterState, [key]: value };
+  const handleYearChange = (value: string) => {
+    const year = value ? parseInt(value, 10) : null;
+    const newFilterState = { ...filterState, year };
 
     setFilterState(newFilterState);
-    // Apply the filters immediately
     applyFilters(newFilterState);
   };
 
-  // Apply filters
-  const applyFilters = (state: FilterState = filterState) => {
-    const newFilters: SemesterFilter = {};
+  const handleNumberOfWeeksChange = (value: string) => {
+    const numberOfWeeks = value ? parseInt(value, 10) : null;
+    const newFilterState = { ...filterState, numberOfWeeks };
 
-    if (state.semesterNumber !== null) {
-      newFilters.semesterNumber = state.semesterNumber;
-    }
+    setFilterState(newFilterState);
+    applyFilters(newFilterState);
+  };
+
+  const applyFilters = (state: FilterState) => {
+    const newFilters: SemesterFilter = {};
 
     if (state.year !== null) {
       newFilters.year = state.year;
-    }
-
-    if (state.isActive !== null) {
-      newFilters.isActive = state.isActive;
-    }
-
-    if (state.startDate !== null) {
-      newFilters.startDate = state.startDate;
-    }
-
-    if (state.endDate !== null) {
-      newFilters.endDate = state.endDate;
     }
 
     if (state.numberOfWeeks !== null) {
       newFilters.numberOfWeeks = state.numberOfWeeks;
     }
 
-    // Apply the filters to the query
     onFilterChange({
       ...query,
+      pageNumber: 1,
       filters: Object.keys(newFilters).length > 0 ? newFilters : undefined,
     });
   };
 
+  const handleClearAll = () => {
+    setFilterState({
+      year: null,
+      numberOfWeeks: null,
+    });
+    onFilterClear();
+    setIsFilterOpen(false);
+  };
+
+  const hasActiveFilters = () => {
+    return (
+      query.filters?.year !== undefined ||
+      query.filters?.numberOfWeeks !== undefined
+    );
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+
+    if (query.filters?.year !== undefined) count++;
+    if (query.filters?.numberOfWeeks !== undefined) count++;
+
+    return count;
+  };
+
   return (
-    <div className="mb-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-        <div>
-          <label className="text-sm mb-1 block" htmlFor="semester-number-input">
-            Semester Number
-          </label>
-          <Input
-            id="semester-number-input"
-            max={3}
-            min={1}
-            placeholder="Enter semester number"
-            size="sm"
-            type="number"
-            value={filterState.semesterNumber?.toString() || ""}
-            onValueChange={(value) =>
-              updateFilter("semesterNumber", value ? parseInt(value, 10) : null)
-            }
-          />
-        </div>
-
-        <div>
-          <label className="text-sm mb-1 block" htmlFor="year-input">
-            Year
-          </label>
-          <Input
-            id="year-input"
-            max={2030}
-            min={2020}
-            placeholder="Enter year"
-            size="sm"
-            type="number"
-            value={filterState.year?.toString() || ""}
-            onValueChange={(value) =>
-              updateFilter("year", value ? parseInt(value, 10) : null)
-            }
-          />
-        </div>
-
-        <div>
-          <label
-            className="text-sm mb-1 block"
-            htmlFor="semester-status-select"
+    <div className="flex items-center justify-end gap-2 mb-4">
+      <Popover
+        isOpen={isFilterOpen}
+        placement="bottom-end"
+        onOpenChange={setIsFilterOpen}
+      >
+        <PopoverTrigger>
+          <Button
+            color={hasActiveFilters() ? "primary" : "default"}
+            startContent={<Filter size={16} />}
+            variant={hasActiveFilters() ? "solid" : "bordered"}
           >
-            Status
-          </label>
-          <Select
-            id="semester-status-select"
-            placeholder="Select status"
-            selectedKeys={
-              filterState.isActive !== null
-                ? [filterState.isActive.toString()]
-                : []
-            }
-            size="sm"
-            onSelectionChange={(keys) => {
-              const selectedKey = Array.from(keys)[0]?.toString();
+            Filter {hasActiveFilters() && `(${getActiveFiltersCount()})`}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full">
+          <div className="px-1 py-2">
+            <div className="text-small font-bold mb-3">Filter Semesters</div>
 
-              if (selectedKey === undefined) {
-                updateFilter("isActive", null);
-              } else {
-                updateFilter("isActive", selectedKey === "true");
-              }
-            }}
-          >
-            <SelectItem key="true">Active</SelectItem>
-            <SelectItem key="false">Inactive</SelectItem>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-sm mb-1 block" htmlFor="number-of-weeks-input">
-            Number of Weeks
-          </label>
-          <Input
-            id="number-of-weeks-input"
-            min={1}
-            placeholder="Enter number of weeks"
-            size="sm"
-            type="number"
-            value={filterState.numberOfWeeks?.toString() || ""}
-            onValueChange={(value) =>
-              updateFilter("numberOfWeeks", value ? parseInt(value, 10) : null)
-            }
-          />
-        </div>
-
-        <div>
-          <label className="text-sm mb-1 block" htmlFor="start-date-input">
-            Start Date
-          </label>          <Input
-            id="start-date-input"
-            placeholder="Select start date"
-            size="sm"
-            type="date"
-            value={
-              filterState.startDate
-                ? filterState.startDate.toISOString().split("T")[0]
-                : ""
-            }
-            onChange={(e) => {
-              const value = e.target.value;
-              
-              updateFilter("startDate", value ? new Date(value) : null);
-            }}
-          />
-        </div>
-
-        <div>
-          <label className="text-sm mb-1 block" htmlFor="end-date-input">
-            End Date
-          </label>          <Input
-            id="end-date-input"
-            placeholder="Select end date"
-            size="sm"
-            type="date"
-            value={
-              filterState.endDate
-                ? filterState.endDate.toISOString().split("T")[0]
-                : ""
-            }
-            onChange={(e) => {
-              const value = e.target.value;
-              
-              updateFilter("endDate", value ? new Date(value) : null);
-            }}
-          />
-        </div>
-      </div>
+            <div className="space-y-4">
+              {/* Year Filter */}
+              <div>
+                <div className="text-sm font-medium mb-2">Year</div>
+                <Input
+                  className="w-full min-w-[200px]"
+                  max={2030}
+                  min={2020}
+                  placeholder="Enter year"
+                  size="sm"
+                  type="number"
+                  value={filterState.year?.toString() || ""}
+                  onValueChange={handleYearChange}
+                />
+              </div>
+              {/* Number of Weeks Filter */}
+              <div>
+                <div className="text-sm font-medium mb-2">Number of Weeks</div>
+                <Input
+                  className="w-full"
+                  max={52}
+                  min={1}
+                  placeholder="Enter number of weeks"
+                  size="sm"
+                  type="number"
+                  value={filterState.numberOfWeeks?.toString() || ""}
+                  onValueChange={handleNumberOfWeeksChange}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4 pt-3 border-t">
+              <Button color="primary" size="sm" onPress={handleClearAll}>
+                Clear All
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

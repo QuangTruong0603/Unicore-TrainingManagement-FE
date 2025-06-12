@@ -1,8 +1,33 @@
 .sidebar-container {
   background-color: #fdfdfd;
 }
+
 .sidebar-content {
-  overflow: unset;
+  overflow: hidden; // Hide overflow on main container
+  
+  // Style the scrollbar for the scrollable area
+  .overflow-y-auto {
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 3px;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    // For Firefox
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  }
 }
 
 .menu-item-container {

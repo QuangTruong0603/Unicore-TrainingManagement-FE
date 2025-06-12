@@ -20,6 +20,7 @@ import { useDepartments } from "@/services/department/department.hooks";
 import { useMajorGroups } from "@/services/major-group/major-group.hooks";
 import { useMajors } from "@/services/major/major.hooks";
 import { useAppDispatch } from "@/store/hooks";
+import useConfirmDialog from "@/hooks/useConfirmDialog";
 import { setQuery as setDepartmentQuery } from "@/store/slices/departmentSlice";
 import { setQuery as setMajorGroupQuery } from "@/store/slices/majorGroupSlice";
 import { setQuery as setMajorQuery } from "@/store/slices/majorSlice";
@@ -70,6 +71,8 @@ export default function MajorPage() {
   } = useDisclosure();
   const [isDepartmentSubmitting, setIsDepartmentSubmitting] = useState(false);
 
+  const { confirmDialog } = useConfirmDialog();
+
   // Function to get the add button label based on activeTab
   const getAddButtonLabel = () => {
     switch (activeTab) {
@@ -97,7 +100,9 @@ export default function MajorPage() {
         onDepartmentModalOpen();
         break;
     }
-  }; // Major state and hooks
+  };
+
+  // Major state and hooks
   const {
     majors,
     query: majorQuery,
@@ -107,12 +112,16 @@ export default function MajorPage() {
     createMajor,
     activateMajor,
     deactivateMajor,
+    deleteMajor,
   } = useMajors();
 
   const [majorSearchInput, setMajorSearchInput] = useState(
     () => majorQuery.searchQuery || ""
   );
-  const debouncedMajorSearch = useDebounce<string>(majorSearchInput, 600); // MajorGroup state and hooks
+
+  const debouncedMajorSearch = useDebounce<string>(majorSearchInput, 600);
+
+  // MajorGroup state and hooks
   const {
     majorGroups,
     query: majorGroupQuery,
@@ -122,6 +131,7 @@ export default function MajorPage() {
     createMajorGroup,
     activateMajorGroup,
     deactivateMajorGroup,
+    deleteMajorGroup,
   } = useMajorGroups();
 
   const [majorGroupSearchInput, setMajorGroupSearchInput] = useState(
@@ -131,6 +141,7 @@ export default function MajorPage() {
     majorGroupSearchInput,
     600
   );
+
   // Department state and hooks
   const {
     departments,
@@ -141,6 +152,7 @@ export default function MajorPage() {
     createDepartment,
     activateDepartment,
     deactivateDepartment,
+    deleteDepartment,
   } = useDepartments();
 
   const [departmentSearchInput, setDepartmentSearchInput] = useState(
@@ -279,6 +291,68 @@ export default function MajorPage() {
     },
     [dispatch, departmentQuery]
   );
+  
+  // Delete handlers
+  const handleMajorDelete = (major: any) => {
+    confirmDialog(
+      async () => {
+        try {
+          await deleteMajor(major.id);
+          // Refresh will be handled by the hook
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting major:", error);
+        }
+      },
+      {
+        title: "Confirm Delete",
+        message: `Are you sure you want to delete the major "${major.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
+  const handleMajorGroupDelete = (majorGroup: any) => {
+    confirmDialog(
+      async () => {
+        try {
+          await deleteMajorGroup(majorGroup.id);
+          // Refresh will be handled by the hook
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting major group:", error);
+        }
+      },
+      {
+        title: "Confirm Delete",
+        message: `Are you sure you want to delete the major group "${majorGroup.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
+  const handleDepartmentDelete = (department: any) => {
+    confirmDialog(
+      async () => {
+        try {
+          await deleteDepartment(department.id);
+          // Refresh will be handled by the hook
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting department:", error);
+        }
+      },
+      {
+        title: "Confirm Delete",
+        message: `Are you sure you want to delete the department "${department.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  };
+  
   // No helper function needed
 
   return (
@@ -321,7 +395,6 @@ export default function MajorPage() {
               </div>
             </div>
             <div className="bg-white rounded-lg shadow">
-              {" "}
               <MajorTable
                 isLoading={isMajorLoading}
                 majors={majors}
@@ -332,6 +405,7 @@ export default function MajorPage() {
                     ? deactivateMajor(major.id)
                     : activateMajor(major.id)
                 }
+                onDeleteMajor={handleMajorDelete}
                 onSort={handleMajorSort}
               />
             </div>
@@ -367,7 +441,6 @@ export default function MajorPage() {
               </div>
             </div>
             <div className="bg-white rounded-lg shadow">
-              {" "}
               <MajorGroupTable
                 isLoading={isMajorGroupLoading}
                 majorGroups={majorGroups}
@@ -378,6 +451,7 @@ export default function MajorPage() {
                     ? deactivateMajorGroup(majorGroup.id)
                     : activateMajorGroup(majorGroup.id)
                 }
+                onDeleteMajorGroup={handleMajorGroupDelete}
                 onSort={handleMajorGroupSort}
               />
             </div>
@@ -401,8 +475,7 @@ export default function MajorPage() {
                     placeholder="Search departments..."
                     value={departmentSearchInput}
                     onChange={(e) => setDepartmentSearchInput(e.target.value)}
-                  />
-                  <Search
+                  />                  <Search
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                     size={18}
                   />
@@ -427,6 +500,7 @@ export default function MajorPage() {
                     : activateDepartment(department.id)
                 }
                 onCreateDepartment={createDepartment}
+                onDeleteDepartment={handleDepartmentDelete}
                 onSort={handleDepartmentSort}
               />
             </div>
@@ -480,6 +554,7 @@ export default function MajorPage() {
                   }
                 );
               } else {
+                // eslint-disable-next-line no-console
                 console.error("Invalid data: Missing required fields.");
               }
             } finally {

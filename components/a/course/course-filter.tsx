@@ -1,20 +1,13 @@
-import { useEffect, useState } from "react";
-import { Filter } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Filter, X } from "lucide-react";
 import {
   Autocomplete,
   AutocompleteItem,
   Button,
   Chip,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Select,
-  SelectItem,
-  Slider,
-  useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
 } from "@heroui/react";
 
 import { CourseQuery } from "@/services/course/course.schema";
@@ -29,654 +22,403 @@ interface CourseFilterProps {
   onFilterClear: () => void;
 }
 
-interface FilterState {
-  minCredit: number;
-  maxCredit: number;
-  majorIds: string[];
-  isActive: boolean | null;
-  isRequired: boolean | null;
-  isOpenForAll: boolean | null;
-  preCourseIds: string[];
-  parallelCourseIds: string[];
-}
-
-interface FilterChip {
-  id: string;
-  label: string;
-  onRemove: () => void;
-}
-
 export function CourseFilter({
   query,
   majors,
   onFilterChange,
   onFilterClear,
 }: CourseFilterProps) {
-  // Use useDisclosure for modal control
-  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-  const [filterState, setFilterState] = useState<FilterState>({
-    minCredit: 0,
-    maxCredit: 10,
-    majorIds: [],
-    isActive: null,
-    isRequired: null,
-    isOpenForAll: null,
-    preCourseIds: [],
-    parallelCourseIds: [],
-  });
-  const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
 
   // Fetch all courses for the dropdowns
   useEffect(() => {
     const fetchAllCourses = async () => {
-      if (isOpen) {
-        try {
-          // Use a larger page size to get most courses in one request
-          const response = await courseService.getCourses({
-            pageNumber: 1,
-            itemsPerpage: 100,
-            orderBy: "name",
-            isDesc: false,
-          });
+      try {
+        // Use a larger page size to get most courses in one request
+        const response = await courseService.getCourses({
+          pageNumber: 1,
+          itemsPerpage: 100,
+          orderBy: "name",
+          isDesc: false,
+        });
 
-          setCourses(response.data.data);
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("Failed to fetch courses", error);
-        } finally {
-        }
+        setCourses(response.data.data);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to fetch courses", error);
       }
     };
 
     fetchAllCourses();
-  }, [isOpen]);
+  }, []);
+  // Immediate filter handler
 
-  // Update filter state based on changed fields
-  const updateFilter = (key: keyof FilterState, value: any) => {
-    setFilterState((prev) => ({ ...prev, [key]: value }));
-  };
-  // Remove a specific filter
-  const removeFilter = (id: string) => {
-    // Handle removing specific filters
-    if (id === "credit") {
-      updateFilter("minCredit", 0);
-      updateFilter("maxCredit", 10);
-    } else if (id === "status") {
-      updateFilter("isOpenForAll", null);
-    } else if (id === "active") {
-      updateFilter("isActive", null);
-    } else if (id === "majorIds") {
-      updateFilter("majorIds", []);
-    } else if (id === "requiredCourse") {
-      updateFilter("isRequired", null);
-    } else if (id === "preCourseIds") {
-      updateFilter("preCourseIds", []);
-    } else if (id === "parallelCourseIds") {
-      updateFilter("parallelCourseIds", []);
-    } else if (id === "openForAll") {
-      updateFilter("isOpenForAll", null);
-    }
-
-    // Remove chip
-    setFilterChips((chips) => chips.filter((chip) => chip.id !== id));
-
-    // Update the query with the new filter state
-    applyFiltersToQuery();
-  };
-
-  // Apply all filters to query
-  const applyFiltersToQuery = () => {
-    // Create a new query with current filter state
-    const newQuery: CourseQuery = {
+  const handleMajorChange = (selectedKey: string) => {
+    onFilterChange({
       ...query,
-      pageNumber: 1, // Reset to first page when applying filters
+      pageNumber: 1,
       filters: {
-        creditRange:
-          filterState.minCredit > 0 || filterState.maxCredit < 10
-            ? [filterState.minCredit, filterState.maxCredit]
-            : undefined,
-        majorIds:
-          filterState.majorIds.length > 0 ? filterState.majorIds : undefined,
-        isActive: filterState.isActive,
-        isRequired: filterState.isRequired,
-        isOpenForAll: filterState.isOpenForAll,
-        preCourseIds:
-          filterState.preCourseIds.length > 0
-            ? filterState.preCourseIds
-            : undefined,
-        parallelCourseIds:
-          filterState.parallelCourseIds.length > 0
-            ? filterState.parallelCourseIds
-            : undefined,
+        ...query.filters,
+        majorIds: selectedKey ? [selectedKey] : undefined,
       },
-    };
-
-    onFilterChange(newQuery);
+    });
   };
 
-  // Apply filters from the modal
-  const applyFilters = () => {
-    const newChips: FilterChip[] = [];
+  const handleOpenForAllChange = (isOpenForAll: string) => {
+    const openValue =
+      isOpenForAll === "all" ? undefined : isOpenForAll === "true";
 
-    // Add credit filter chip
-    if (filterState.minCredit > 0 || filterState.maxCredit < 10) {
-      newChips.push({
-        id: "credit",
-        label: `Credits: ${filterState.minCredit} - ${filterState.maxCredit}`,
-        onRemove: () => removeFilter("credit"),
-      });
+    onFilterChange({
+      ...query,
+      pageNumber: 1,
+      filters: {
+        ...query.filters,
+        isOpenForAll: openValue,
+      },
+    });
+  };
+
+  const handlePreCourseChange = (
+    key: string | null,
+    action: "add" | "remove",
+    courseId?: string
+  ) => {
+    const currentIds = query.filters?.preCourseIds || [];
+    let newIds: string[];
+
+    if (action === "add" && key && !currentIds.includes(key)) {
+      newIds = [...currentIds, key];
+    } else if (action === "remove" && courseId) {
+      newIds = currentIds.filter((id) => id !== courseId);
+    } else {
+      return;
     }
 
-    // Add major filter chip
-    if (filterState.majorIds.length > 0) {
-      const selectedMajors = majors
-        .filter((m) => filterState.majorIds.includes(m.id))
-        .map((m) => m.code)
-        .join(", ");
+    onFilterChange({
+      ...query,
+      pageNumber: 1,
+      filters: {
+        ...query.filters,
+        preCourseIds: newIds.length > 0 ? newIds : undefined,
+      },
+    });
+  };
 
-      newChips.push({
-        id: "majorIds",
-        label: `Majors: ${selectedMajors}`,
-        onRemove: () => removeFilter("majorIds"),
-      });
+  const handleParallelCourseChange = (
+    key: string | null,
+    action: "add" | "remove",
+    courseId?: string
+  ) => {
+    const currentIds = query.filters?.parallelCourseIds || [];
+    let newIds: string[];
+
+    if (action === "add" && key && !currentIds.includes(key)) {
+      newIds = [...currentIds, key];
+    } else if (action === "remove" && courseId) {
+      newIds = currentIds.filter((id) => id !== courseId);
+    } else {
+      return;
     }
 
-    // Add active status chip
-    if (filterState.isActive !== null) {
-      newChips.push({
-        id: "active",
-        label: `Active: ${filterState.isActive ? "Yes" : "No"}`,
-        onRemove: () => removeFilter("active"),
-      });
-    }
+    onFilterChange({
+      ...query,
+      pageNumber: 1,
+      filters: {
+        ...query.filters,
+        parallelCourseIds: newIds.length > 0 ? newIds : undefined,
+      },
+    });
+  };
 
-    // Add required course chip
-    if (filterState.isRequired !== null) {
-      newChips.push({
-        id: "requiredCourse",
-        label: `Required Course: ${filterState.isRequired ? "Yes" : "No"}`,
-        onRemove: () => removeFilter("requiredCourse"),
-      });
-    }
+  // Check if any filters are active
+  const hasActiveFilters = () => {
+    return (
+      query.filters?.creditRange ||
+      query.filters?.majorIds?.length ||
+      query.filters?.isActive !== undefined ||
+      query.filters?.isRequired !== undefined ||
+      query.filters?.isOpenForAll !== undefined ||
+      query.filters?.preCourseIds?.length ||
+      query.filters?.parallelCourseIds?.length
+    );
+  };
+  // Get active filters count
+  const getActiveFiltersCount = () => {
+    let count = 0;
 
-    // Add pre-course IDs chip
-    if (filterState.preCourseIds.length > 0) {
-      newChips.push({
-        id: "preCourseIds",
-        label: `Pre-Courses: ${filterState.preCourseIds.length}`,
-        onRemove: () => removeFilter("preCourseIds"),
-      });
-    }
+    if (query.filters?.creditRange) count++;
+    if (query.filters?.majorIds?.length) count++;
+    if (query.filters?.isActive !== undefined) count++;
+    if (query.filters?.isRequired !== undefined) count++;
+    if (query.filters?.isOpenForAll !== undefined) count++;
+    if (query.filters?.preCourseIds?.length) count++;
+    if (query.filters?.parallelCourseIds?.length) count++;
 
-    // Add parallel course IDs chip
-    if (filterState.parallelCourseIds.length > 0) {
-      newChips.push({
-        id: "parallelCourseIds",
-        label: `Parallel Courses: ${filterState.parallelCourseIds.length}`,
-        onRemove: () => removeFilter("parallelCourseIds"),
-      });
-    }
-
-    // Add open for all toggle chip
-    if (filterState.isOpenForAll !== null) {
-      newChips.push({
-        id: "openForAll",
-        label: `Open For All: ${filterState.isOpenForAll ? "Yes" : "No"}`,
-        onRemove: () => removeFilter("openForAll"),
-      });
-    }
-
-    setFilterChips(newChips);
-    applyFiltersToQuery();
-    onClose();
+    return count;
   };
 
   // Clear all filters
-  const clearFilters = () => {
-    setFilterState({
-      minCredit: 0,
-      maxCredit: 10,
-      majorIds: [],
-      isActive: null,
-      isRequired: null,
-      isOpenForAll: null,
-      preCourseIds: [],
-      parallelCourseIds: [],
-    });
-    setFilterChips([]);
+  const handleClearAll = () => {
     onFilterClear();
+    setIsFilterOpen(false);
   };
 
-  // Calculate if any filters are active
-  const hasActiveFilters = filterChips.length > 0;
+  const selectedMajorId = query.filters?.majorIds?.[0] || "";
+  const isOpenForAll = query.filters?.isOpenForAll;
+  const preCourseIds = query.filters?.preCourseIds || [];
+  const parallelCourseIds = query.filters?.parallelCourseIds || [];
 
   return (
-    <div>
-      <div>
-        <Button
-          className="flex items-center gap-1"
-          color={hasActiveFilters ? "primary" : "default"}
-          variant={hasActiveFilters ? "solid" : "bordered"}
-          onPress={onOpen}
-        >
-          <Filter size={16} />
-          <span>Filters {hasActiveFilters && `(${filterChips.length})`}</span>
-        </Button>
-      </div>
-
-      {/* Filter modal */}
-      <Modal
-        isOpen={isOpen}
-        scrollBehavior="inside"
-        size="md"
-        onOpenChange={onOpenChange}
+    <div className="flex items-center gap-2">
+      <Popover
+        isOpen={isFilterOpen}
+        placement="bottom-start"
+        onOpenChange={setIsFilterOpen}
       >
-        <ModalContent>
-          <ModalHeader className="flex justify-between items-center p-4 border-b">
-            <span className="text-lg font-medium">Filter Courses</span>
-          </ModalHeader>
-          <ModalBody className="py-4 px-4">
-            {/* Credit Range Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="credit-range"
+        <PopoverTrigger>
+          <Button
+            className="flex items-center gap-1"
+            color={hasActiveFilters() ? "primary" : "default"}
+            variant={hasActiveFilters() ? "solid" : "bordered"}
+          >
+            <Filter size={16} />
+            <span>
+              Filters {hasActiveFilters() && `(${getActiveFiltersCount()})`}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Filter Courses</h3>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => setIsFilterOpen(false)}
               >
-                Credit Range
-              </label>
-              <div className="flex items-center gap-2 mb-2">
-                <Input
-                  aria-label="Minimum credits"
-                  className="w-[120px] bg-gray-50"
-                  id="min-credit"
-                  min={0}
-                  size="sm"
-                  type="number"
-                  value={filterState.minCredit.toString()}
-                  onChange={(e) =>
-                    updateFilter("minCredit", Number(e.target.value))
-                  }
-                />
-                <span>to</span>
-                <Input
-                  aria-label="Maximum credits"
-                  className="w-[120px] bg-gray-50"
-                  id="max-credit"
-                  min={0}
-                  size="sm"
-                  type="number"
-                  value={filterState.maxCredit.toString()}
-                  onChange={(e) =>
-                    updateFilter("maxCredit", Number(e.target.value))
-                  }
-                />
-              </div>
-              <div className="px-1">
-                <p className="text-xs text-gray-500 flex justify-between mb-1">
-                  <span>Credits</span>
-                  <span>0-10</span>
-                </p>
-                <Slider
-                  aria-label="Credit range"
-                  className="max-w-full h-1"
-                  classNames={{
-                    track: "!bg-gray-200 !h-1",
-                    filler: "!bg-primary !h-1",
-                    thumb: "!bg-white !border-2 !border-primary !h-3 !w-3",
+                <X size={16} />
+              </Button>
+            </div>
+            <div className="space-y-4 max-h-96">
+              {/* Major Filter */}
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                  htmlFor="major-autocomplete"
+                >
+                  Major
+                </label>
+                <Autocomplete
+                  allowsCustomValue={false}
+                  className="w-full"
+                  defaultItems={majors}
+                  id="major-autocomplete"
+                  placeholder="Search and select major"
+                  selectedKey={selectedMajorId || null}
+                  onSelectionChange={(key) => {
+                    handleMajorChange(key?.toString() || "");
                   }}
-                  id="credit-range"
-                  maxValue={10}
-                  minValue={0}
-                  step={1}
-                  value={[filterState.minCredit, filterState.maxCredit]}
-                  onChange={(value) => {
-                    if (Array.isArray(value)) {
-                      updateFilter("minCredit", value[0]);
-                      updateFilter("maxCredit", value[1]);
+                >
+                  {(major) => (
+                    <AutocompleteItem
+                      key={major.id}
+                      textValue={`${major.name} (${major.code})`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {major.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {major.code}
+                        </span>
+                      </div>
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+              </div>
+
+              {/* Open For All */}
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                  htmlFor="open-for-all-button"
+                >
+                  Open For All Majors
+                </label>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    color={isOpenForAll === true ? "primary" : "default"}
+                    id="open-for-all-button"
+                    size="sm"
+                    variant={isOpenForAll === true ? "solid" : "bordered"}
+                    onPress={() =>
+                      handleOpenForAllChange(
+                        isOpenForAll === true ? "all" : "true"
+                      )
+                    }
+                  >
+                    Open For All
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    color={isOpenForAll === false ? "primary" : "default"}
+                    size="sm"
+                    variant={isOpenForAll === false ? "solid" : "bordered"}
+                    onPress={() =>
+                      handleOpenForAllChange(
+                        isOpenForAll === false ? "all" : "false"
+                      )
+                    }
+                  >
+                    Major Specific
+                  </Button>
+                </div>
+              </div>
+
+              {/* Prerequisite Courses */}
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                  htmlFor="prerequisite-autocomplete"
+                >
+                  Prerequisite Courses
+                </label>
+                {preCourseIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {preCourseIds.map((courseId) => {
+                      const selectedCourse = courses.find(
+                        (c) => c.id === courseId
+                      );
+
+                      return (
+                        selectedCourse && (
+                          <Chip
+                            key={courseId}
+                            className="bg-primary-100 text-primary-700"
+                            size="sm"
+                            onClose={() =>
+                              handlePreCourseChange(null, "remove", courseId)
+                            }
+                          >
+                            {selectedCourse.code}
+                          </Chip>
+                        )
+                      );
+                    })}
+                  </div>
+                )}
+                <Autocomplete
+                  allowsCustomValue={false}
+                  className="w-full"
+                  defaultItems={courses.filter(
+                    (c) => !preCourseIds.includes(c.id)
+                  )}
+                  id="prerequisite-autocomplete"
+                  placeholder="Search and select prerequisite courses"
+                  onSelectionChange={(key) => {
+                    if (key) {
+                      handlePreCourseChange(key.toString(), "add");
                     }
                   }}
-                />
+                >
+                  {(course) => (
+                    <AutocompleteItem
+                      key={course.id}
+                      textValue={`${course.code} - ${course.name}`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {course.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {course.code}
+                        </span>
+                      </div>
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
               </div>
-            </div>
 
-            {/* Major Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="major-select"
-              >
-                Major
-              </label>
-              <Select
-                disableSelectorIconRotation
-                aria-label="Select major"
-                className="w-full bg-gray-50"
-                id="major-select"
-                items={majors}
-                placeholder="Select a major"
-                selectedKeys={
-                  filterState.majorIds.length > 0
-                    ? new Set([filterState.majorIds[0]])
-                    : new Set()
-                }
-                onSelectionChange={(keys) => {
-                  if (keys instanceof Set) {
-                    const selectedKey = Array.from(keys)[0];
+              {/* Parallel Courses */}
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                  htmlFor="parallel-autocomplete"
+                >
+                  Parallel Courses
+                </label>
+                {parallelCourseIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {parallelCourseIds.map((courseId) => {
+                      const selectedCourse = courses.find(
+                        (c) => c.id === courseId
+                      );
 
-                    updateFilter("majorIds", selectedKey ? [selectedKey] : []);
-                  }
-                }}
-              >
-                {(major) => (
-                  <SelectItem key={major.id}>
-                    {`${major.name} (${major.code})`}
-                  </SelectItem>
+                      return (
+                        selectedCourse && (
+                          <Chip
+                            key={courseId}
+                            className="bg-primary-100 text-primary-700"
+                            size="sm"
+                            onClose={() =>
+                              handleParallelCourseChange(
+                                null,
+                                "remove",
+                                courseId
+                              )
+                            }
+                          >
+                            {selectedCourse.code}
+                          </Chip>
+                        )
+                      );
+                    })}
+                  </div>
                 )}
-              </Select>
-            </div>
-
-            {/* Active Toggle */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="active-toggle"
-              >
-                Active Status
-              </label>
-              <div className="flex gap-2" id="active-toggle" role="group">
-                <Button
-                  className="flex-1"
-                  color={filterState.isActive === true ? "primary" : "default"}
-                  size="sm"
-                  variant={filterState.isActive === true ? "solid" : "bordered"}
-                  onPress={() =>
-                    updateFilter(
-                      "isActive",
-                      filterState.isActive === true ? null : true
-                    )
-                  }
+                <Autocomplete
+                  allowsCustomValue={false}
+                  className="w-full"
+                  defaultItems={courses.filter(
+                    (c) => !parallelCourseIds.includes(c.id)
+                  )}
+                  id="parallel-autocomplete"
+                  placeholder="Search and select parallel courses"
+                  onSelectionChange={(key) => {
+                    if (key) {
+                      handleParallelCourseChange(key.toString(), "add");
+                    }
+                  }}
                 >
-                  Active
-                </Button>
-                <Button
-                  className="flex-1"
-                  color={filterState.isActive === false ? "primary" : "default"}
-                  size="sm"
-                  variant={
-                    filterState.isActive === false ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isActive",
-                      filterState.isActive === false ? null : false
-                    )
-                  }
-                >
-                  Inactive
-                </Button>
+                  {(course) => (
+                    <AutocompleteItem
+                      key={course.id}
+                      textValue={`${course.code} - ${course.name}`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {course.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {course.code}
+                        </span>
+                      </div>
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
               </div>
             </div>
-
-            {/* Required Course Toggle */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="required-toggle"
-              >
-                Course Required
-              </label>
-              <div className="flex gap-2" id="required-toggle" role="group">
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isRequired === true ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isRequired === true ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isRequired",
-                      filterState.isRequired === true ? null : true
-                    )
-                  }
-                >
-                  Required
-                </Button>
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isRequired === false ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isRequired === false ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isRequired",
-                      filterState.isRequired === false ? null : false
-                    )
-                  }
-                >
-                  Not Required
-                </Button>
-              </div>
-            </div>
-
-            {/* Open For All Toggle */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="open-for-all-toggle"
-              >
-                Open For All Majors
-              </label>
-              <div className="flex gap-2" id="open-for-all-toggle" role="group">
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isOpenForAll === true ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isOpenForAll === true ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isOpenForAll",
-                      filterState.isOpenForAll === true ? null : true
-                    )
-                  }
-                >
-                  Open For All
-                </Button>
-                <Button
-                  className="flex-1"
-                  color={
-                    filterState.isOpenForAll === false ? "primary" : "default"
-                  }
-                  size="sm"
-                  variant={
-                    filterState.isOpenForAll === false ? "solid" : "bordered"
-                  }
-                  onPress={() =>
-                    updateFilter(
-                      "isOpenForAll",
-                      filterState.isOpenForAll === false ? null : false
-                    )
-                  }
-                >
-                  Major Specific
-                </Button>
-              </div>
-            </div>
-
-            {/* Pre-course IDs Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="pre-course-ids"
-              >
-                Prerequisite Courses
-              </label>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {filterState.preCourseIds.map((courseId) => {
-                  const selectedCourse = courses.find((c) => c.id === courseId);
-
-                  return (
-                    selectedCourse && (
-                      <Chip
-                        key={courseId}
-                        className="bg-primary-100 text-primary-700"
-                        size="sm"
-                        onClose={() => {
-                          updateFilter(
-                            "preCourseIds",
-                            filterState.preCourseIds.filter(
-                              (id) => id !== courseId
-                            )
-                          );
-                        }}
-                      >
-                        {selectedCourse.code}
-                      </Chip>
-                    )
-                  );
-                })}
-              </div>
-              <Autocomplete
-                allowsCustomValue={false}
-                className="w-full"
-                classNames={{
-                  base: "w-full",
-                  listboxWrapper: "max-h-[400px]",
-                }}
-                defaultItems={courses.filter(
-                  (c) => !filterState.preCourseIds.includes(c.id)
-                )}
-                placeholder="Search and select prerequisite courses"
-                onSelectionChange={(key) => {
-                  if (
-                    key &&
-                    !filterState.preCourseIds.includes(key.toString())
-                  ) {
-                    updateFilter("preCourseIds", [
-                      ...filterState.preCourseIds,
-                      key.toString(),
-                    ]);
-                  }
-                }}
-              >
-                {(course) => (
-                  <AutocompleteItem
-                    key={course.id}
-                    textValue={`${course.code} - ${course.name}`}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold">
-                        {course.name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {course.code}
-                      </span>
-                    </div>
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-            </div>
-
-            {/* Parallel Course IDs Filter */}
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="parallel-course-ids"
-              >
-                Parallel Courses
-              </label>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {filterState.parallelCourseIds.map((courseId) => {
-                  const selectedCourse = courses.find((c) => c.id === courseId);
-
-                  return (
-                    selectedCourse && (
-                      <Chip
-                        key={courseId}
-                        className="bg-primary-100 text-primary-700"
-                        size="sm"
-                        onClose={() => {
-                          updateFilter(
-                            "parallelCourseIds",
-                            filterState.parallelCourseIds.filter(
-                              (id) => id !== courseId
-                            )
-                          );
-                        }}
-                      >
-                        {selectedCourse.code}
-                      </Chip>
-                    )
-                  );
-                })}
-              </div>
-              <Autocomplete
-                allowsCustomValue={false}
-                className="w-full"
-                classNames={{
-                  base: "w-full",
-                  listboxWrapper: "max-h-[400px]",
-                }}
-                defaultItems={courses.filter(
-                  (c) => !filterState.parallelCourseIds.includes(c.id)
-                )}
-                placeholder="Search and select parallel courses"
-                onSelectionChange={(key) => {
-                  if (
-                    key &&
-                    !filterState.parallelCourseIds.includes(key.toString())
-                  ) {
-                    updateFilter("parallelCourseIds", [
-                      ...filterState.parallelCourseIds,
-                      key.toString(),
-                    ]);
-                  }
-                }}
-              >
-                {(course) => (
-                  <AutocompleteItem
-                    key={course.id}
-                    textValue={`${course.code} - ${course.name}`}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold">
-                        {course.name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {course.code}
-                      </span>
-                    </div>
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-            </div>
-          </ModalBody>
-          <ModalFooter className="border-t pt-4 flex justify-between">
-            <Button color="danger" variant="light" onPress={clearFilters}>
-              Reset All
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="bordered" onPress={onClose}>
-                Cancel
-              </Button>
-              <Button color="primary" onPress={applyFilters}>
-                Apply Filters
+            {/* Footer */}
+            <div className="flex justify-end gap-2 mt-4 pt-3 border-t">
+              <Button color="primary" size="sm" onPress={handleClearAll}>
+                Clear All
               </Button>
             </div>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

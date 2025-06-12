@@ -7,8 +7,10 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
+  Autocomplete,
+  AutocompleteItem,
 } from "@heroui/react";
-import { Filter, X } from "lucide-react";
+import { Filter } from "lucide-react";
 import { parseDate, CalendarDate } from "@internationalized/date";
 
 import { Course } from "@/services/course/course.schema";
@@ -30,6 +32,31 @@ export function EnrollmentFilter({
   onFilterClear,
 }: EnrollmentFilterProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [courseSearchValue, setCourseSearchValue] = useState("");
+
+  // Get display value for selected course
+  const getSelectedCourseDisplay = () => {
+    if (!query.filters?.courseId) return "";
+
+    const selectedCourse = courses.find(
+      (course) => course.id === query.filters.courseId
+    );
+
+    return selectedCourse
+      ? `${selectedCourse.code} - ${selectedCourse.name}`
+      : "";
+  };
+
+  // Filter courses based on search input
+  const filteredCourses = React.useMemo(() => {
+    if (!courseSearchValue) return courses;
+
+    return courses.filter(
+      (course) =>
+        course.code.toLowerCase().includes(courseSearchValue.toLowerCase()) ||
+        course.name.toLowerCase().includes(courseSearchValue.toLowerCase())
+    );
+  }, [courses, courseSearchValue]);
 
   const handleStatusChange = (status: string) => {
     const statusValue = status === "all" ? undefined : parseInt(status);
@@ -43,14 +70,13 @@ export function EnrollmentFilter({
       },
     });
   };
-
   const handleCourseChange = (courseId: string) => {
     onFilterChange({
       ...query,
       pageNumber: 1,
       filters: {
         ...query.filters,
-        courseId: courseId === "all" ? undefined : courseId,
+        courseId: courseId === "all" || !courseId ? undefined : courseId,
       },
     });
   };
@@ -65,7 +91,6 @@ export function EnrollmentFilter({
       },
     });
   };
-
   const handleFromDateChange = (date: CalendarDate | null) => {
     onFilterChange({
       ...query,
@@ -73,7 +98,7 @@ export function EnrollmentFilter({
       filters: {
         ...query.filters,
         fromDate: date
-          ? new Date(date.year, date.month - 1, date.day)
+          ? new Date(date.year, date.month - 1, date.day, 12, 0, 0)
           : undefined,
       },
     });
@@ -86,7 +111,7 @@ export function EnrollmentFilter({
       filters: {
         ...query.filters,
         toDate: date
-          ? new Date(date.year, date.month - 1, date.day)
+          ? new Date(date.year, date.month - 1, date.day, 12, 0, 0)
           : undefined,
       },
     });
@@ -94,12 +119,11 @@ export function EnrollmentFilter({
 
   const statusOptions = [
     { key: "all", label: "All Statuses" },
-    { key: "0", label: "Pending" },
-    { key: "1", label: "Enrolled" },
-    { key: "2", label: "Dropped" },
-    { key: "3", label: "Completed" },
+    { key: "0", label: "Approved" },
+    { key: "1", label: "Started" },
+    { key: "2", label: "Passed" },
+    { key: "3", label: "Failed" },
   ];
-
   const hasActiveFilters = () => {
     return (
       query.filters?.status !== undefined ||
@@ -109,9 +133,25 @@ export function EnrollmentFilter({
       query.filters?.toDate
     );
   };
+  const getActiveFiltersCount = () => {
+    let count = 0;
+
+    if (query.filters?.status !== undefined) count++;
+    if (query.filters?.courseId) count++;
+    if (query.filters?.semesterId) count++;
+    if (query.filters?.fromDate) count++;
+    if (query.filters?.toDate) count++;
+
+    return count;
+  };
+  const handleClearAll = () => {
+    setCourseSearchValue("");
+    onFilterClear();
+    setIsFilterOpen(false);
+  };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-end gap-2">
       <Popover
         isOpen={isFilterOpen}
         placement="bottom-end"
@@ -123,7 +163,7 @@ export function EnrollmentFilter({
             startContent={<Filter size={16} />}
             variant={hasActiveFilters() ? "solid" : "bordered"}
           >
-            Filter
+            Filter {hasActiveFilters() && `(${getActiveFiltersCount()})`}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80">
@@ -152,35 +192,31 @@ export function EnrollmentFilter({
                   ))}
                 </Select>
               </div>
-
               {/* Course Filter */}
               <div>
                 <div className="text-sm font-medium mb-2">Course</div>
-                <Select
-                  items={[
-                    { id: "all", code: "All", name: "Courses" },
-                    ...courses,
-                  ]}
-                  placeholder="Select course"
-                  selectedKeys={
-                    query.filters?.courseId ? [query.filters.courseId] : ["all"]
-                  }
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
+                <Autocomplete
+                  allowsCustomValue
+                  className="w-full"
+                  inputValue={courseSearchValue || getSelectedCourseDisplay()}
+                  items={filteredCourses}
+                  placeholder="Search for a course..."
+                  selectedKey={query.filters?.courseId || null}
+                  onInputChange={(value) => setCourseSearchValue(value)}
+                  onSelectionChange={(key) => {
+                    const selectedKey = key as string;
 
                     handleCourseChange(selectedKey);
+                    setCourseSearchValue("");
                   }}
                 >
                   {(course) => (
-                    <SelectItem key={course.id}>
-                      {course.id === "all"
-                        ? "All Courses"
-                        : `${course.code} - ${course.name}`}
-                    </SelectItem>
+                    <AutocompleteItem key={course.id}>
+                      {`${course.code} - ${course.name}`}
+                    </AutocompleteItem>
                   )}
-                </Select>
+                </Autocomplete>
               </div>
-
               {/* Semester Filter */}
               <div>
                 <div className="text-sm font-medium mb-2">Semester</div>
@@ -219,7 +255,11 @@ export function EnrollmentFilter({
                     value={
                       query.filters?.fromDate
                         ? parseDate(
-                            query.filters.fromDate.toISOString().split("T")[0]
+                            `${query.filters.fromDate.getFullYear()}-${String(
+                              query.filters.fromDate.getMonth() + 1
+                            ).padStart(2, "0")}-${String(
+                              query.filters.fromDate.getDate()
+                            ).padStart(2, "0")}`
                           )
                         : null
                     }
@@ -232,7 +272,11 @@ export function EnrollmentFilter({
                     value={
                       query.filters?.toDate
                         ? parseDate(
-                            query.filters.toDate.toISOString().split("T")[0]
+                            `${query.filters.toDate.getFullYear()}-${String(
+                              query.filters.toDate.getMonth() + 1
+                            ).padStart(2, "0")}-${String(
+                              query.filters.toDate.getDate()
+                            ).padStart(2, "0")}`
                           )
                         : null
                     }
@@ -243,32 +287,13 @@ export function EnrollmentFilter({
             </div>
 
             <div className="flex justify-end gap-2 mt-4 pt-3 border-t">
-              <Button size="sm" variant="flat" onPress={onFilterClear}>
+              <Button color="primary" size="sm" onPress={handleClearAll}>
                 Clear All
-              </Button>
-              <Button
-                color="primary"
-                size="sm"
-                onPress={() => setIsFilterOpen(false)}
-              >
-                Apply
               </Button>
             </div>
           </div>
         </PopoverContent>
       </Popover>
-
-      {hasActiveFilters() && (
-        <Button
-          isIconOnly
-          color="danger"
-          size="sm"
-          variant="light"
-          onPress={onFilterClear}
-        >
-          <X size={16} />
-        </Button>
-      )}
     </div>
   );
 }

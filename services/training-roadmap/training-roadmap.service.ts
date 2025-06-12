@@ -1,5 +1,6 @@
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { BaseResponse } from "../api";
 
 import { TrainingRoadmapQuery } from "./training-roadmap.schema";
 import {
@@ -38,14 +39,6 @@ export const trainingRoadmapService = {
     // Add major IDs if provided
     if (query.filters?.majorIds?.length) {
       params["Filter.MajorId"] = query.filters.majorIds.join(",");
-    }
-
-    // Add start year range if provided
-    if (query.filters?.startYearRange) {
-      params["Filter.MinStartYear"] =
-        query.filters.startYearRange[0].toString();
-      params["Filter.MaxStartYear"] =
-        query.filters.startYearRange[1].toString();
     }
 
     // Add code filter if provided
@@ -173,5 +166,9 @@ export const trainingRoadmapService = {
         },
       }
     );
+  },
+
+  deleteTrainingRoadmap: async (id: string): Promise<BaseResponse<boolean>> => {
+    return courseClient.delete(`${API_ENDPOINTS.TRAINING_ROADMAPS}/${id}`);
   },
 };
