@@ -10,6 +10,9 @@ import {
   MultipleEnrollmentCheckRequest,
   EnrollmentCheckResponse,
   MultipleEnrollmentCheckResponse,
+  MoveEnrollmentsDto,
+  CheckClassConflictRequest,
+  CheckClassConflictApiResponse,
 } from "./enrollment.dto";
 
 export const enrollmentService = {
@@ -162,6 +165,75 @@ export const enrollmentService = {
   ): Promise<BaseResponse<boolean>> => {
     return enrollmentClient.delete(
       `${API_ENDPOINTS.ENROLLMENTS}/${enrollmentId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  approveAllEnrollmentsByClass: async (
+    classId: string
+  ): Promise<BaseResponse<boolean>> => {
+    return enrollmentClient.put(
+      `${API_ENDPOINTS.ENROLLMENTS}/approve-by-class/${classId}`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  rejectAllEnrollmentsByClass: async (
+    classId: string
+  ): Promise<BaseResponse<boolean>> => {
+    return enrollmentClient.put(
+      `${API_ENDPOINTS.ENROLLMENTS}/reject-by-class/${classId}`,
+      {},
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  getEnrollmentsByClassId: async (
+    classId: string
+  ): Promise<BaseResponse<Enrollment[]>> => {
+    return enrollmentClient.get(
+      `${API_ENDPOINTS.ENROLLMENTS}/class/${classId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  moveEnrollmentsToNewClass: async (
+    moveEnrollmentsDto: MoveEnrollmentsDto
+  ): Promise<BaseResponse<number>> => {
+    return enrollmentClient.put(
+      `${API_ENDPOINTS.ENROLLMENTS}/move-to-class`,
+      moveEnrollmentsDto,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  checkClassConflict: async (
+    request: CheckClassConflictRequest
+  ): Promise<CheckClassConflictApiResponse> => {
+    return enrollmentClient.post(
+      `${API_ENDPOINTS.ENROLLMENTS}/check-class-conflict`,
+      request,
       {
         headers: {
           accept: "text/plain",

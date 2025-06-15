@@ -60,7 +60,6 @@ export function ClassModal({
   const [theoryClasses, setTheoryClasses] = useState<AcademicClass[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]); // Empty by default
-
   const {
     handleSubmit,
     control,
@@ -79,6 +78,7 @@ export function ClassModal({
             isRegistrable: false,
             courseId: "",
             semesterId: "",
+            minEnrollmentRequired: 1,
             parentTheoryAcademicClassId: null,
             scheduleInDays: [],
           }
@@ -90,6 +90,7 @@ export function ClassModal({
             isRegistrable: academicClass?.isRegistrable || false,
             courseId: academicClass?.courseId || "",
             semesterId: academicClass?.semesterId || "",
+            minEnrollmentRequired: academicClass?.minEnrollmentRequired || 1,
             parentTheoryAcademicClassId:
               academicClass?.parentTheoryAcademicClassId || null,
             scheduleInDays:
@@ -334,7 +335,7 @@ export function ClassModal({
                   />
 
                   {/* Group number and capacity in the same row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Controller
                       control={control}
                       name="groupNumber"
@@ -373,6 +374,42 @@ export function ClassModal({
                           }
                         />
                       )}
+                    />
+
+                    <Controller
+                      control={control}
+                      name="minEnrollmentRequired"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          errorMessage={errors.minEnrollmentRequired?.message}
+                          isDisabled={isLoadingData}
+                          label="Min Enrollment Required"
+                          min={1}
+                          placeholder="Enter minimum enrollment"
+                          type="number"
+                          value={field.value?.toString()}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value, 10) || 1)
+                          }
+                        />
+                      )}
+                      rules={{
+                        required: "Minimum enrollment is required",
+                        min: {
+                          value: 1,
+                          message: "Minimum enrollment must be at least 1",
+                        },
+                        validate: (value) => {
+                          const capacity = watch("capacity");
+
+                          if (value > capacity) {
+                            return "Minimum enrollment cannot exceed capacity";
+                          }
+
+                          return true;
+                        },
+                      }}
                     />
                   </div>
 

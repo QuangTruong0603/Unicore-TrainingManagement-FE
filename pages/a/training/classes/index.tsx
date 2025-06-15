@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, CalendarClock } from "lucide-react";
-import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
+import {
+  Button,
+  Input,
+  Pagination,
+  useDisclosure,
+  addToast,
+} from "@heroui/react";
 
 import { ClassFilter } from "@/components/a/class/class-filter";
 import { ClassModal } from "@/components/a/class/class-modal";
 import { ClassTable } from "@/components/a/class/class-table";
 import { ClassRegistrationModal } from "@/components/a/class/class-registration-modal";
+import { MoveEnrollmentsModal } from "@/components/a/class/move-enrollments-modal";
 import DefaultLayout from "@/layouts/default";
 import { AcademicClass } from "@/services/class/class.schema";
 import {
@@ -13,6 +20,8 @@ import {
   ClassRegistrationScheduleDto,
 } from "@/services/class/class.dto";
 import { classService } from "@/services/class/class.service";
+import { enrollmentService } from "@/services/enrollment/enrollment.service";
+import { Enrollment } from "@/services/enrollment/enrollment.schema";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setClasses,
@@ -62,16 +71,32 @@ export default function ClassesPage() {
     onOpen: onCreateOpen,
     onOpenChange: onCreateOpenChange,
   } = useDisclosure();
-
   // Update modal
-  const { isOpen: isUpdateOpen, onOpenChange: onUpdateOpenChange } =
-    useDisclosure();
+  const {
+    isOpen: isUpdateOpen,
+    onOpen: onUpdateOpen,
+    onOpenChange: onUpdateOpenChange,
+  } = useDisclosure();
+
   // Registration schedule modal
   const {
     isOpen: isRegistrationOpen,
     onOpen: onRegistrationOpen,
     onOpenChange: onRegistrationOpenChange,
   } = useDisclosure();
+
+  // Move enrollments modal
+  const {
+    isOpen: isMoveEnrollmentsOpen,
+    onOpen: onMoveEnrollmentsOpen,
+    onOpenChange: onMoveEnrollmentsOpenChange,
+  } = useDisclosure();
+
+  // State for move enrollments
+  const [selectedSourceClass, setSelectedSourceClass] =
+    useState<AcademicClass | null>(null);
+  const [enrollmentsToMove, setEnrollmentsToMove] = useState<Enrollment[]>([]);
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(false);
 
   const { confirmDialog } = useConfirmDialog();
 
@@ -153,7 +178,7 @@ export default function ClassesPage() {
         const shiftsResponse = await shiftService.getAllShifts();
 
         setShifts(shiftsResponse.data);
-      } catch (err) {
+      } catch {
         // Silent error handling
       }
     };
@@ -305,7 +330,7 @@ export default function ClassesPage() {
       const response = await classService.getClasses(query);
 
       dispatch(setClasses(response.data.data));
-    } catch (error) {
+    } catch {
       dispatch(setError("Failed to update registration status"));
     }
   };
@@ -326,7 +351,7 @@ export default function ClassesPage() {
       // Reset selection
       setSelectedClasses([]);
       onRegistrationOpenChange();
-    } catch (error) {
+    } catch {
       dispatch(setError("Failed to set registration schedule"));
     } finally {
       setIsSubmitting(false);
@@ -346,7 +371,7 @@ export default function ClassesPage() {
       dispatch(setTotal(response.data.total));
 
       onCreateOpenChange();
-    } catch (error) {
+    } catch {
       dispatch(setError("Failed to create class"));
     } finally {
       setIsSubmitting(false);
@@ -368,7 +393,7 @@ export default function ClassesPage() {
 
       onUpdateOpenChange();
       dispatch(setSelectedClass(null));
-    } catch (error) {
+    } catch {
       dispatch(setError("Failed to update class"));
     } finally {
       setIsSubmitting(false);
@@ -381,7 +406,7 @@ export default function ClassesPage() {
         try {
           dispatch(setLoading(true));
           await classService.deleteClass(academicClass.id);
-          
+
           // Refresh the classes list after successful deletion
           const response = await classService.getClasses(query);
 
@@ -402,6 +427,195 @@ export default function ClassesPage() {
         cancelText: "Cancel",
       }
     );
+  };
+
+  const handleApproveAllEnrollments = (academicClass: AcademicClass) => {
+    confirmDialog(
+      async () => {
+        try {
+          setIsSubmitting(true);
+          await enrollmentService.approveAllEnrollmentsByClass(
+            academicClass.id
+          );
+
+          addToast({
+            title: "Success",
+            description: `All enrollments for class "${academicClass.name}" have been approved successfully.`,
+            color: "success",
+          });
+
+          // Refresh the classes list after successful approval
+          const response = await classService.getClasses(query);
+
+          dispatch(setClasses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        } catch (error) {
+          addToast({
+            title: "Error",
+            description: "Failed to approve enrollments. Please try again.",
+            color: "danger",
+          });
+          // eslint-disable-next-line no-console
+          console.error("Error approving enrollments:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      {
+        title: "Confirm Approval",
+        message: `Are you sure you want to approve all enrollments for class "${academicClass.name}"? This will change the status of all pending enrollments from Pending (1) to Approved (2).`,
+        confirmText: "Approve All",
+        cancelText: "Cancel",
+      }
+    );
+  };
+  const handleRejectAllEnrollments = (academicClass: AcademicClass) => {
+    confirmDialog(
+      async () => {
+        try {
+          setIsSubmitting(true);
+          await enrollmentService.rejectAllEnrollmentsByClass(academicClass.id);
+
+          addToast({
+            title: "Success",
+            description: `All enrollments for class "${academicClass.name}" have been rejected successfully.`,
+            color: "success",
+          });
+
+          // Refresh the classes list after successful rejection
+          const response = await classService.getClasses(query);
+
+          dispatch(setClasses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        } catch (error) {
+          addToast({
+            title: "Error",
+            description: "Failed to reject enrollments. Please try again.",
+            color: "danger",
+          });
+          // eslint-disable-next-line no-console
+          console.error("Error rejecting enrollments:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      {
+        title: "Confirm Rejection",
+        message: `Are you sure you want to reject all enrollments for class "${academicClass.name}"? This will change the status of all pending enrollments from Pending (1) to Rejected (3).`,
+        confirmText: "Reject All",
+        cancelText: "Cancel",
+      }
+    );
+  };
+  const handleUpdateClassFromTable = (academicClass: AcademicClass) => {
+    dispatch(setSelectedClass(academicClass));
+    onUpdateOpenChange();
+  };
+
+  const handleToggleActivation = (academicClass: AcademicClass) => {
+    confirmDialog(
+      async () => {
+        try {
+          setIsSubmitting(true);
+          // Note: You might need to implement this method in classService
+          // await classService.toggleClassActivation(academicClass.id);
+
+          addToast({
+            title: "Success",
+            description: `Class "${academicClass.name}" has been ${academicClass.isActive ? "deactivated" : "activated"} successfully.`,
+            color: "success",
+          });
+
+          // Refresh the classes list
+          const response = await classService.getClasses(query);
+
+          dispatch(setClasses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        } catch (error) {
+          addToast({
+            title: "Error",
+            description: "Failed to toggle class activation. Please try again.",
+            color: "danger",
+          });
+          // eslint-disable-next-line no-console
+          console.error("Error toggling class activation:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      {
+        title: "Confirm Action",
+        message: `Are you sure you want to ${academicClass.isActive ? "deactivate" : "activate"} the class "${academicClass.name}"?`,
+        confirmText: academicClass.isActive ? "Deactivate" : "Activate",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
+  // Move enrollments handlers
+  const handleMoveEnrollments = async (academicClass: AcademicClass) => {
+    try {
+      setIsLoadingEnrollments(true);
+      setSelectedSourceClass(academicClass);
+
+      // Fetch enrollments for this class
+      const response = await enrollmentService.getEnrollmentsByClassId(
+        academicClass.id
+      );
+
+      setEnrollmentsToMove(response.data || []);
+      onMoveEnrollmentsOpen();
+    } catch (error) {
+      addToast({
+        title: "Error",
+        description: "Failed to load enrollments. Please try again.",
+        color: "danger",
+      });
+      // eslint-disable-next-line no-console
+      console.error("Error loading enrollments:", error);
+    } finally {
+      setIsLoadingEnrollments(false);
+    }
+  };
+
+  const handleMoveEnrollmentsSubmit = async (data: {
+    toClassId: string;
+    enrollmentIds: string[];
+  }) => {
+    try {
+      setIsSubmitting(true);
+
+      await enrollmentService.moveEnrollmentsToNewClass({
+        toClassId: data.toClassId,
+        enrollmentIds: data.enrollmentIds,
+      });
+
+      addToast({
+        title: "Success",
+        description: `Successfully moved ${data.enrollmentIds.length} enrollment${
+          data.enrollmentIds.length !== 1 ? "s" : ""
+        } to the new class.`,
+        color: "success",
+      });
+
+      // Refresh the classes list to update enrollment counts
+      const response = await classService.getClasses(query);
+
+      dispatch(setClasses(response.data.data));
+      dispatch(setTotal(response.data.total));
+
+      onMoveEnrollmentsOpenChange();
+    } catch (error) {
+      addToast({
+        title: "Error",
+        description: "Failed to move enrollments. Please try again.",
+        color: "danger",
+      });
+      // eslint-disable-next-line no-console
+      console.error("Error moving enrollments:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -479,11 +693,16 @@ export default function ClassesPage() {
             selectedClasses={selectedClasses}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
+            onApproveAllEnrollments={handleApproveAllEnrollments}
             onDeleteClass={handleDeleteClass}
+            onMoveEnrollments={handleMoveEnrollments}
             onRegistrationToggle={handleRegistrationToggle}
+            onRejectAllEnrollments={handleRejectAllEnrollments}
             onRowToggle={toggleRow}
             onSelectedClassesChange={setSelectedClasses}
             onSort={handleSort}
+            onToggleActivation={handleToggleActivation}
+            onUpdateClass={handleUpdateClassFromTable}
           />
           {/* Pagination */}
           <div className="px-4 py-3 border-t flex justify-end">
@@ -514,11 +733,22 @@ export default function ClassesPage() {
         />
         {/* Registration Schedule Modal */}
         <ClassRegistrationModal
+          classes={classes}
           isOpen={isRegistrationOpen}
           isSubmitting={isSubmitting}
           selectedClasses={selectedClasses}
           onOpenChange={onRegistrationOpenChange}
           onSubmit={handleCreateRegistrationSchedule}
+        />
+        {/* Move Enrollments Modal */}
+        <MoveEnrollmentsModal
+          enrollments={enrollmentsToMove}
+          isLoadingEnrollments={isLoadingEnrollments}
+          isOpen={isMoveEnrollmentsOpen}
+          isSubmitting={isSubmitting}
+          sourceClass={selectedSourceClass}
+          onOpenChange={onMoveEnrollmentsOpenChange}
+          onSubmit={handleMoveEnrollmentsSubmit}
         />
       </div>
     </DefaultLayout>

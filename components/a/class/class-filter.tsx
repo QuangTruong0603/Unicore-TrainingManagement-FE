@@ -4,7 +4,6 @@ import {
   Autocomplete,
   AutocompleteItem,
   Button,
-  Input,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -15,10 +14,8 @@ import {
 import { AcademicClassQuery } from "@/services/class/class.schema";
 import { Course } from "@/services/course/course.schema";
 import { Semester } from "@/services/semester/semester.schema";
-import { Shift } from "@/services/shift/shift.schema";
 import { courseService } from "@/services/course/course.service";
 import { semesterService } from "@/services/semester/semester.service";
-import { shiftService } from "@/services/shift/shift.service";
 
 interface ClassFilterProps {
   query: AcademicClassQuery;
@@ -34,7 +31,6 @@ export function ClassFilter({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
-  const [shifts, setShifts] = useState<Shift[]>([]);
   const [courseSearchValue, setCourseSearchValue] = useState("");
 
   // Fetch data on component mount
@@ -60,11 +56,6 @@ export function ClassFilter({
         });
 
         setSemesters(semesterResponse.data.data);
-
-        // Fetch shifts
-        const shiftsResponse = await shiftService.getAllShifts();
-
-        setShifts(shiftsResponse.data);
       } catch {
         // Handle errors silently
       }
@@ -118,42 +109,6 @@ export function ClassFilter({
     });
   };
 
-  const handleShiftChange = (shiftId: string) => {
-    onFilterChange({
-      ...query,
-      pageNumber: 1,
-      filters: {
-        ...query.filters,
-        shiftId: shiftId === "all" ? undefined : shiftId,
-      },
-    });
-  };
-
-  const handleMinCapacityChange = (value: string) => {
-    const minCapacity = value ? parseInt(value, 10) : undefined;
-
-    onFilterChange({
-      ...query,
-      pageNumber: 1,
-      filters: {
-        ...query.filters,
-        minCapacity,
-      },
-    });
-  };
-
-  const handleMaxCapacityChange = (value: string) => {
-    const maxCapacity = value ? parseInt(value, 10) : undefined;
-
-    onFilterChange({
-      ...query,
-      pageNumber: 1,
-      filters: {
-        ...query.filters,
-        maxCapacity,
-      },
-    });
-  };
   const handleRegistrableChange = (isRegistrable: string) => {
     const registrableValue =
       isRegistrable === "all" ? undefined : isRegistrable === "true";
@@ -167,6 +122,20 @@ export function ClassFilter({
       },
     });
   };
+  const handleEnrollmentStatusChange = (enrollmentStatus: string) => {
+    const statusValue =
+      enrollmentStatus === "all" ? undefined : parseInt(enrollmentStatus, 10);
+
+    onFilterChange({
+      ...query,
+      pageNumber: 1,
+      filters: {
+        ...query.filters,
+        enrollmentStatus: statusValue,
+      },
+    });
+  };
+
   const hasActiveFilters = () => {
     return (
       query.filters?.groupNumber !== undefined ||
@@ -175,10 +144,10 @@ export function ClassFilter({
       query.filters?.shiftId ||
       query.filters?.minCapacity !== undefined ||
       query.filters?.maxCapacity !== undefined ||
-      query.filters?.isRegistrable !== undefined
+      query.filters?.isRegistrable !== undefined ||
+      query.filters?.enrollmentStatus !== undefined
     );
   };
-
   const getActiveFiltersCount = () => {
     let count = 0;
 
@@ -189,6 +158,7 @@ export function ClassFilter({
     if (query.filters?.minCapacity !== undefined) count++;
     if (query.filters?.maxCapacity !== undefined) count++;
     if (query.filters?.isRegistrable !== undefined) count++;
+    if (query.filters?.enrollmentStatus !== undefined) count++;
 
     return count;
   };
@@ -203,6 +173,13 @@ export function ClassFilter({
     { key: "all", label: "All Status" },
     { key: "true", label: "Open" },
     { key: "false", label: "Closed" },
+  ];
+  const enrollmentStatusOptions = [
+    { key: "all", label: "All Status" },
+    { key: "1", label: "Pending" },
+    { key: "2", label: "Approved" },
+    { key: "3", label: "Started" },
+    { key: "6", label: "Rejected" },
   ];
 
   return (
@@ -282,63 +259,6 @@ export function ClassFilter({
                 </Select>
               </div>
 
-              {/* Shift Filter */}
-              <div>
-                <div className="text-sm font-medium mb-2">Shift</div>
-                <Select
-                  items={[
-                    {
-                      id: "all",
-                      name: "All Shifts",
-                      startTime: "",
-                      endTime: "",
-                    },
-                    ...shifts,
-                  ]}
-                  placeholder="Select shift"
-                  selectedKeys={
-                    query.filters?.shiftId ? [query.filters.shiftId] : ["all"]
-                  }
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
-
-                    handleShiftChange(selectedKey);
-                  }}
-                >
-                  {(shift) => (
-                    <SelectItem key={shift.id}>
-                      {shift.id === "all"
-                        ? "All Shifts"
-                        : `${shift.name} (${shift.startTime.substring(0, 5)} - ${shift.endTime.substring(0, 5)})`}
-                    </SelectItem>
-                  )}
-                </Select>
-              </div>
-
-              {/* Capacity Range */}
-              <div>
-                <div className="text-sm font-medium mb-2">Capacity Range</div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    className="flex-1"
-                    placeholder="Min"
-                    size="sm"
-                    type="number"
-                    value={query.filters?.minCapacity?.toString() || ""}
-                    onChange={(e) => handleMinCapacityChange(e.target.value)}
-                  />
-                  <span className="text-sm">to</span>
-                  <Input
-                    className="flex-1"
-                    placeholder="Max"
-                    size="sm"
-                    type="number"
-                    value={query.filters?.maxCapacity?.toString() || ""}
-                    onChange={(e) => handleMaxCapacityChange(e.target.value)}
-                  />
-                </div>
-              </div>
-
               {/* Registration Status */}
               <div>
                 <div className="text-sm font-medium mb-2">
@@ -358,6 +278,30 @@ export function ClassFilter({
                   }}
                 >
                   {registrableOptions.map((option) => (
+                    <SelectItem key={option.key}>{option.label}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Enrollment Status */}
+              <div>
+                <div className="text-sm font-medium mb-2">
+                  Enrollment Status
+                </div>
+                <Select
+                  placeholder="Select enrollment status"
+                  selectedKeys={
+                    query.filters?.enrollmentStatus !== undefined
+                      ? [query.filters.enrollmentStatus.toString()]
+                      : ["all"]
+                  }
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+
+                    handleEnrollmentStatusChange(selectedKey);
+                  }}
+                >
+                  {enrollmentStatusOptions.map((option) => (
                     <SelectItem key={option.key}>{option.label}</SelectItem>
                   ))}
                 </Select>

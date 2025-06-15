@@ -2,7 +2,7 @@ import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 import { BaseResponse } from "../api";
 
-import { AcademicClassQuery } from "./class.schema";
+import { AcademicClassQuery, AcademicClass } from "./class.schema";
 import {
   AcademicClassResponse,
   AcademicClassListResponse,
@@ -61,6 +61,11 @@ export const classService = {
 
     if (query.filters?.shiftId) {
       params["Filter.ShiftId"] = query.filters.shiftId;
+    }
+
+    if (query.filters?.enrollmentStatus !== undefined) {
+      params["Filter.EnrollmentStatus"] =
+        query.filters.enrollmentStatus.toString();
     }
 
     // Create URLSearchParams object to handle multiple values for the same parameter
@@ -166,6 +171,19 @@ export const classService = {
         accept: "text/plain",
       },
     });
+  },
+  getClassesBySemesterAndCourse: async (
+    semesterId: string,
+    courseId: string
+  ): Promise<BaseResponse<AcademicClass[]>> => {
+    return courseClient.get(
+      `${API_ENDPOINTS.CLASSES}/semester/${semesterId}/course/${courseId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
 
   getClassesByMajorAndBatch: async (

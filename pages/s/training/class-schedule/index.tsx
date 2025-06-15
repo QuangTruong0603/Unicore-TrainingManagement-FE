@@ -296,12 +296,16 @@ const ClassSchedulePage: React.FC = () => {
                     handleSemesterChange(selectedKey);
                   }}
                 >
-                  {semesters.map((semester) => (
-                    <SelectItem key={semester.id}>
-                      Semester {semester.semesterNumber} - {semester.year}
-                      {semester.isActive && ""}
-                    </SelectItem>
-                  ))}
+                  {semesters.map((semester) => {
+                    const displayText = `Semester ${semester.semesterNumber} - ${semester.year}${semester.isActive ? " (Active)" : ""}`;
+
+                    return (
+                      <SelectItem key={semester.id} textValue={displayText}>
+                        Semester {semester.semesterNumber} - {semester.year}
+                        {semester.isActive && " (Active)"}
+                      </SelectItem>
+                    );
+                  })}
                 </Select>
               </div>
               {/* Week Selector */}
@@ -323,11 +327,16 @@ const ClassSchedulePage: React.FC = () => {
                     handleWeekChange(selectedKey);
                   }}
                 >
-                  {availableWeeks.map((week) => (
-                    <SelectItem key={week.toString()}>
-                      Week {week} ({getWeekDateRange(week)})
-                    </SelectItem>
-                  ))}
+                  {availableWeeks.map((week) => {
+                    const dateRange = getWeekDateRange(week);
+                    const displayText = `Week ${week} (${dateRange})`;
+
+                    return (
+                      <SelectItem key={week.toString()} textValue={displayText}>
+                        Week {week} ({dateRange})
+                      </SelectItem>
+                    );
+                  })}
                 </Select>
               </div>
             </div>
