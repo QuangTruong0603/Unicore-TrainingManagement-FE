@@ -70,13 +70,17 @@ export function EnrollmentTable({
   const getStatusLabel = (status: number): string => {
     switch (status) {
       case 1:
-        return "Approved";
+        return "Pending";
       case 2:
-        return "Started";
+        return "Approved";
       case 3:
-        return "Passed";
+        return "Started";
       case 4:
+        return "Passed";
+      case 5:
         return "Failed";
+      case 6:
+        return "Rejected";
       default:
         return "Unknown";
     }
@@ -225,14 +229,18 @@ export function EnrollmentTable({
                   <Chip
                     color={
                       enrollment.status == 3
-                        ? "success"
+                        ? "primary"
                         : enrollment.status == 2
-                          ? "secondary"
+                          ? "warning"
                           : enrollment.status == 1
-                            ? "warning"
+                            ? "default"
                             : enrollment.status === 4
-                              ? "danger"
-                              : "default"
+                              ? "success"
+                              : enrollment.status === 5
+                                ? "danger"
+                                : enrollment.status === 6
+                                  ? "secondary"
+                                  : "default"
                     }
                     size="sm"
                     variant="flat"

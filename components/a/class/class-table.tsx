@@ -17,6 +17,9 @@ import {
   Trash,
   Power,
   Edit,
+  CheckCheck,
+  X,
+  Move,
 } from "lucide-react";
 import {
   Table,
@@ -43,6 +46,9 @@ interface ClassTableProps {
   onDeleteClass?: (academicClass: AcademicClass) => void;
   onToggleActivation?: (academicClass: AcademicClass) => void;
   onUpdateClass?: (academicClass: AcademicClass) => void;
+  onApproveAllEnrollments?: (academicClass: AcademicClass) => void;
+  onRejectAllEnrollments?: (academicClass: AcademicClass) => void;
+  onMoveEnrollments?: (academicClass: AcademicClass) => void;
   selectedClasses: string[];
   onSelectedClassesChange: (selectedClasses: string[]) => void;
   allowMultiSelect?: boolean;
@@ -67,6 +73,9 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   onDeleteClass,
   onToggleActivation,
   onUpdateClass,
+  onApproveAllEnrollments,
+  onRejectAllEnrollments,
+  onMoveEnrollments,
   selectedClasses,
   onSelectedClassesChange,
   allowMultiSelect,
@@ -218,29 +227,59 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
-      key: "schedule",
-      title: "Schedule",
-      sortable: false,
+      key: "enrollmentStatus",
+      title: "Enrollment Status",
+      sortable: true,
       render: (academicClass: AcademicClass) => {
-        if (
-          !academicClass.scheduleInDays ||
-          academicClass.scheduleInDays.length === 0
-        ) {
-          return <span className="text-gray-500 text-xs">No schedule</span>;
-        }
+        const getEnrollmentStatusLabel = (status?: number) => {
+          switch (status) {
+            case 1:
+              return {
+                label: "Pending",
+                color: "bg-gray-100 text-gray-600",
+              };
+            case 2:
+              return {
+                label: "Approved",
+                color: "bg-yellow-100 text-yellow-800",
+              };
+            case 3:
+              return {
+                label: "Started",
+                color: "bg-orange-100 text-orange-800",
+              };
+            case 4:
+              return {
+                label: "Passed",
+                color: "bg-green-100 text-green-800",
+              };
+            case 5:
+              return {
+                label: "Failed",
+                color: "bg-red-100 text-red-800",
+              };
+            case 6:
+              return {
+                label: "Rejected",
+                color: "bg-purple-100 text-purple-800",
+              };
+            default:
+              return {
+                label: "Not Enrolled",
+                color: "bg-gray-100 text-gray-600",
+              };
+          }
+        };
+
+        const statusInfo = getEnrollmentStatusLabel(
+          academicClass.enrollmentStatus
+        );
 
         return (
-          <div className="flex flex-wrap gap-1 max-w-[300px]">
-            {academicClass.scheduleInDays.map(
-              (schedule: any, index: number) => (
-                <span
-                  key={`${schedule.id || index}`}
-                  className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs whitespace-nowrap"
-                >
-                  {`${schedule.shift.name} ${schedule.dayOfWeek} ${schedule.room.name}`}
-                </span>
-              )
-            )}
+          <div
+            className={`px-2 py-1 rounded-full text-xs text-center ${statusInfo.color}`}
+          >
+            {statusInfo.label}
           </div>
         );
       },
@@ -296,6 +335,16 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             case "registration":
               onRegistrationToggle(academicClass);
               break;
+            case "approveEnrollments":
+              if (onApproveAllEnrollments)
+                onApproveAllEnrollments(academicClass);
+              break;
+            case "rejectEnrollments":
+              if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
+              break;
+            case "moveEnrollments":
+              if (onMoveEnrollments) onMoveEnrollments(academicClass);
+              break;
           }
         };
 
@@ -334,8 +383,35 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                   key="activate"
                   startContent={<Power className="w-4 h-4" />}
                 >
-                  {true ? "Deactivate" : "Activate"}
+                  {" "}
+                  {academicClass.isActive ? "Deactivate" : "Activate"}
                 </DropdownItem>
+                {!academicClass.isRegistrable &&
+                academicClass.enrollmentStatus !== 3 &&
+                academicClass.enrollmentStatus !== 4 &&
+                academicClass.enrollmentStatus !== 5 &&
+                academicClass.enrollmentStatus !== undefined ? (
+                  <>
+                    <DropdownItem
+                      key="approveEnrollments"
+                      startContent={<CheckCheck className="w-4 h-4" />}
+                    >
+                      Approve all enrollment
+                    </DropdownItem>
+                    <DropdownItem
+                      key="rejectEnrollments"
+                      startContent={<X className="w-4 h-4" />}
+                    >
+                      Reject all enrollment
+                    </DropdownItem>
+                    <DropdownItem
+                      key="moveEnrollments"
+                      startContent={<Move className="w-4 h-4" />}
+                    >
+                      Move Enrollments
+                    </DropdownItem>
+                  </>
+                ) : null}
               </DropdownMenu>
             </Dropdown>
             <Tooltip content="Toggle details">
@@ -431,6 +507,24 @@ export const ClassTable: React.FC<ClassTableProps> = ({
               <span className="font-medium">Semester:</span>{" "}
               {`${academicClass.semester.semesterNumber}/${academicClass.semester.year}`}
             </p>
+            {academicClass.minEnrollmentRequired && (
+              <p className="text-sm">
+                <span className="font-medium">Min Enrollment:</span>{" "}
+                {academicClass.minEnrollmentRequired}
+              </p>
+            )}
+            {academicClass.registrationOpenTime && (
+              <p className="text-sm">
+                <span className="font-medium">Registration Opens:</span>{" "}
+                {new Date(academicClass.registrationOpenTime).toLocaleString()}
+              </p>
+            )}
+            {academicClass.registrationCloseTime && (
+              <p className="text-sm">
+                <span className="font-medium">Registration Closes:</span>{" "}
+                {new Date(academicClass.registrationCloseTime).toLocaleString()}
+              </p>
+            )}
           </div>
         </div>
       </div>

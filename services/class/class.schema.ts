@@ -52,6 +52,8 @@ export const academicClassBasic = z.object({
   registrationOpenTime: z.date().optional(),
   registrationCloseTime: z.date().optional(),
   enrollmentCount: z.number(),
+  minEnrollmentRequired: z.number().optional(),
+  enrollmentStatus: z.number().optional(),
 });
 
 export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
@@ -74,6 +76,8 @@ export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
     registrationOpenTime: z.date().optional(),
     registrationCloseTime: z.date().optional(),
     enrollmentCount: z.number(),
+    minEnrollmentRequired: z.number().optional(),
+    enrollmentStatus: z.number().optional(),
   })
 );
 
@@ -90,6 +94,7 @@ export const academicClassFilterSchema = z.object({
   shiftId: z.string().optional(),
   roomId: z.string().optional(),
   scheduleInDayIds: z.array(z.string()).optional(),
+  enrollmentStatus: z.number().optional(),
 });
 
 export type AcademicClassFilter = z.infer<typeof academicClassFilterSchema>;

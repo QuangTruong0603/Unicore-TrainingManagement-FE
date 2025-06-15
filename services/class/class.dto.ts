@@ -22,6 +22,7 @@ export interface AcademicClassCreateDto {
   isRegistrable: boolean;
   courseId: string;
   semesterId: string;
+  minEnrollmentRequired: number;
   parentTheoryAcademicClassId: string | null;
   scheduleInDays: ScheduleInDayCreateForClassDto[];
 }

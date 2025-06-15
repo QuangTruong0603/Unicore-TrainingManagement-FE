@@ -14,11 +14,15 @@ import {
   Spinner,
   Chip,
   Button,
+  Tooltip,
 } from "@heroui/react";
+import { Trash2 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentEnrollments } from "@/services/enrollment/enrollment.hooks";
+import { enrollmentService } from "@/services/enrollment/enrollment.service";
 import { useSemesters } from "@/services/semester/semester.hooks";
+import useConfirmDialog from "@/hooks/useConfirmDialog";
 import { Enrollment } from "@/services/enrollment/enrollment.schema";
 import { SemesterQuery } from "@/services/semester/semester.schema";
 import DefaultLayout from "@/layouts/default";
@@ -26,6 +30,7 @@ import "./index.scss";
 
 const EnrollmentResultPage = () => {
   const { user, studentInfo } = useAuth();
+  const { confirmDialog } = useConfirmDialog();
   const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
 
   // Fetch semesters for dropdown
@@ -74,13 +79,17 @@ const EnrollmentResultPage = () => {
   const getEnrollmentStatusColor = (status: number) => {
     switch (status) {
       case 1:
+        return "default";
+      case 2:
         return "warning";
       case 3:
-        return "success";
-      case 2:
-        return "secondary";
+        return "primary";
       case 4:
+        return "success";
+      case 5:
         return "danger";
+      case 6:
+        return "secondary";
       default:
         return "default";
     }
@@ -89,13 +98,17 @@ const EnrollmentResultPage = () => {
   const getEnrollmentStatusText = (status: number) => {
     switch (status) {
       case 1:
-        return "Approved";
+        return "Pending";
       case 2:
-        return "Started";
+        return "Approved";
       case 3:
-        return "Passed";
+        return "Started";
       case 4:
+        return "Passed";
+      case 5:
         return "Failed";
+      case 6:
+        return "Rejected";
       default:
         return "Unknown";
     }
@@ -110,7 +123,6 @@ const EnrollmentResultPage = () => {
       minute: "2-digit",
     });
   };
-
   const formatSchedule = (scheduleInDays: any[]) => {
     if (!scheduleInDays || scheduleInDays.length === 0) return "No schedule";
 
@@ -123,6 +135,39 @@ const EnrollmentResultPage = () => {
         return `${day} (${shift}) - ${room}`;
       })
       .join(", ");
+  };
+  const handleDeleteEnrollment = async (enrollmentId: string) => {
+    confirmDialog(
+      async () => {
+        try {
+          await enrollmentService.deleteEnrollment(enrollmentId);
+          // Refresh the enrollments list after successful deletion
+          refetchEnrollments();
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting enrollment:", error);
+          // Show error dialog
+          confirmDialog(() => {}, {
+            title: "Error",
+            message: "Failed to delete enrollment. Please try again.",
+            confirmText: "OK",
+            cancelText: "",
+          });
+        }
+      },
+      {
+        title: "Delete Enrollment",
+        message:
+          "Are you sure you want to delete this enrollment? This action cannot be undone.",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
+  const canDeleteEnrollment = (status: number) => {
+    // Can delete if status is Pending (1), Approved (2), or Rejected (6)
+    return status === 1 || status === 2 || status === 6;
   };
 
   if (!user || !studentInfo) {
@@ -220,6 +265,7 @@ const EnrollmentResultPage = () => {
                       <TableColumn>SCHEDULE</TableColumn>
                       <TableColumn>STATUS</TableColumn>
                       <TableColumn>ENROLLED DATE</TableColumn>
+                      <TableColumn>ACTIONS</TableColumn>
                     </TableHeader>
                     <TableBody>
                       {enrollmentsResponse.data.map(
@@ -291,6 +337,23 @@ const EnrollmentResultPage = () => {
                               <p className="text-sm">
                                 {formatDate(enrollment.createdAt)}
                               </p>
+                            </TableCell>
+                            <TableCell>
+                              {canDeleteEnrollment(enrollment.status) && (
+                                <Tooltip content="Delete enrollment">
+                                  <Button
+                                    isIconOnly
+                                    color="danger"
+                                    size="sm"
+                                    variant="light"
+                                    onPress={() =>
+                                      handleDeleteEnrollment(enrollment.id)
+                                    }
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </Tooltip>
+                              )}
                             </TableCell>
                           </TableRow>
                         )

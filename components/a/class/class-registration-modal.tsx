@@ -8,10 +8,12 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  addToast,
 } from "@heroui/react";
 import { now, CalendarDateTime } from "@internationalized/date";
 
 import { ClassRegistrationScheduleDto } from "@/services/class/class.dto";
+import { AcademicClass } from "@/services/class/class.schema";
 
 interface ClassRegistrationModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface ClassRegistrationModalProps {
   onSubmit: (data: ClassRegistrationScheduleDto) => void;
   isSubmitting: boolean;
   selectedClasses: string[];
+  classes: AcademicClass[];
 }
 
 export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
@@ -27,6 +30,7 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
   onOpenChange,
   onSubmit,
   selectedClasses,
+  classes,
 }) => {
   // Define Vietnam timezone (UTC+7)
   const VIETNAM_TIMEZONE = "Asia/Ho_Chi_Minh";
@@ -48,10 +52,49 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
 
   const registrationOpenTime = watch("registrationOpenTime");
 
+  // Validate that all selected classes are from the same semester
+  const validateSameSemester = (): boolean => {
+    if (selectedClasses.length === 0) return true;
+
+    const selectedClassObjects = classes.filter((cls) =>
+      selectedClasses.includes(cls.id)
+    );
+
+    if (selectedClassObjects.length === 0) return true;
+
+    const firstSemesterId = selectedClassObjects[0].semesterId;
+
+    const allSameSemester = selectedClassObjects.every(
+      (cls) => cls.semesterId === firstSemesterId
+    );
+
+    if (!allSameSemester) {
+      const semesterInfo = selectedClassObjects.map(
+        (cls) => `${cls.semester.semesterNumber}/${cls.semester.year}`
+      );
+      const uniqueSemesters = Array.from(new Set(semesterInfo));
+
+      addToast({
+        title: "Invalid Selection",
+        description: `All selected classes must be from the same semester. Found classes from: ${uniqueSemesters.join(", ")}`,
+        color: "danger",
+      });
+
+      return false;
+    }
+
+    return true;
+  };
+
   const onFormSubmit = (data: {
     registrationOpenTime: CalendarDateTime;
     registrationCloseTime: CalendarDateTime;
   }) => {
+    // Validate semester consistency first
+    if (!validateSameSemester()) {
+      return;
+    }
+
     // Ensure dates are valid
     if (!data.registrationOpenTime || !data.registrationCloseTime) {
       return;
@@ -93,11 +136,55 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
           <ModalHeader className="flex flex-col gap-1">
             Set Registration Schedule
           </ModalHeader>
+
           <ModalBody>
             <p className="text-sm text-gray-500 mb-4">
               {selectedClasses.length} class(es) selected. Set registration open
               and close times for these classes.
             </p>
+
+            {/* Show semester information for selected classes */}
+            {selectedClasses.length > 0 &&
+              (() => {
+                const selectedClassObjects = classes.filter((cls) =>
+                  selectedClasses.includes(cls.id)
+                );
+                const semesterSet = new Set(
+                  selectedClassObjects.map(
+                    (cls) =>
+                      `${cls.semester.semesterNumber}/${cls.semester.year}`
+                  )
+                );
+                const semesters = Array.from(semesterSet);
+
+                return (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm font-medium text-blue-800 mb-1">
+                      Selected Classes Semesters:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {semesters.map((semester, index) => (
+                        <span
+                          key={index}
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            semesters.length > 1
+                              ? "bg-red-100 text-red-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          Semester {semester}
+                        </span>
+                      ))}
+                    </div>
+                    {semesters.length > 1 && (
+                      <p className="text-xs text-red-600 mt-2">
+                        ⚠️ Warning: Classes from different semesters cannot be
+                        registered together
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
 
             <div className="space-y-4">
               {" "}
@@ -174,13 +261,30 @@ export const ClassRegistrationModal: React.FC<ClassRegistrationModalProps> = ({
               </div>
             </div>
           </ModalBody>
+
           <ModalFooter>
             <Button color="danger" variant="flat" onPress={onOpenChange}>
               Cancel
             </Button>
             <Button
               color="primary"
-              disabled={isSubmitting || selectedClasses.length === 0}
+              disabled={
+                isSubmitting ||
+                selectedClasses.length === 0 ||
+                (() => {
+                  const selectedClassObjects = classes.filter((cls) =>
+                    selectedClasses.includes(cls.id)
+                  );
+
+                  if (selectedClassObjects.length === 0) return false;
+
+                  const firstSemesterId = selectedClassObjects[0].semesterId;
+
+                  return !selectedClassObjects.every(
+                    (cls) => cls.semesterId === firstSemesterId
+                  );
+                })()
+              }
               isLoading={isSubmitting}
               type="submit"
             >

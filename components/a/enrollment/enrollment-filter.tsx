@@ -119,10 +119,12 @@ export function EnrollmentFilter({
 
   const statusOptions = [
     { key: "all", label: "All Statuses" },
-    { key: "0", label: "Approved" },
-    { key: "1", label: "Started" },
-    { key: "2", label: "Passed" },
-    { key: "3", label: "Failed" },
+    { key: "1", label: "Pending" },
+    { key: "2", label: "Approved" },
+    { key: "3", label: "Started" },
+    { key: "4", label: "Passed" },
+    { key: "5", label: "Failed" },
+    { key: "6", label: "Rejected" },
   ];
   const hasActiveFilters = () => {
     return (

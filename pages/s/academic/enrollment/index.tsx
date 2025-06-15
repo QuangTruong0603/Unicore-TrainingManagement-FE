@@ -100,10 +100,9 @@ const EnrollmentPage: React.FC = () => {
       return;
     }
 
-    // If studentInfo is available, fetch academic classes and existing enrollments
+    // If studentInfo is available, fetch academic classes
     if (studentInfo?.majorId && studentInfo?.batchId) {
       fetchAcademicClasses(studentInfo.majorId, studentInfo.batchId);
-      loadExistingEnrollments();
     }
   }, [user, router, authLoading, studentInfo]);
 
@@ -164,7 +163,6 @@ const EnrollmentPage: React.FC = () => {
       // Failed to check enrollment status - will fall back to local state
     }
   };
-
   const loadExistingEnrollments = async () => {
     if (!studentInfo?.id) {
       setLoadingEnrollments(false);
@@ -174,8 +172,13 @@ const EnrollmentPage: React.FC = () => {
 
     try {
       setLoadingEnrollments(true);
+
+      // Get the current semester ID from available classes
+      const currentSemesterId = getCurrentSemesterId();
+
       const response = await enrollmentService.getStudentEnrollments(
-        studentInfo.id
+        studentInfo.id,
+        currentSemesterId // Pass semester ID to filter enrollments on the backend
       );
 
       if (response.data) {
@@ -249,8 +252,7 @@ const EnrollmentPage: React.FC = () => {
         setAcademicClasses(response.data);
         // Check enrollment status for all classes
         await checkEnrollmentStatus(response.data);
-        // Reload existing enrollments to keep schedule in sync
-        await loadExistingEnrollments();
+        // Enrollments will be reloaded automatically by useEffect when academicClasses changes
         addToast({
           title: "Refreshed Successfully",
           description: "Class list has been updated.",
@@ -1061,6 +1063,27 @@ const EnrollmentPage: React.FC = () => {
     }
   };
 
+  // Helper function to get the current semester ID from available classes
+  const getCurrentSemesterId = (): string | undefined => {
+    if (academicClasses.length === 0) return undefined;
+
+    // Get the first class's semester ID as the current semester
+    // All classes should belong to the same semester when fetched by major and batch
+    return academicClasses[0].semester?.id;
+  };
+
+  // Reload enrollments when academic classes change (semester changes)
+  useEffect(() => {
+    if (academicClasses.length > 0 && studentInfo?.id) {
+      loadExistingEnrollments();
+    } else if (academicClasses.length === 0) {
+      // No classes available, clear enrollments
+      setEnrolledClasses([]);
+      setEnrolledClassIds(new Set());
+      setLoadingEnrollments(false);
+    }
+  }, [academicClasses, studentInfo?.id]);
+
   if (authLoading) {
     return (
       <DefaultLayout>
@@ -1271,13 +1294,11 @@ const EnrollmentPage: React.FC = () => {
               // Clear enrolled classes from state
               setEnrolledClasses([]);
 
-              // Refresh enrollment status and reload existing enrollments
+              // Refresh enrollment status and academic classes list
               await refreshEnrollmentStatus();
-              await loadExistingEnrollments();
 
-              // Refresh the academic classes list to get updated enrollment counts
               if (studentInfo?.majorId && studentInfo?.batchId) {
-                await handleRefresh();
+                await handleRefresh(); // This will trigger useEffect to reload enrollments
               }
             }}
           />
