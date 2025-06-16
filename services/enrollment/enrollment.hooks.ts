@@ -49,3 +49,34 @@ export const useDeleteEnrollment = () => {
       enrollmentService.deleteEnrollment(enrollmentId),
   });
 };
+
+// Hook for getting student enrollments with optional semester filter, excluding rejected enrollments
+export const useActiveStudentEnrollments = (
+  studentId: string,
+  semesterId?: string
+) => {
+  return useQuery({
+    queryKey: ["active-student-enrollments", studentId, semesterId],
+    queryFn: async () => {
+      const response = await enrollmentService.getStudentEnrollments(
+        studentId,
+        semesterId
+      );
+
+      // Filter out rejected enrollments (status 6) on the client side
+      if (response.data) {
+        const filteredData = response.data.filter(
+          (enrollment) => enrollment.status !== 6
+        );
+
+        return {
+          ...response,
+          data: filteredData,
+        };
+      }
+
+      return response;
+    },
+    enabled: !!studentId,
+  });
+};

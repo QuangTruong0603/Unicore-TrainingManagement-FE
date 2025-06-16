@@ -183,8 +183,11 @@ const EnrollmentPage: React.FC = () => {
 
       if (response.data) {
         // Convert API enrollments to our EnrolledClass format
+        // Filter out rejected enrollments (status 6)
         const existingEnrolledClasses: EnrolledClass[] = response.data
-          .filter((enrollment) => enrollment.academicClass) // Filter out any null academic classes
+          .filter(
+            (enrollment) => enrollment.academicClass && enrollment.status !== 6
+          ) // Filter out rejected enrollments and null academic classes
           .map((enrollment) => ({
             id: enrollment.academicClass!.id,
             name: enrollment.academicClass!.name || "",
@@ -215,9 +218,13 @@ const EnrollmentPage: React.FC = () => {
         // Set the existing enrolled classes to the schedule
         setEnrolledClasses(existingEnrolledClasses);
         // Also update the enrolled class IDs set for button state management
+        // Filter out rejected enrollments here as well
         const enrolledIds = new Set(
           response.data
-            .filter((enrollment) => enrollment.academicClass)
+            .filter(
+              (enrollment) =>
+                enrollment.academicClass && enrollment.status !== 6
+            )
             .map((enrollment) => enrollment.academicClass!.id)
         );
 

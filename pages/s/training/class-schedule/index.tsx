@@ -10,7 +10,7 @@ import {
 
 import DefaultLayout from "../../../../layouts/default";
 import { useAuth } from "../../../../hooks/useAuth";
-import { useStudentEnrollments } from "../../../../services/enrollment/enrollment.hooks";
+import { useActiveStudentEnrollments } from "../../../../services/enrollment/enrollment.hooks";
 import { useSemesters } from "../../../../services/semester/semester.hooks";
 import { useAllShifts } from "../../../../services/shift/shift.hooks";
 import { EnrolledClass } from "../../../../components/s/enrollment";
@@ -32,9 +32,10 @@ const ClassSchedulePage: React.FC = () => {
 
   // Fetch shifts
   const { data: shiftsData } = useAllShifts();
-  // Fetch student enrollments for the selected semester
+
+  // Fetch student enrollments for the selected semester, excluding rejected ones
   const { data: enrollmentsData, isLoading: isLoadingEnrollments } =
-    useStudentEnrollments(studentInfo?.id || "", selectedSemesterId);
+    useActiveStudentEnrollments(studentInfo?.id || "", selectedSemesterId);
 
   const semesters = semestersData?.data?.data || [];
   const enrollments = enrollmentsData?.data || [];

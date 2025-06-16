@@ -25,6 +25,12 @@ export interface MoveEnrollmentsDto {
   enrollmentIds: string[];
 }
 
+// DTO for bulk enrollment status changes
+export interface BulkStatusChangeDto {
+  classIds: string[];
+  status: number;
+}
+
 // New DTOs for class conflict checking
 export interface EnrollmentConflictCheckDto extends Enrollment {
   isConflict: boolean;
