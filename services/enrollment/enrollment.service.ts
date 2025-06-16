@@ -241,4 +241,23 @@ export const enrollmentService = {
       }
     );
   },
+
+  // Bulk enrollment status change for multiple classes
+  bulkChangeEnrollmentStatus: async (
+    classIds: string[],
+    status: number
+  ): Promise<BaseResponse<number>> => {
+    return enrollmentClient.put(
+      `${API_ENDPOINTS.ENROLLMENTS}/bulk-change-status`,
+      {
+        classIds,
+        status,
+      },
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
 };
