@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import router from "next/router";
 
 import { studentService } from "@/services/student/student.service";
+import { lecturerService } from "@/services/lecturer/lecturer.service";
 
 interface DecodedToken {
   aud: string;
@@ -37,6 +38,28 @@ interface StudentInfo {
   };
 }
 
+interface LecturerInfo {
+  id: string;
+  lecturerCode: string;
+  departmentId: string;
+  degree: string;
+  salary: number;
+  workingStatus: number;
+  joinDate: string;
+  mainMajor: string;
+  applicationUser: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    dob: string;
+    phoneNumber: string;
+    status: number;
+    imageUrl: string;
+  };
+}
+
+
 // Helper function to safely access localStorage
 const getLocalStorage = (key: string): string | null => {
   if (typeof window !== "undefined") {
@@ -64,7 +87,9 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
+  const [lecturerInfo, setLecturerInfo] = useState<LecturerInfo | null>(null);
   const [isStudentInfoLoading, setIsStudentInfoLoading] = useState(false);
+  const [isLecturerInfoLoading, setIsLecturerInfoLoading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -143,6 +168,25 @@ export const useAuth = () => {
     }
   };
 
+  const fetchLecturerInfo = async (email: string) => {
+    if (isLecturerInfoLoading) return; // Prevent multiple simultaneous calls
+
+    setIsLecturerInfoLoading(true);
+
+    try {
+      const response = await lecturerService.getLecturerByEmail(email);
+
+      if (response.success && response.data) {
+        setLocalStorage("lecturerInfo", JSON.stringify(response.data));
+        setLecturerInfo(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching lecturer info:", error);
+    } finally {
+      setIsLecturerInfoLoading(false);
+    }
+  };
+
   const login = async (token: string) => {
     try {
       const decoded = jwtDecode<any>(token);
@@ -175,9 +219,15 @@ export const useAuth = () => {
         await fetchStudentInfo(userData.email);
       }
 
+      if (userData.role === "Lecturer") {
+        await fetchLecturerInfo(userData.email);
+      }
+
       // Redirect based on role
       if (userData.role === "Student") {
         router.push("/s");
+      } else if (userData.role === "Lecturer") {
+        router.push("/l");
       } else if (userData.role === "TrainingManager") {
         router.push("/t");
       } else if (userData.role === "Admin") {
@@ -195,9 +245,11 @@ export const useAuth = () => {
     removeLocalStorage("token");
     removeLocalStorage("user");
     removeLocalStorage("studentInfo");
+    removeLocalStorage("lecturerInfo");
     router.push("/login");
     setUser(null);
     setStudentInfo(null);
+    setLecturerInfo(null);
   };
 
   const isAuthenticated = !!user;
@@ -205,6 +257,7 @@ export const useAuth = () => {
   return {
     user,
     studentInfo,
+    lecturerInfo,
     login,
     logout,
     isAuthenticated,

@@ -68,6 +68,10 @@ export const classService = {
         query.filters.enrollmentStatus.toString();
     }
 
+    if (query.filters?.lecturerId) {
+      params["Filter.LecturerId"] = query.filters.lecturerId;
+    }
+
     // Create URLSearchParams object to handle multiple values for the same parameter
     const searchParams = new URLSearchParams();
 

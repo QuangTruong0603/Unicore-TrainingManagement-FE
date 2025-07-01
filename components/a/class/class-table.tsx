@@ -52,6 +52,8 @@ interface ClassTableProps {
   selectedClasses: string[];
   onSelectedClassesChange: (selectedClasses: string[]) => void;
   allowMultiSelect?: boolean;
+  isScorePage?: boolean;
+  onClassNameClick?: (academicClass: AcademicClass) => void;
 }
 
 interface Column {
@@ -79,6 +81,8 @@ export const ClassTable: React.FC<ClassTableProps> = ({
   selectedClasses,
   onSelectedClassesChange,
   allowMultiSelect,
+  isScorePage = false,
+  onClassNameClick,
 }) => {
   // Safety check: Ensure classes is an array
   const safeClasses = Array.isArray(classes) ? classes : [];
@@ -146,8 +150,20 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       sortable: true,
       render: (academicClass: AcademicClass) => (
         <div
-          className="max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis"
+          className={`max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis ${isScorePage ? "text-primary cursor-pointer font-semibold" : ""}`}
           title={academicClass.name}
+          onClick={isScorePage && onClassNameClick ? () => onClassNameClick(academicClass) : undefined}
+          {...(isScorePage && onClassNameClick
+            ? {
+                role: "button",
+                tabIndex: 0,
+                onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    onClassNameClick(academicClass);
+                  }
+                },
+              }
+            : {})}
         >
           {academicClass.name}
         </div>
@@ -316,125 +332,129 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         </div>
       ),
     },
-    {
-      key: "actions",
-      title: "Actions",
-      sortable: false,
-      render: (academicClass: AcademicClass) => {
-        const handleActionSelection = (key: React.Key) => {
-          switch (key) {
-            case "update":
-              if (onUpdateClass) onUpdateClass(academicClass);
-              break;
-            case "delete":
-              if (onDeleteClass) onDeleteClass(academicClass);
-              break;
-            case "activate":
-              if (onToggleActivation) onToggleActivation(academicClass);
-              break;
-            case "registration":
-              onRegistrationToggle(academicClass);
-              break;
-            case "approveEnrollments":
-              if (onApproveAllEnrollments)
-                onApproveAllEnrollments(academicClass);
-              break;
-            case "rejectEnrollments":
-              if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
-              break;
-            case "moveEnrollments":
-              if (onMoveEnrollments) onMoveEnrollments(academicClass);
-              break;
-          }
-        };
+    ...(!isScorePage
+      ? [
+          {
+            key: "actions",
+            title: "Actions",
+            sortable: false,
+            render: (academicClass: AcademicClass) => {
+              const handleActionSelection = (key: React.Key) => {
+                switch (key) {
+                  case "update":
+                    if (onUpdateClass) onUpdateClass(academicClass);
+                    break;
+                  case "delete":
+                    if (onDeleteClass) onDeleteClass(academicClass);
+                    break;
+                  case "activate":
+                    if (onToggleActivation) onToggleActivation(academicClass);
+                    break;
+                  case "registration":
+                    onRegistrationToggle(academicClass);
+                    break;
+                  case "approveEnrollments":
+                    if (onApproveAllEnrollments)
+                      onApproveAllEnrollments(academicClass);
+                    break;
+                  case "rejectEnrollments":
+                    if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
+                    break;
+                  case "moveEnrollments":
+                    if (onMoveEnrollments) onMoveEnrollments(academicClass);
+                    break;
+                }
+              };
 
-        return (
-          <div className="flex gap-2 justify-end pr-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Class Actions"
-                onAction={handleActionSelection}
-              >
-                <DropdownItem
-                  key="update"
-                  startContent={<Edit className="w-4 h-4" />}
-                >
-                  Update
-                </DropdownItem>
-                <DropdownItem
-                  key="delete"
-                  startContent={<Trash className="w-4 h-4" />}
-                >
-                  Delete
-                </DropdownItem>
-                <DropdownItem
-                  key="activate"
-                  startContent={<Power className="w-4 h-4" />}
-                >
-                  {" "}
-                  {academicClass.isActive ? "Deactivate" : "Activate"}
-                </DropdownItem>
-                {!academicClass.isRegistrable &&
-                academicClass.enrollmentStatus !== 3 &&
-                academicClass.enrollmentStatus !== 4 &&
-                academicClass.enrollmentStatus !== 5 &&
-                academicClass.enrollmentStatus !== undefined ? (
-                  <>
-                    <DropdownItem
-                      key="approveEnrollments"
-                      startContent={<CheckCheck className="w-4 h-4" />}
+              return (
+                <div className="flex gap-2 justify-end pr-2">
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                      aria-label="Class Actions"
+                      onAction={handleActionSelection}
                     >
-                      Approve all enrollment
-                    </DropdownItem>
-                    <DropdownItem
-                      key="rejectEnrollments"
-                      startContent={<X className="w-4 h-4" />}
+                      <DropdownItem
+                        key="update"
+                        startContent={<Edit className="w-4 h-4" />}
+                      >
+                        Update
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete"
+                        startContent={<Trash className="w-4 h-4" />}
+                      >
+                        Delete
+                      </DropdownItem>
+                      <DropdownItem
+                        key="activate"
+                        startContent={<Power className="w-4 h-4" />}
+                      >
+                        {" "}
+                        {academicClass.isActive ? "Deactivate" : "Activate"}
+                      </DropdownItem>
+                      {!academicClass.isRegistrable &&
+                      academicClass.enrollmentStatus !== 3 &&
+                      academicClass.enrollmentStatus !== 4 &&
+                      academicClass.enrollmentStatus !== 5 &&
+                      academicClass.enrollmentStatus !== undefined ? (
+                        <>
+                          <DropdownItem
+                            key="approveEnrollments"
+                            startContent={<CheckCheck className="w-4 h-4" />}
+                          >
+                            Approve all enrollment
+                          </DropdownItem>
+                          <DropdownItem
+                            key="rejectEnrollments"
+                            startContent={<X className="w-4 h-4" />}
+                          >
+                            Reject all enrollment
+                          </DropdownItem>
+                          <DropdownItem
+                            key="moveEnrollments"
+                            startContent={<Move className="w-4 h-4" />}
+                          >
+                            Move Enrollments
+                          </DropdownItem>
+                        </>
+                      ) : null}
+                    </DropdownMenu>
+                  </Dropdown>
+                  <Tooltip content="Toggle details">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="flat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRowToggle(academicClass.id);
+                      }}
                     >
-                      Reject all enrollment
-                    </DropdownItem>
-                    <DropdownItem
-                      key="moveEnrollments"
-                      startContent={<Move className="w-4 h-4" />}
-                    >
-                      Move Enrollments
-                    </DropdownItem>
-                  </>
-                ) : null}
-              </DropdownMenu>
-            </Dropdown>
-            <Tooltip content="Toggle details">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="flat"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRowToggle(academicClass.id);
-                }}
-              >
-                {expandedRows[academicClass.id] ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
-              </Button>
-            </Tooltip>
-          </div>
-        );
-      },
-    },
+                      {expandedRows[academicClass.id] ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </Tooltip>
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 
   const handleSort = (key: string) => {

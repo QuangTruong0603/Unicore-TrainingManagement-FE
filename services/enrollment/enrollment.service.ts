@@ -260,4 +260,11 @@ export const enrollmentService = {
       }
     );
   },
+  getStudentResultsByClassId: async (classId: string): Promise<BaseResponse<any>> => {
+    return enrollmentClient.get(`${API_ENDPOINTS.STUDENT_RESULTS}/class/${classId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
 };

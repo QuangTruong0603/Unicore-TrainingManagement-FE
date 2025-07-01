@@ -34,7 +34,8 @@ export const API_ENDPOINTS = {
   ROOMS: "/m/Room", // Added room endpoint
   BUILDINGS: "/m/Building", // Added building endpoint
   ENROLLMENTS: "/e/Enrollments", // Added enrollment endpoint
-  LECTURERS: "/u/Lecturer", // Added lecturer endpoint
+  LECTURERS: "/u/Lecturer",
+  STUDENT_RESULTS: "/StudentResult", // Added student result endpoint
 };
 
 // Common headers
