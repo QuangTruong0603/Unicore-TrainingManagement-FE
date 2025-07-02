@@ -267,4 +267,14 @@ export const enrollmentService = {
       },
     });
   },
+  importStudentResults: async (classId: string, file: File): Promise<BaseResponse<any>> => {
+    const formData = new FormData();
+    formData.append("excelFile", file);
+    return enrollmentClient.post(`${API_ENDPOINTS.STUDENT_RESULTS}/import-scores/${classId}`, formData, {
+      headers: {
+        accept: "text/plain",
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
