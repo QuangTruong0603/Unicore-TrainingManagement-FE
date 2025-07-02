@@ -14,9 +14,13 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 import { AcademicClass } from "@/services/class/class.schema";
-import { Download, Upload, FileDown } from "lucide-react";
+import { Download, Upload, FileDown, MoreVertical } from "lucide-react";
 import * as XLSX from "xlsx";
 import { addToast } from "@heroui/react";
 import { ImportScoreModal } from "@/components/a/material/import-score-modal";
@@ -85,6 +89,7 @@ export default function ClassScorePage() {
           // Get all unique score types
           const allTypes: { id: string; name: string; percentage: number }[] =
             [];
+
           res.data.forEach((sv: StudentResult) => {
             sv.results.forEach((r) => {
               if (!allTypes.find((t) => t.id === r.scoreTypeId)) {
@@ -113,6 +118,7 @@ export default function ClassScorePage() {
       "Student Code",
       ...scoreTypes.map((type) => `${type.name} (${type.percentage}%)`),
     ];
+
     wsData.push(header);
     // Body
     data.forEach((sv) => {
@@ -120,6 +126,7 @@ export default function ClassScorePage() {
     });
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(wb, ws, "Template");
     XLSX.writeFile(wb, `class_score_template_${classId}.xlsx`);
   };
@@ -133,6 +140,7 @@ export default function ClassScorePage() {
       "Student Name",
       ...scoreTypes.map((type) => `${type.name} (${type.percentage}%)`),
     ];
+
     wsData.push(header);
     // Body
     data.forEach((sv) => {
@@ -141,12 +149,14 @@ export default function ClassScorePage() {
         sv.studentName,
         ...scoreTypes.map((type) => {
           const result = sv.results.find((r) => r.scoreTypeId === type.id);
+
           return result ? (result.score === -1 ? "" : result.score) : "";
         }),
       ]);
     });
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(wb, ws, "Scores");
     XLSX.writeFile(wb, `class_score_${classId}.xlsx`);
   };
@@ -160,6 +170,7 @@ export default function ClassScorePage() {
         classId as string,
         file
       );
+
       if (res.success) {
         addToast({ title: "Import scores successfully!", color: "success" });
         // Reload data
@@ -174,6 +185,7 @@ export default function ClassScorePage() {
                 name: string;
                 percentage: number;
               }[] = [];
+
               res.data.forEach((sv: StudentResult) => {
                 sv.results.forEach((r) => {
                   if (!allTypes.find((t) => t.id === r.scoreTypeId)) {
@@ -210,6 +222,7 @@ export default function ClassScorePage() {
         classId as string,
         { scores: edits }
       );
+
       if (res.success) {
         addToast({ title: "Scores updated successfully!", color: "success" });
         // Reload data
@@ -224,6 +237,7 @@ export default function ClassScorePage() {
                 name: string;
                 percentage: number;
               }[] = [];
+
               res.data.forEach((sv: StudentResult) => {
                 sv.results.forEach((r) => {
                   if (!allTypes.find((t) => t.id === r.scoreTypeId)) {
@@ -290,28 +304,33 @@ export default function ClassScorePage() {
               <div className="text-red-500 text-sm">Class info not found.</div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Button
               color="success"
-              startContent={<FileDown size={16} />}
-              onClick={handleExportTemplate}
+              isLoading={isSaving}
+              isDisabled={edits.length === 0}
+              onClick={handleSaveChanges}
             >
-              Export Template
+              Save Changes
             </Button>
-            <Button
-              color="secondary"
-              startContent={<Download size={16} />}
-              onClick={handleExportData}
-            >
-              Export
-            </Button>
-            <Button
-              color="primary"
-              startContent={<Upload size={16} />}
-              onClick={() => setIsImportModalOpen(true)}
-            >
-              Import
-            </Button>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button isIconOnly variant="flat" color="secondary">
+                  <MoreVertical size={20} />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Score Actions">
+                <DropdownItem key="export-template" startContent={<FileDown size={16} />} onClick={handleExportTemplate}>
+                  Export Template
+                </DropdownItem>
+                <DropdownItem key="export" startContent={<Download size={16} />} onClick={handleExportData}>
+                  Export
+                </DropdownItem>
+                <DropdownItem key="import" startContent={<Upload size={16} />} onClick={() => setIsImportModalOpen(true)}>
+                  Import
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
             <ImportScoreModal
               isOpen={isImportModalOpen}
               onOpenChange={() => setIsImportModalOpen(false)}
@@ -339,11 +358,11 @@ export default function ClassScorePage() {
                       <TableColumn key="practice">Practice</TableColumn>,
                       <TableColumn key="midterm">Midterm</TableColumn>,
                       <TableColumn key="final">Final</TableColumn>,
-                    //   ...scoreTypes.map((type) => (
-                    //     <TableColumn key={type.id}>
-                    //       {type.name} ({type.percentage}%)
-                    //     </TableColumn>
-                    //   )),
+                      //   ...scoreTypes.map((type) => (
+                      //     <TableColumn key={type.id}>
+                      //       {type.name} ({type.percentage}%)
+                      //     </TableColumn>
+                      //   )),
                       <TableColumn key="actions">Actions</TableColumn>,
                     ]}
                   </TableHeader>
@@ -371,6 +390,7 @@ export default function ClassScorePage() {
                         const result = sv.results.find(
                           (r) => r.scoreTypeName === typeName
                         );
+
                         return result
                           ? result.score === -1
                             ? "-"
@@ -390,7 +410,9 @@ export default function ClassScorePage() {
                                   className="border rounded px-1 py-0.5 w-16"
                                   min={0}
                                   max={10}
-                                  placeholder={editItem.theoryScore?.toString() ?? ""}
+                                  placeholder={
+                                    editItem.theoryScore?.toString() ?? ""
+                                  }
                                   value={editItem.theoryScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -416,7 +438,9 @@ export default function ClassScorePage() {
                                   className="border rounded px-1 py-0.5 w-16"
                                   min={0}
                                   max={10}
-                                  placeholder={editItem.practiceScore?.toString() ?? ""}
+                                  placeholder={
+                                    editItem.practiceScore?.toString() ?? ""
+                                  }
                                   value={editItem.practiceScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -442,7 +466,9 @@ export default function ClassScorePage() {
                                   className="border rounded px-1 py-0.5 w-16"
                                   min={0}
                                   max={10}
-                                  placeholder={editItem.midtermScore?.toString() ?? ""}
+                                  placeholder={
+                                    editItem.midtermScore?.toString() ?? ""
+                                  }
                                   value={editItem.midtermScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -467,7 +493,9 @@ export default function ClassScorePage() {
                                   type="number"
                                   min={0}
                                   max={10}
-                                  placeholder={editItem.finalScore?.toString() ?? ""}
+                                  placeholder={
+                                    editItem.finalScore?.toString() ?? ""
+                                  }
                                   className="border rounded px-1 py-0.5 w-16"
                                   value={editItem.finalScore ?? ""}
                                   onChange={(e) =>
@@ -513,22 +541,61 @@ export default function ClassScorePage() {
                                     onClick={() => {
                                       dispatch(saveEdit());
                                       // Update UI immediately
-                                      const updated = edits.find(e => e.studentCode === sv.studentCode);
+                                      const updated = edits.find(
+                                        (e) => e.studentCode === sv.studentCode
+                                      );
+
                                       if (updated) {
-                                        setData(prevData => prevData.map(item => {
-                                          if (item.studentCode === sv.studentCode) {
-                                            // Update 4 trường điểm vào results (theo mapping scoreTypeName)
-                                            const newResults = item.results.map(r => {
-                                              if (r.scoreTypeName === "1") return { ...r, score: updated.theoryScore ?? -1 };
-                                              if (r.scoreTypeName === "2") return { ...r, score: updated.practiceScore ?? -1 };
-                                              if (r.scoreTypeName === "3") return { ...r, score: updated.midtermScore ?? -1 };
-                                              if (r.scoreTypeName === "4") return { ...r, score: updated.finalScore ?? -1 };
-                                              return r;
-                                            });
-                                            return { ...item, results: newResults };
-                                          }
-                                          return item;
-                                        }));
+                                        setData((prevData) =>
+                                          prevData.map((item) => {
+                                            if (
+                                              item.studentCode ===
+                                              sv.studentCode
+                                            ) {
+                                              // Update 4 trường điểm vào results (theo mapping scoreTypeName)
+                                              const newResults =
+                                                item.results.map((r) => {
+                                                  if (r.scoreTypeName === "1")
+                                                    return {
+                                                      ...r,
+                                                      score:
+                                                        updated.theoryScore ??
+                                                        -1,
+                                                    };
+                                                  if (r.scoreTypeName === "2")
+                                                    return {
+                                                      ...r,
+                                                      score:
+                                                        updated.practiceScore ??
+                                                        -1,
+                                                    };
+                                                  if (r.scoreTypeName === "3")
+                                                    return {
+                                                      ...r,
+                                                      score:
+                                                        updated.midtermScore ??
+                                                        -1,
+                                                    };
+                                                  if (r.scoreTypeName === "4")
+                                                    return {
+                                                      ...r,
+                                                      score:
+                                                        updated.finalScore ??
+                                                        -1,
+                                                    };
+
+                                                  return r;
+                                                });
+
+                                              return {
+                                                ...item,
+                                                results: newResults,
+                                              };
+                                            }
+
+                                            return item;
+                                          })
+                                        );
                                       }
                                     }}
                                   >
@@ -547,7 +614,9 @@ export default function ClassScorePage() {
                                 <Button
                                   size="sm"
                                   color="secondary"
-                                  onClick={() => dispatch(startEdit(sv.studentCode))}
+                                  onClick={() =>
+                                    dispatch(startEdit(sv.studentCode))
+                                  }
                                 >
                                   Edit
                                 </Button>
@@ -559,16 +628,6 @@ export default function ClassScorePage() {
                     })}
                   </TableBody>
                 </Table>
-                <div className="flex justify-end mt-4">
-                  <Button
-                    color="success"
-                    isLoading={isSaving}
-                    isDisabled={edits.length === 0}
-                    onClick={handleSaveChanges}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
               </div>
             </CardBody>
           </Card>

@@ -14,6 +14,7 @@ import {
   CheckClassConflictRequest,
   CheckClassConflictApiResponse,
 } from "./enrollment.dto";
+
 import { ScoreEditItem } from "@/store/slices/scoreEditSlice";
 
 export const enrollmentService = {
@@ -261,29 +262,48 @@ export const enrollmentService = {
       }
     );
   },
-  getStudentResultsByClassId: async (classId: string): Promise<BaseResponse<any>> => {
-    return enrollmentClient.get(`${API_ENDPOINTS.STUDENT_RESULTS}/class/${classId}`, {
-      headers: {
-        accept: "text/plain",
-      },
-    });
+  getStudentResultsByClassId: async (
+    classId: string
+  ): Promise<BaseResponse<any>> => {
+    return enrollmentClient.get(
+      `${API_ENDPOINTS.STUDENT_RESULTS}/class/${classId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
-  importStudentResults: async (classId: string, file: File): Promise<BaseResponse<any>> => {
+  importStudentResults: async (
+    classId: string,
+    file: File
+  ): Promise<BaseResponse<any>> => {
     const formData = new FormData();
     formData.append("excelFile", file);
-    return enrollmentClient.post(`${API_ENDPOINTS.STUDENT_RESULTS}/import-scores/${classId}`, formData, {
-      headers: {
-        accept: "text/plain",
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    return enrollmentClient.post(
+      `${API_ENDPOINTS.STUDENT_RESULTS}/import-scores/${classId}`,
+      formData,
+      {
+        headers: {
+          accept: "text/plain",
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   },
-  updateStudentScores: async (classId: string, scores: ScoreEditItem[]): Promise<BaseResponse<any>> => {
-    return enrollmentClient.post(`${API_ENDPOINTS.STUDENT_RESULTS}/update-scores/${classId}`, scores, {
-      headers: {
-        accept: "text/plain",
-        "Content-Type": "application/json",
-      },
-    });
+  updateStudentScores: async (
+    classId: string,
+    scores: ScoreEditItem[]
+  ): Promise<BaseResponse<any>> => {
+    return enrollmentClient.post(
+      `${API_ENDPOINTS.STUDENT_RESULTS}/update-scores/${classId}`,
+      scores,
+      {
+        headers: {
+          accept: "text/plain",
+          "Content-Type": "application/json",
+        },
+      }
+    );
   },
 };

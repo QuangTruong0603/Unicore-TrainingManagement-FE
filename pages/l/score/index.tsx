@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import { Input, Pagination } from "@heroui/react";
+import { useRouter } from "next/router";
+
 import { ClassFilter } from "@/components/a/class/class-filter";
 import DefaultLayout from "@/layouts/default";
 import { classService } from "@/services/class/class.service";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setClasses, setError, setLoading, setQuery, setTotal } from "@/store/slices/classSlice";
+import {
+  setClasses,
+  setError,
+  setLoading,
+  setQuery,
+  setTotal,
+} from "@/store/slices/classSlice";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Course } from "@/services/course/course.schema";
 import { courseService } from "@/services/course/course.service";
@@ -14,7 +22,6 @@ import { Shift } from "@/services/shift/shift.schema";
 import { shiftService } from "@/services/shift/shift.service";
 import { ClassTable } from "@/components/a/class/class-table";
 import { AcademicClass } from "@/services/class/class.schema";
-import { useRouter } from "next/router";
 
 interface FilterChip {
   id: string;
@@ -23,9 +30,13 @@ interface FilterChip {
 
 export default function ScorePage() {
   const dispatch = useAppDispatch();
-  const { classes, query, total, isLoading } = useAppSelector((state) => state.class);
+  const { classes, query, total, isLoading } = useAppSelector(
+    (state) => state.class
+  );
   const router = useRouter();
-  const [searchInputValue, setSearchInputValue] = useState<string>(query.filters?.name || "");
+  const [searchInputValue, setSearchInputValue] = useState<string>(
+    query.filters?.name || ""
+  );
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -36,8 +47,10 @@ export default function ScorePage() {
   // Effect for handling debounced search
   useEffect(() => {
     const currentSearchValue = query.filters?.name || "";
+
     if (currentSearchValue === debouncedSearchValue) return;
     const newFilters = query.filters ? { ...query.filters } : {};
+
     if (debouncedSearchValue) {
       newFilters.name = debouncedSearchValue;
     } else {
@@ -58,8 +71,9 @@ export default function ScorePage() {
       try {
         dispatch(setLoading(true));
         // Lấy lecturerId từ localStorage
-        const lecturerId = JSON.parse(localStorage.getItem("lecturerInfo") || "{}").id;
-        console.log(lecturerId);
+        const lecturerId = JSON.parse(
+          localStorage.getItem("lecturerInfo") || "{}"
+        ).id;
         const response = await classService.getClasses({
           ...query,
           filters: {
@@ -67,14 +81,18 @@ export default function ScorePage() {
             lecturerId: lecturerId || undefined,
           },
         });
+
         dispatch(setClasses(response.data.data || []));
         dispatch(setTotal(response.data.total || 0));
       } catch (error) {
-        dispatch(setError(error instanceof Error ? error.message : "An error occurred"));
+        dispatch(
+          setError(error instanceof Error ? error.message : "An error occurred")
+        );
       } finally {
         dispatch(setLoading(false));
       }
     };
+
     fetchClasses();
     updateFilterChipsFromQuery();
   }, [query, dispatch]);
@@ -89,6 +107,7 @@ export default function ScorePage() {
           orderBy: "name",
           isDesc: false,
         });
+
         setCourses(coursesResponse.data.data);
         const semestersResponse = await semesterService.getSemesters({
           pageNumber: 1,
@@ -96,13 +115,16 @@ export default function ScorePage() {
           orderBy: "year",
           isDesc: true,
         });
+
         setSemesters(semestersResponse.data.data);
         const shiftsResponse = await shiftService.getAllShifts();
+
         setShifts(shiftsResponse.data);
       } catch {
         // Silent error handling
       }
     };
+
     fetchFilterData();
   }, []);
 
@@ -110,32 +132,59 @@ export default function ScorePage() {
   const updateFilterChipsFromQuery = () => {
     if (!query.filters) {
       setFilterChips([]);
+
       return;
     }
     const newChips: FilterChip[] = [];
+
     if (query.filters.name) {
       newChips.push({ id: "name", label: `Name: ${query.filters.name}` });
     }
     if (query.filters.groupNumber) {
-      newChips.push({ id: "groupNumber", label: `Group: ${query.filters.groupNumber}` });
+      newChips.push({
+        id: "groupNumber",
+        label: `Group: ${query.filters.groupNumber}`,
+      });
     }
     if (query.filters.minCapacity) {
-      newChips.push({ id: "minCapacity", label: `Min Capacity: ${query.filters.minCapacity}` });
+      newChips.push({
+        id: "minCapacity",
+        label: `Min Capacity: ${query.filters.minCapacity}`,
+      });
     }
     if (query.filters.maxCapacity) {
-      newChips.push({ id: "maxCapacity", label: `Max Capacity: ${query.filters.maxCapacity}` });
+      newChips.push({
+        id: "maxCapacity",
+        label: `Max Capacity: ${query.filters.maxCapacity}`,
+      });
     }
     if (query.filters.courseId) {
-      const course = courses.find((course) => course.id === query.filters!.courseId);
-      newChips.push({ id: "courseId", label: `Course: ${course ? `${course.code} - ${course.name}` : "Unknown"}` });
+      const course = courses.find(
+        (course) => course.id === query.filters!.courseId
+      );
+
+      newChips.push({
+        id: "courseId",
+        label: `Course: ${course ? `${course.code} - ${course.name}` : "Unknown"}`,
+      });
     }
     if (query.filters.semesterId) {
-      const semester = semesters.find((semester) => semester.id === query.filters!.semesterId);
-      newChips.push({ id: "semesterId", label: `Semester: ${semester ? `${semester.semesterNumber}/${semester.year}` : "Unknown"}` });
+      const semester = semesters.find(
+        (semester) => semester.id === query.filters!.semesterId
+      );
+
+      newChips.push({
+        id: "semesterId",
+        label: `Semester: ${semester ? `${semester.semesterNumber}/${semester.year}` : "Unknown"}`,
+      });
     }
     if (query.filters.shiftId) {
       const shift = shifts.find((shift) => shift.id === query.filters!.shiftId);
-      newChips.push({ id: "shiftId", label: `Shift: ${shift ? shift.name : "Unknown"}` });
+
+      newChips.push({
+        id: "shiftId",
+        label: `Shift: ${shift ? shift.name : "Unknown"}`,
+      });
     }
     setFilterChips(newChips);
   };
@@ -239,14 +288,14 @@ export default function ScorePage() {
             classes={classes}
             expandedRows={expandedRows}
             isLoading={isLoading}
+            isScorePage={true}
             selectedClasses={[]}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
-            onRowToggle={toggleRow}
-            onSort={handleSort}
             onRegistrationToggle={() => {}}
+            onRowToggle={toggleRow}
             onSelectedClassesChange={() => {}}
-            isScorePage={true}
+            onSort={handleSort}
             onClassNameClick={handleClassNameClick}
             // Không truyền các props action
           />
