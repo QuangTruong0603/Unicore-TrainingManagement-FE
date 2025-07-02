@@ -14,6 +14,7 @@ import {
   CheckClassConflictRequest,
   CheckClassConflictApiResponse,
 } from "./enrollment.dto";
+import { ScoreEditItem } from "@/store/slices/scoreEditSlice";
 
 export const enrollmentService = {
   getEnrollments: async (
@@ -274,6 +275,14 @@ export const enrollmentService = {
       headers: {
         accept: "text/plain",
         "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+  updateStudentScores: async (classId: string, scores: ScoreEditItem[]): Promise<BaseResponse<any>> => {
+    return enrollmentClient.post(`${API_ENDPOINTS.STUDENT_RESULTS}/update-scores/${classId}`, scores, {
+      headers: {
+        accept: "text/plain",
+        "Content-Type": "application/json",
       },
     });
   },
