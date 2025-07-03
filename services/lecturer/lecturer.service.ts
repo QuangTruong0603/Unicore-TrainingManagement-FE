@@ -76,4 +76,9 @@ export const lecturerService = {
       }
     );
   },
+  getLecturerByEmail: async (email: string): Promise<any> => {
+    return lecturerClient.get(
+      `${API_ENDPOINTS.LECTURERS}/get-lecturer-by-email?email=${email}`
+    );
+  },
 }; 

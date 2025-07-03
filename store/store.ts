@@ -7,6 +7,7 @@ import semesterReducer from "./slices/semesterSlice";
 import classReducer from "./slices/classSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
 import lecturerReducer from "./slices/lecturerSlice";
+import scoreEditReducer from "./slices/scoreEditSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     class: classReducer,
     enrollment: enrollmentReducer,
     lecturer: lecturerReducer,
+    scoreEdit: scoreEditReducer,
   },
 });
 
