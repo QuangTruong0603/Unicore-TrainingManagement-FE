@@ -34,17 +34,16 @@ const scoreEditSlice = createSlice({
         studentCode: string;
         field: keyof Omit<ScoreEditItem, "studentCode">;
         value: number | null;
+        current: Omit<ScoreEditItem, "studentCode">;
       }>
     ) {
-      const { studentCode, field, value } = action.payload;
+      const { studentCode, field, value, current } = action.payload;
       let item = state.edits.find((e) => e.studentCode === studentCode);
+
       if (!item) {
         item = {
           studentCode,
-          theoryScore: null,
-          practiceScore: null,
-          midtermScore: null,
-          finalScore: null,
+          ...current,
         };
         state.edits.push(item);
       }
@@ -68,4 +67,4 @@ export const {
   clearAllEdits,
 } = scoreEditSlice.actions;
 
-export default scoreEditSlice.reducer; 
+export default scoreEditSlice.reducer;

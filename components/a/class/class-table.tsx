@@ -152,7 +152,11 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         <div
           className={`max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis ${isScorePage ? "text-primary cursor-pointer font-semibold" : ""}`}
           title={academicClass.name}
-          onClick={isScorePage && onClassNameClick ? () => onClassNameClick(academicClass) : undefined}
+          onClick={
+            isScorePage && onClassNameClick
+              ? () => onClassNameClick(academicClass)
+              : undefined
+          }
           {...(isScorePage && onClassNameClick
             ? {
                 role: "button",
@@ -358,7 +362,8 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                       onApproveAllEnrollments(academicClass);
                     break;
                   case "rejectEnrollments":
-                    if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
+                    if (onRejectAllEnrollments)
+                      onRejectAllEnrollments(academicClass);
                     break;
                   case "moveEnrollments":
                     if (onMoveEnrollments) onMoveEnrollments(academicClass);

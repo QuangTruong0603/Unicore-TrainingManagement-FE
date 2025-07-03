@@ -27,6 +27,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
       setSelectedFile(file);
       setFileError("");
@@ -37,6 +38,7 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
     setFileError("");
     if (!selectedFile) {
       setFileError("File is required");
+
       return;
     }
     onSubmit(selectedFile);
@@ -49,10 +51,10 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
         <ModalBody>
           <Input
             isRequired
+            accept=".xlsx,.xls"
             errorMessage={fileError}
             label="Upload Excel File"
             type="file"
-            accept=".xlsx,.xls"
             onChange={handleFileChange}
           />
           {selectedFile && (
@@ -82,4 +84,4 @@ export const ImportScoreModal: React.FC<ImportScoreModalProps> = ({
       </ModalContent>
     </Modal>
   );
-}; 
+};

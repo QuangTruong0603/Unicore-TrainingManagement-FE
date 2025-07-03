@@ -1,8 +1,5 @@
 import { useRouter } from "next/router";
-import { useEffect, useState, useRef } from "react";
-import { enrollmentService } from "@/services/enrollment/enrollment.service";
-import { classService } from "@/services/class/class.service";
-import DefaultLayout from "@/layouts/default";
+import { useEffect, useState } from "react";
 import {
   Spinner,
   Button,
@@ -19,10 +16,14 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { AcademicClass } from "@/services/class/class.schema";
 import { Download, Upload, FileDown, MoreVertical } from "lucide-react";
 import * as XLSX from "xlsx";
 import { addToast } from "@heroui/react";
+
+import { enrollmentService } from "@/services/enrollment/enrollment.service";
+import { classService } from "@/services/class/class.service";
+import DefaultLayout from "@/layouts/default";
+import { AcademicClass } from "@/services/class/class.schema";
 import { ImportScoreModal } from "@/components/a/material/import-score-modal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -57,7 +58,6 @@ export default function ClassScorePage() {
   >([]);
   const [classInfo, setClassInfo] = useState<AcademicClass | null>(null);
   const [loadingClass, setLoadingClass] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const dispatch = useAppDispatch();
@@ -307,35 +307,47 @@ export default function ClassScorePage() {
           <div className="flex gap-2 items-center">
             <Button
               color="success"
-              isLoading={isSaving}
               isDisabled={edits.length === 0}
+              isLoading={isSaving}
               onClick={handleSaveChanges}
             >
               Save Changes
             </Button>
             <Dropdown>
               <DropdownTrigger>
-                <Button isIconOnly variant="flat" color="secondary">
+                <Button isIconOnly color="secondary" variant="flat">
                   <MoreVertical size={20} />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Score Actions">
-                <DropdownItem key="export-template" startContent={<FileDown size={16} />} onClick={handleExportTemplate}>
+                <DropdownItem
+                  key="export-template"
+                  startContent={<FileDown size={16} />}
+                  onClick={handleExportTemplate}
+                >
                   Export Template
                 </DropdownItem>
-                <DropdownItem key="export" startContent={<Download size={16} />} onClick={handleExportData}>
+                <DropdownItem
+                  key="export"
+                  startContent={<Download size={16} />}
+                  onClick={handleExportData}
+                >
                   Export
                 </DropdownItem>
-                <DropdownItem key="import" startContent={<Upload size={16} />} onClick={() => setIsImportModalOpen(true)}>
+                <DropdownItem
+                  key="import"
+                  startContent={<Upload size={16} />}
+                  onClick={() => setIsImportModalOpen(true)}
+                >
                   Import
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
             <ImportScoreModal
               isOpen={isImportModalOpen}
+              isSubmitting={isImporting}
               onOpenChange={() => setIsImportModalOpen(false)}
               onSubmit={handleImportModalSubmit}
-              isSubmitting={isImporting}
             />
           </div>
         </div>
@@ -349,7 +361,7 @@ export default function ClassScorePage() {
           <Card>
             <CardBody>
               <div className="overflow-x-auto">
-                <Table aria-label="Score table" isStriped isHeaderSticky>
+                <Table isHeaderSticky isStriped aria-label="Score table">
                   <TableHeader>
                     {[
                       <TableColumn key="code">Student Code</TableColumn>,
@@ -373,15 +385,6 @@ export default function ClassScorePage() {
                   >
                     {data.map((sv) => {
                       const isEditing = editingStudentCode === sv.studentCode;
-                      const editItem = edits.find(
-                        (e) => e.studentCode === sv.studentCode
-                      ) || {
-                        studentCode: sv.studentCode,
-                        theoryScore: null,
-                        practiceScore: null,
-                        midtermScore: null,
-                        finalScore: null,
-                      };
                       // Helper to get score from results by typeName
                       const getScore = (
                         sv: StudentResult,
@@ -393,9 +396,18 @@ export default function ClassScorePage() {
 
                         return result
                           ? result.score === -1
-                            ? "-"
+                            ? null
                             : result.score
-                          : "-";
+                          : null;
+                      };
+                      const editItem = edits.find(
+                        (e) => e.studentCode === sv.studentCode
+                      ) || {
+                        studentCode: sv.studentCode,
+                        theoryScore: getScore(sv, "1"),
+                        practiceScore: getScore(sv, "2"),
+                        midtermScore: getScore(sv, "3"),
+                        finalScore: getScore(sv, "4"),
                       };
 
                       return (
@@ -406,13 +418,13 @@ export default function ClassScorePage() {
                             <TableCell key="theory">
                               {isEditing ? (
                                 <input
-                                  type="number"
                                   className="border rounded px-1 py-0.5 w-16"
-                                  min={0}
                                   max={10}
+                                  min={0}
                                   placeholder={
                                     editItem.theoryScore?.toString() ?? ""
                                   }
+                                  type="number"
                                   value={editItem.theoryScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -423,6 +435,12 @@ export default function ClassScorePage() {
                                           e.target.value === ""
                                             ? null
                                             : Number(e.target.value),
+                                        current: {
+                                          theoryScore: editItem.theoryScore,
+                                          practiceScore: editItem.practiceScore,
+                                          midtermScore: editItem.midtermScore,
+                                          finalScore: editItem.finalScore,
+                                        },
                                       })
                                     )
                                   }
@@ -434,13 +452,13 @@ export default function ClassScorePage() {
                             <TableCell key="practice">
                               {isEditing ? (
                                 <input
-                                  type="number"
                                   className="border rounded px-1 py-0.5 w-16"
-                                  min={0}
                                   max={10}
+                                  min={0}
                                   placeholder={
                                     editItem.practiceScore?.toString() ?? ""
                                   }
+                                  type="number"
                                   value={editItem.practiceScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -451,6 +469,12 @@ export default function ClassScorePage() {
                                           e.target.value === ""
                                             ? null
                                             : Number(e.target.value),
+                                        current: {
+                                          theoryScore: editItem.theoryScore,
+                                          practiceScore: editItem.practiceScore,
+                                          midtermScore: editItem.midtermScore,
+                                          finalScore: editItem.finalScore,
+                                        },
                                       })
                                     )
                                   }
@@ -462,13 +486,13 @@ export default function ClassScorePage() {
                             <TableCell key="midterm">
                               {isEditing ? (
                                 <input
-                                  type="number"
                                   className="border rounded px-1 py-0.5 w-16"
-                                  min={0}
                                   max={10}
+                                  min={0}
                                   placeholder={
                                     editItem.midtermScore?.toString() ?? ""
                                   }
+                                  type="number"
                                   value={editItem.midtermScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -479,6 +503,12 @@ export default function ClassScorePage() {
                                           e.target.value === ""
                                             ? null
                                             : Number(e.target.value),
+                                        current: {
+                                          theoryScore: editItem.theoryScore,
+                                          practiceScore: editItem.practiceScore,
+                                          midtermScore: editItem.midtermScore,
+                                          finalScore: editItem.finalScore,
+                                        },
                                       })
                                     )
                                   }
@@ -490,13 +520,13 @@ export default function ClassScorePage() {
                             <TableCell key="final">
                               {isEditing ? (
                                 <input
-                                  type="number"
-                                  min={0}
+                                  className="border rounded px-1 py-0.5 w-16"
                                   max={10}
+                                  min={0}
                                   placeholder={
                                     editItem.finalScore?.toString() ?? ""
                                   }
-                                  className="border rounded px-1 py-0.5 w-16"
+                                  type="number"
                                   value={editItem.finalScore ?? ""}
                                   onChange={(e) =>
                                     dispatch(
@@ -507,6 +537,12 @@ export default function ClassScorePage() {
                                           e.target.value === ""
                                             ? null
                                             : Number(e.target.value),
+                                        current: {
+                                          theoryScore: editItem.theoryScore,
+                                          practiceScore: editItem.practiceScore,
+                                          midtermScore: editItem.midtermScore,
+                                          finalScore: editItem.finalScore,
+                                        },
                                       })
                                     )
                                   }
@@ -536,8 +572,8 @@ export default function ClassScorePage() {
                               {isEditing ? (
                                 <>
                                   <Button
-                                    size="sm"
                                     color="primary"
+                                    size="sm"
                                     onClick={() => {
                                       dispatch(saveEdit());
                                       // Update UI immediately
@@ -602,8 +638,8 @@ export default function ClassScorePage() {
                                     Done
                                   </Button>
                                   <Button
-                                    size="sm"
                                     color="danger"
+                                    size="sm"
                                     variant="flat"
                                     onClick={() => dispatch(cancelEdit())}
                                   >
@@ -612,8 +648,8 @@ export default function ClassScorePage() {
                                 </>
                               ) : (
                                 <Button
-                                  size="sm"
                                   color="secondary"
+                                  size="sm"
                                   onClick={() =>
                                     dispatch(startEdit(sv.studentCode))
                                   }

@@ -297,7 +297,6 @@ export default function ScorePage() {
             onSelectedClassesChange={() => {}}
             onSort={handleSort}
             onClassNameClick={handleClassNameClick}
-            // Không truyền các props action
           />
           {/* Pagination */}
           <div className="px-4 py-3 border-t flex justify-end">

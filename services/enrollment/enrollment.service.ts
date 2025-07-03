@@ -279,7 +279,9 @@ export const enrollmentService = {
     file: File
   ): Promise<BaseResponse<any>> => {
     const formData = new FormData();
+
     formData.append("excelFile", file);
+
     return enrollmentClient.post(
       `${API_ENDPOINTS.STUDENT_RESULTS}/import-scores/${classId}`,
       formData,
