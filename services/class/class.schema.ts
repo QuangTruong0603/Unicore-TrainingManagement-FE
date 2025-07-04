@@ -95,6 +95,7 @@ export const academicClassFilterSchema = z.object({
   roomId: z.string().optional(),
   scheduleInDayIds: z.array(z.string()).optional(),
   enrollmentStatus: z.number().optional(),
+  lecturerId: z.string().optional(),
 });
 
 export type AcademicClassFilter = z.infer<typeof academicClassFilterSchema>;

@@ -11,7 +11,7 @@ export {
   locationClient,
   buildingClient,
   floorClient,
-  roomClient
+  roomClient,
 } from "./http-client";
 export type { ApiError } from "./http-client";
 

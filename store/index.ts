@@ -19,6 +19,7 @@ import shiftReducer from "./slices/shiftSlice";
 import enrollmentReducer from "./slices/enrollmentSlice";
 import lecturerReducer from "./slices/lecturerSlice";
 import examReducer from "./slices/examSlice";
+import scoreEditReducer from "./slices/scoreEditSlice";
 
 export const store = configureStore({
   reducer: {
@@ -41,6 +42,7 @@ export const store = configureStore({
     enrollment: enrollmentReducer,
     lecturer: lecturerReducer,
     exam: examReducer,
+    scoreEdit: scoreEditReducer,
   },
 });
 

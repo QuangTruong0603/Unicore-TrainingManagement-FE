@@ -190,6 +190,15 @@ const Sidebar: React.FC<ISidebarProps> = ({
     { key: "/t", title: "Training", icon: <Book size={20} /> },
   ];
 
+  const lecturerMenuItems: IMenuItem[] = [
+    { key: "/l", title: "Lecturer", icon: <User size={20} /> },
+    {
+      key: "/l/score",
+      title: "Score Mangement",
+      icon: <ClipboardList size={20} />,
+    },
+  ];
+
   const bottomMenuItems: IMenuItem[] = [
     { key: "settings", title: "Settings", icon: <Settings size={20} /> },
     {
@@ -217,7 +226,9 @@ const Sidebar: React.FC<ISidebarProps> = ({
       ? adminMenuItems
       : user?.role === "TrainingManager"
         ? trainingManagerMenuItems
-        : studentMenuItems;
+        : user?.role === "Lecturer"
+          ? lecturerMenuItems
+          : studentMenuItems;
 
   return (
     <Card
