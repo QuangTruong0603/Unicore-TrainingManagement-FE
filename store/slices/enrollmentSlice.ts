@@ -20,6 +20,8 @@ interface EnrollmentState {
   selectedEnrollment: Enrollment | null;
   selectedClassIds: string[]; // For tracking selected classes to enroll
   isEnrolling: boolean; // For tracking enrollment process
+  selectedEnrollmentIds: string[]; // For tracking selected enrollments for exam
+  isAddingToExam: boolean; // For tracking add to exam process
 }
 
 const initialState: EnrollmentState = {
@@ -36,6 +38,8 @@ const initialState: EnrollmentState = {
   selectedEnrollment: null,
   selectedClassIds: [],
   isEnrolling: false,
+  selectedEnrollmentIds: [],
+  isAddingToExam: false,
 };
 
 // No async thunks - we'll use React Query hooks instead
@@ -85,6 +89,26 @@ const enrollmentSlice = createSlice({
     setEnrolling: (state, action: PayloadAction<boolean>) => {
       state.isEnrolling = action.payload;
     },
+    // Actions for managing selected enrollment IDs for exam
+    setSelectedEnrollmentIds: (state, action: PayloadAction<string[]>) => {
+      state.selectedEnrollmentIds = action.payload;
+    },
+    addSelectedEnrollmentId: (state, action: PayloadAction<string>) => {
+      if (!state.selectedEnrollmentIds.includes(action.payload)) {
+        state.selectedEnrollmentIds.push(action.payload);
+      }
+    },
+    removeSelectedEnrollmentId: (state, action: PayloadAction<string>) => {
+      state.selectedEnrollmentIds = state.selectedEnrollmentIds.filter(
+        (id) => id !== action.payload
+      );
+    },
+    clearSelectedEnrollmentIds: (state) => {
+      state.selectedEnrollmentIds = [];
+    },
+    setAddingToExam: (state, action: PayloadAction<boolean>) => {
+      state.isAddingToExam = action.payload;
+    },
     // Reset entire state
     resetEnrollmentState: () => initialState,
   },
@@ -102,6 +126,11 @@ export const {
   setSelectedClasses,
   clearSelectedClasses,
   setEnrolling,
+  setSelectedEnrollmentIds,
+  addSelectedEnrollmentId,
+  removeSelectedEnrollmentId,
+  clearSelectedEnrollmentIds,
+  setAddingToExam,
   resetEnrollmentState,
 } = enrollmentSlice.actions;
 
