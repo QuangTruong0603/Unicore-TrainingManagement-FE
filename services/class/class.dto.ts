@@ -33,6 +33,11 @@ export interface ClassRegistrationScheduleDto {
   registrationCloseTime: Date;
 }
 
+export interface AssignLecturerToClassesDto {
+  lecturerId: string;
+  academicClassIds: string[];
+}
+
 export interface AcademicClassResponse extends BaseResponse<AcademicClass> {}
 
 export interface AcademicClassListResponse

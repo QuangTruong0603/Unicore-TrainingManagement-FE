@@ -4,7 +4,6 @@ import {
   Users,
   Settings,
   BarChart,
-  HelpCircle,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -115,8 +114,8 @@ const Sidebar: React.FC<ISidebarProps> = ({
           icon: <UserPlus size={20} />,
         },
         {
-          key: "/a/training/exam-schedule",
-          title: "Exam schedule",
+          key: "/a/training/exam",
+          title: "Exam",
           icon: <CalendarRange size={20} />,
         },
       ],

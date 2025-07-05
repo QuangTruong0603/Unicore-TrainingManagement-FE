@@ -54,6 +54,7 @@ export const academicClassBasic = z.object({
   enrollmentCount: z.number(),
   minEnrollmentRequired: z.number().optional(),
   enrollmentStatus: z.number().optional(),
+  lecturerId: z.string().optional(),
 });
 
 export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
@@ -78,6 +79,7 @@ export const academicClassSchema: z.ZodType<any> = z.lazy(() =>
     enrollmentCount: z.number(),
     minEnrollmentRequired: z.number().optional(),
     enrollmentStatus: z.number().optional(),
+    lecturerId: z.string().optional(),
   })
 );
 

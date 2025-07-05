@@ -8,6 +8,7 @@ import { AcademicClassQuery } from "./class.schema";
 import {
   AcademicClassCreateDto,
   ClassRegistrationScheduleDto,
+  AssignLecturerToClassesDto,
 } from "./class.dto";
 import { classService } from "./class.service";
 
@@ -133,6 +134,14 @@ export const useCreateClassRegistrationSchedule = () => {
   return useMutation({
     mutationFn: (scheduleData: ClassRegistrationScheduleDto) =>
       classService.createClassRegistrationSchedule(scheduleData),
+  });
+};
+
+// Mutation for assigning lecturer to classes
+export const useAssignLecturerToClasses = () => {
+  return useMutation({
+    mutationFn: (assignData: AssignLecturerToClassesDto) =>
+      classService.assignLecturerToClasses(assignData),
   });
 };
 

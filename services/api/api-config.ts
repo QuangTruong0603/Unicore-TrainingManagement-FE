@@ -31,10 +31,10 @@ export const API_ENDPOINTS = {
   LOCATIONS: "/m/Location", // Added location endpoint
   DEPARTMENTS: "/m/Department", // Added department endpoint  BUILDINGS: "/m/Building", // Added building endpoint
   FLOORS: "/m/Floor", // Added floor endpoint
-  ROOMS: "/m/Room", // Added room endpoint
-  BUILDINGS: "/m/Building", // Added building endpoint
+  ROOMS: "/m/Room", // Added room endpoint  BUILDINGS: "/m/Building", // Added building endpoint
   ENROLLMENTS: "/e/Enrollments", // Added enrollment endpoint
-  LECTURERS: "/u/Lecturer",
+  EXAMS: "/e/Exams", // Added exam endpoint
+  LECTURERS: "/u/Lecturer", // Added lecturer endpoint
   STUDENT_RESULTS: "/StudentResult", // Added student result endpoint
 };
 

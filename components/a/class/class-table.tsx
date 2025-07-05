@@ -33,6 +33,76 @@ import {
 import styles from "./class-table.module.scss";
 
 import { AcademicClass } from "@/services/class/class.schema";
+import { useLecturerById } from "@/services/lecturer/lecturer.hooks";
+
+// Lecturer cell component that fetches lecturer data
+const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
+  const { data: lecturerResponse, isLoading } = useLecturerById(lecturerId);
+  const lecturer = lecturerResponse?.data;
+
+  // Don't show loading if there's no lecturerId
+  if (!lecturerId) {
+    return <span className="text-xs text-gray-400 italic">Not assigned</span>;
+  }
+
+  if (isLoading) {
+    return <span className="text-xs text-gray-400">Loading...</span>;
+  }
+
+  if (!lecturer) {
+    return <span className="text-xs text-gray-400 italic">Not assigned</span>;
+  }
+
+  // Additional safety check for applicationUser
+  if (!lecturer.applicationUser) {
+    return <span className="text-xs text-gray-400 italic">Not assigned</span>;
+  }
+
+  return (
+    <div className={styles.lecturerCell}>
+      <Tooltip
+        content={`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName} (${lecturer.lecturerCode})`}
+      >
+        <span className="text-sm text-gray-700 cursor-help">
+          {`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`}
+          <span className="text-xs text-gray-500 ml-1">
+            ({lecturer.lecturerCode})
+          </span>
+        </span>
+      </Tooltip>
+    </div>
+  );
+};
+
+// Lecturer display component for expanded details
+const LecturerDisplay: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
+  const { data: lecturerResponse, isLoading } = useLecturerById(lecturerId);
+  const lecturer = lecturerResponse?.data;
+
+  // Don't show loading if there's no lecturerId
+  if (!lecturerId) {
+    return <span className="text-sm text-gray-500">Not assigned</span>;
+  }
+
+  if (isLoading) {
+    return <span className="text-sm">Loading...</span>;
+  }
+
+  if (!lecturer) {
+    return <span className="text-sm text-gray-500">Not assigned</span>;
+  }
+
+  // Additional safety check for applicationUser
+  if (!lecturer.applicationUser) {
+    return <span className="text-sm text-gray-500">Not assigned</span>;
+  }
+
+  return (
+    <span className="text-sm">
+      {`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName} (${lecturer.lecturerCode})`}
+    </span>
+  );
+};
 
 interface ClassTableProps {
   classes: AcademicClass[];
@@ -149,6 +219,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       title: "Name",
       sortable: true,
       render: (academicClass: AcademicClass) => (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div
           className={`max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis ${isScorePage ? "text-primary cursor-pointer font-semibold" : ""}`}
           title={academicClass.name}
@@ -224,6 +295,14 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             </span>
           </Tooltip>
         </div>
+      ),
+    },
+    {
+      key: "lecturer",
+      title: "Lecturer",
+      sortable: false,
+      render: (academicClass: AcademicClass) => (
+        <LecturerCell lecturerId={academicClass.lecturerId} />
       ),
     },
     {
@@ -532,6 +611,10 @@ export const ClassTable: React.FC<ClassTableProps> = ({
               <span className="font-medium">Semester:</span>{" "}
               {`${academicClass.semester.semesterNumber}/${academicClass.semester.year}`}
             </p>
+            <p className="text-sm">
+              <span className="font-medium">Lecturer:</span>{" "}
+              <LecturerDisplay lecturerId={academicClass.lecturerId} />
+            </p>
             {academicClass.minEnrollmentRequired && (
               <p className="text-sm">
                 <span className="font-medium">Min Enrollment:</span>{" "}
@@ -564,6 +647,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         aria-label="Classes table"
         classNames={{
           base: "min-h-[400px]",
+          table: "min-w-[1200px]", // Ensure minimum width for horizontal scrolling
         }}
         selectionMode="none"
       >
