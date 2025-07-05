@@ -1,12 +1,14 @@
 /* eslint-disable no-console */
-import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { lecturerClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 import { BaseResponse } from "../api/api-response";
 
 import { LecturerQuery } from "./lecturer.schema";
-import { LecturerListResponse } from "./lecturer.dto";
+import {
+  LecturerListResponse,
+  LecturersByMajorsResponse,
+  LecturerResponse,
+} from "./lecturer.dto";
 
 export const lecturerService = {
   getLecturers: async (query: LecturerQuery): Promise<LecturerListResponse> => {
@@ -38,7 +40,7 @@ export const lecturerService = {
       },
     });
   },
-  getLecturerById: async (lecturerId: string): Promise<any> => {
+  getLecturerById: async (lecturerId: string): Promise<LecturerResponse> => {
     return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`, {
       headers: {
         accept: "text/plain",
@@ -49,7 +51,10 @@ export const lecturerService = {
     lecturerCode: string,
     data: Partial<any>
   ): Promise<any> => {
-    return lecturerClient.put(`${API_ENDPOINTS.LECTURERS}/${lecturerCode}`, data);
+    return lecturerClient.put(
+      `${API_ENDPOINTS.LECTURERS}/${lecturerCode}`,
+      data
+    );
   },
   createLecturer: async (data: Partial<any>): Promise<any> => {
     return lecturerClient.post(`${API_ENDPOINTS.LECTURERS}`, data);
@@ -81,4 +86,18 @@ export const lecturerService = {
       `${API_ENDPOINTS.LECTURERS}/get-lecturer-by-email?email=${email}`
     );
   },
-}; 
+  getLecturersByMajorsDepartment: async (
+    majorIds: string[]
+  ): Promise<LecturersByMajorsResponse> => {
+    return lecturerClient.post(
+      `${API_ENDPOINTS.LECTURERS}/by-majors-department`,
+      majorIds,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+};

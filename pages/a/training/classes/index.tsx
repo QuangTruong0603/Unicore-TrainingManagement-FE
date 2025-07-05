@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Play,
   XCircle,
+  UserPlus,
 } from "lucide-react";
 import {
   Button,
@@ -20,6 +21,7 @@ import { ClassModal } from "@/components/a/class/class-modal";
 import { ClassTable } from "@/components/a/class/class-table";
 import { ClassRegistrationModal } from "@/components/a/class/class-registration-modal";
 import { MoveEnrollmentsModal } from "@/components/a/class/move-enrollments-modal";
+import { AssignLecturerModal } from "@/components/a/class/assign-lecturer-modal";
 import DefaultLayout from "@/layouts/default";
 import { AcademicClass } from "@/services/class/class.schema";
 import {
@@ -97,6 +99,13 @@ export default function ClassesPage() {
     isOpen: isMoveEnrollmentsOpen,
     onOpen: onMoveEnrollmentsOpen,
     onOpenChange: onMoveEnrollmentsOpenChange,
+  } = useDisclosure();
+
+  // Assign lecturer modal
+  const {
+    isOpen: isAssignLecturerOpen,
+    onOpen: onAssignLecturerOpen,
+    onOpenChange: onAssignLecturerOpenChange,
   } = useDisclosure();
 
   // State for move enrollments
@@ -516,7 +525,7 @@ export default function ClassesPage() {
   };
   const handleUpdateClassFromTable = (academicClass: AcademicClass) => {
     dispatch(setSelectedClass(academicClass));
-    onUpdateOpenChange();
+    onUpdateOpen();
   };
 
   const handleToggleActivation = (academicClass: AcademicClass) => {
@@ -855,6 +864,89 @@ export default function ClassesPage() {
     );
   };
 
+  // Helper function to get major IDs from selected classes
+  const getMajorIdsFromSelectedClasses = (): string[] => {
+    try {
+      const selectedClassesData = classes.filter((cls) =>
+        selectedClasses.includes(cls.id)
+      );
+      const majorIds = new Set<string>();
+
+      selectedClassesData.forEach((classObj) => {
+        // Add comprehensive null checks for course and majorIds
+        if (
+          classObj &&
+          classObj.course &&
+          classObj.course.majorIds &&
+          Array.isArray(classObj.course.majorIds)
+        ) {
+          // majorIds is an array of strings, not objects
+          classObj.course.majorIds.forEach((majorId: string) => {
+            if (majorId && typeof majorId === "string") {
+              majorIds.add(majorId);
+            }
+          });
+        }
+        // Also check for majors array (in case some courses use the object format)
+        else if (
+          classObj &&
+          classObj.course &&
+          classObj.course.majors &&
+          Array.isArray(classObj.course.majors)
+        ) {
+          classObj.course.majors.forEach((major: any) => {
+            if (major && typeof major === "object" && major.id) {
+              majorIds.add(major.id);
+            }
+          });
+        }
+      });
+
+      return Array.from(majorIds);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error getting major IDs from selected classes:", error);
+
+      return [];
+    }
+  };
+
+  // Assign lecturer handlers
+  const handleAssignLecturer = () => {
+    if (selectedClasses.length > 0) {
+      const majorIds = getMajorIdsFromSelectedClasses();
+
+      if (majorIds.length === 0) {
+        addToast({
+          title: "Warning",
+          description:
+            "Selected classes don't have associated majors. Cannot fetch lecturers.",
+          color: "warning",
+        });
+
+        return;
+      }
+
+      onAssignLecturerOpen();
+    }
+  };
+
+  const handleLecturerAssignmentSuccess = async (message: string) => {
+    addToast({
+      title: "Success",
+      description: message,
+      color: "success",
+    });
+    onAssignLecturerOpenChange();
+    setSelectedClasses([]);
+    
+    // Refresh the classes list
+    const response = await classService.getClasses(query);
+
+    dispatch(setClasses(response.data.data));
+    dispatch(setTotal(response.data.total));
+  };
+
   return (
     <DefaultLayout>
       <div className="container mx-auto px-4 py-8">
@@ -890,6 +982,13 @@ export default function ClassesPage() {
                     Reject ({selectedClasses.length})
                   </Button>
                 )}
+                <Button
+                  color="warning"
+                  startContent={<UserPlus className="w-4 h-4" />}
+                  onClick={handleAssignLecturer}
+                >
+                  Assign Lecturer ({selectedClasses.length})
+                </Button>
                 <Button
                   color="secondary"
                   startContent={<CalendarClock className="w-4 h-4" />}
@@ -1015,6 +1114,20 @@ export default function ClassesPage() {
           onOpenChange={onMoveEnrollmentsOpenChange}
           onSubmit={handleMoveEnrollmentsSubmit}
         />
+
+        {/* Assign Lecturer Modal */}
+        {isAssignLecturerOpen && selectedClasses.length > 0 && (
+          <AssignLecturerModal
+            isOpen={isAssignLecturerOpen}
+            majorIds={getMajorIdsFromSelectedClasses()}
+            selectedClassIds={selectedClasses}
+            selectedClassNames={classes
+              .filter((c) => selectedClasses.includes(c.id))
+              .map((c) => c.name)}
+            onAssignSuccess={handleLecturerAssignmentSuccess}
+            onClose={() => onAssignLecturerOpenChange()}
+          />
+        )}
       </div>
     </DefaultLayout>
   );

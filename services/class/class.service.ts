@@ -8,6 +8,7 @@ import {
   AcademicClassListResponse,
   AcademicClassCreateDto,
   ClassRegistrationScheduleDto,
+  AssignLecturerToClassesDto,
 } from "./class.dto";
 
 export const classService = {
@@ -213,5 +214,19 @@ export const classService = {
     );
 
     return response.data;
+  },
+
+  assignLecturerToClasses: async (
+    assignData: AssignLecturerToClassesDto
+  ): Promise<BaseResponse<string>> => {
+    return courseClient.put(
+      `${API_ENDPOINTS.CLASSES}/assign-lecturer`,
+      assignData,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
   },
 };

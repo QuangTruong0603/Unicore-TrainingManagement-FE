@@ -1,3 +1,37 @@
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  
+  // Ensure table maintains minimum width for proper horizontal scrolling
+  table {
+    min-width: 1200px; // Adjust based on your column needs
+  }
+}
+
+.lecturerCell {
+  max-width: 200px;
+  overflow-x: auto;
+  white-space: nowrap;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
 .classTable {
   width: 100%;
   overflow-x: auto;
