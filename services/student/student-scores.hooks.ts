@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { studentScoresService } from "./student-scores.service";
 
 export const useStudentScores = (studentId: string, semesterId: string) => {
@@ -7,4 +8,4 @@ export const useStudentScores = (studentId: string, semesterId: string) => {
     queryFn: () => studentScoresService.getStudentScores(studentId, semesterId),
     enabled: !!studentId && !!semesterId,
   });
-}; 
+};

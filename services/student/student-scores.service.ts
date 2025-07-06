@@ -1,6 +1,5 @@
 import { enrollmentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
-import { BaseResponse } from "../api";
 
 export interface ComponentScore {
   scoreTypeId: string;
@@ -27,6 +26,7 @@ export interface StudentScore {
   isPassed: boolean;
   componentScores: ComponentScore[];
   practiceScores: PracticeScore[];
+  totalCredits: number;
 }
 
 export interface StudentScoresResponse {
@@ -49,4 +49,4 @@ export const studentScoresService = {
       }
     );
   },
-}; 
+};

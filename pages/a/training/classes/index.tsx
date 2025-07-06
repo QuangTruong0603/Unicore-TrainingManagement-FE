@@ -939,7 +939,7 @@ export default function ClassesPage() {
     });
     onAssignLecturerOpenChange();
     setSelectedClasses([]);
-    
+
     // Refresh the classes list
     const response = await classService.getClasses(query);
 

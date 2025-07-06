@@ -46,10 +46,7 @@ const ClassResultPage = () => {
     isLoading: isLoadingScores,
     error: scoresError,
     refetch: refetchScores,
-  } = useStudentScores(
-    studentInfo?.id || "",
-    selectedSemesterId || ""
-  );
+  } = useStudentScores(studentInfo?.id || "", selectedSemesterId || "");
 
   // Set default semester (current active semester)
   useEffect(() => {
@@ -72,25 +69,26 @@ const ClassResultPage = () => {
     refetchScores();
   };
 
-  const getScoreTypeName = (scoreType: number) => {
-    switch (scoreType) {
-      case 1:
-        return "Theory";
-      case 2:
-        return "Practice";
-      case 3:
-        return "Midterm";
-      case 4:
-        return "Final";
-      default:
-        return "Unknown";
-    }
-  };
+  // const getScoreTypeName = (scoreType: number) => {
+  //   switch (scoreType) {
+  //     case 1:
+  //       return "Theory";
+  //     case 2:
+  //       return "Practice";
+  //     case 3:
+  //       return "Midterm";
+  //     case 4:
+  //       return "Final";
+  //     default:
+  //       return "Unknown";
+  //   }
+  // };
 
   const getScoreColor = (score: number) => {
     if (score >= 8.5) return "success";
     if (score >= 7.0) return "primary";
     if (score >= 5.5) return "warning";
+
     return "danger";
   };
 
@@ -107,8 +105,40 @@ const ClassResultPage = () => {
   };
 
   const getComponentScore = (scores: any[], scoreType: number) => {
-    const score = scores.find(s => s.scoreType === scoreType);
+    const score = scores.find((s) => s.scoreType === scoreType);
+
     return score ? score.score : null;
+  };
+
+  // Calculate semester GPA based on credits
+  const calculateSemesterGPA = (scores: StudentScore[]) => {
+    if (!scores || scores.length === 0) return 0;
+
+    let totalGradePoints = 0;
+    let totalCredits = 0;
+
+    scores.forEach((score) => {
+      if (score.isPassed) {
+        // Convert score to grade points (assuming 10-point scale)
+        let gradePoints = 0;
+
+        if (score.overallScore >= 8.5) gradePoints = 4.0;
+        else if (score.overallScore >= 7.0) gradePoints = 3.0;
+        else if (score.overallScore >= 5.5) gradePoints = 2.0;
+        else if (score.overallScore >= 4.0) gradePoints = 1.0;
+        else gradePoints = 0.0;
+
+        totalGradePoints += gradePoints * score.totalCredits;
+        totalCredits += score.totalCredits;
+      }
+    });
+
+    return totalCredits > 0 ? totalGradePoints / totalCredits : 0;
+  };
+
+  // Calculate total credits for the semester
+  const calculateTotalCredits = (scores: StudentScore[]) => {
+    return scores.reduce((total, score) => total + score.totalCredits, 0);
   };
 
   if (!user || !studentInfo) {
@@ -142,6 +172,7 @@ const ClassResultPage = () => {
             selectedKeys={selectedSemesterId ? [selectedSemesterId] : []}
             onSelectionChange={(keys) => {
               const selectedKey = Array.from(keys)[0] as string;
+
               handleSemesterChange(selectedKey);
             }}
           >
@@ -183,8 +214,7 @@ const ClassResultPage = () => {
                     Try Again
                   </Button>
                 </div>
-              ) : !scoresResponse?.data ||
-                scoresResponse.data.length === 0 ? (
+              ) : !scoresResponse?.data || scoresResponse.data.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500">
                     No academic data found for the selected semester
@@ -201,6 +231,7 @@ const ClassResultPage = () => {
                       <TableColumn>COURSE CODE</TableColumn>
                       <TableColumn>COURSE NAME</TableColumn>
                       <TableColumn>CLASS</TableColumn>
+                      <TableColumn>CREDITS</TableColumn>
                       <TableColumn>THEORY</TableColumn>
                       <TableColumn>PRACTICE</TableColumn>
                       <TableColumn>MIDTERM</TableColumn>
@@ -231,8 +262,17 @@ const ClassResultPage = () => {
                             </div>
                           </TableCell>
                           <TableCell>
+                            <Chip color="secondary" size="sm" variant="flat">
+                              {score.totalCredits} credits
+                            </Chip>
+                          </TableCell>
+                          <TableCell>
                             {(() => {
-                              const theoryScore = getComponentScore(score.componentScores, 1);
+                              const theoryScore = getComponentScore(
+                                score.componentScores,
+                                1
+                              );
+
                               return theoryScore !== null ? (
                                 <Chip
                                   color={getScoreColor(theoryScore)}
@@ -248,7 +288,11 @@ const ClassResultPage = () => {
                           </TableCell>
                           <TableCell>
                             {(() => {
-                              const practiceScore = getComponentScore(score.componentScores, 2);
+                              const practiceScore = getComponentScore(
+                                score.componentScores,
+                                2
+                              );
+
                               return practiceScore !== null ? (
                                 <Chip
                                   color={getScoreColor(practiceScore)}
@@ -264,7 +308,11 @@ const ClassResultPage = () => {
                           </TableCell>
                           <TableCell>
                             {(() => {
-                              const midtermScore = getComponentScore(score.componentScores, 3);
+                              const midtermScore = getComponentScore(
+                                score.componentScores,
+                                3
+                              );
+
                               return midtermScore !== null ? (
                                 <Chip
                                   color={getScoreColor(midtermScore)}
@@ -280,7 +328,11 @@ const ClassResultPage = () => {
                           </TableCell>
                           <TableCell>
                             {(() => {
-                              const finalScore = getComponentScore(score.componentScores, 4);
+                              const finalScore = getComponentScore(
+                                score.componentScores,
+                                4
+                              );
+
                               return finalScore !== null ? (
                                 <Chip
                                   color={getScoreColor(finalScore)}
@@ -304,10 +356,10 @@ const ClassResultPage = () => {
                                 {formatScore(score.overallScore)}
                               </Chip>
                               <Progress
+                                className="w-16"
+                                color={getScoreColor(score.overallScore)}
                                 size="sm"
                                 value={score.overallScore * 10}
-                                color={getScoreColor(score.overallScore)}
-                                className="w-16"
                               />
                             </div>
                           </TableCell>
@@ -336,7 +388,7 @@ const ClassResultPage = () => {
                 <h3 className="text-lg font-semibold">Summary</h3>
               </CardHeader>
               <CardBody>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-primary">
                       {scoresResponse.data.length}
@@ -345,21 +397,44 @@ const ClassResultPage = () => {
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-success">
-                      {scoresResponse.data.filter(score => score.isPassed).length}
+                      {
+                        scoresResponse.data.filter((score) => score.isPassed)
+                          .length
+                      }
                     </p>
                     <p className="text-sm text-gray-600">Passed Courses</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-warning">
-                      {scoresResponse.data.filter(score => !score.isPassed).length}
+                      {
+                        scoresResponse.data.filter((score) => !score.isPassed)
+                          .length
+                      }
                     </p>
                     <p className="text-sm text-gray-600">Failed Courses</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-secondary">
-                      {(scoresResponse.data.reduce((sum, score) => sum + score.overallScore, 0) / scoresResponse.data.length).toFixed(1)}
+                      {calculateTotalCredits(scoresResponse.data)}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Credits</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-info">
+                      {(
+                        scoresResponse.data.reduce(
+                          (sum, score) => sum + score.overallScore,
+                          0
+                        ) / scoresResponse.data.length
+                      ).toFixed(1)}
                     </p>
                     <p className="text-sm text-gray-600">Average Score</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">
+                      {calculateSemesterGPA(scoresResponse.data).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-gray-600">Semester GPA</p>
                   </div>
                 </div>
               </CardBody>
