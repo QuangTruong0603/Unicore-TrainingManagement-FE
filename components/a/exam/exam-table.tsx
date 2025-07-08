@@ -53,7 +53,6 @@ interface Column {
 }
 
 const columns: Column[] = [
-  { key: "expand", label: "", sortable: false, width: "50px" },
   {
     key: "examTime",
     label: "Exam Date & Time",
@@ -192,23 +191,16 @@ export function ExamTable({
                   className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => handleViewDetails(exam)}
                 >
-                  <TableCell>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRowClick(exam.id);
-                      }}
-                    >
-                      {expandedRows[exam.id] ? (
-                        <ChevronUp size={16} />
-                      ) : (
-                        <ChevronDown size={16} />
-                      )}
-                    </Button>
-                  </TableCell>
+                  {/* <TableCell>
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Users size={12} />
+                        <span className="text-xs">
+                          {exam.totalEnrollment || 0} enrolled
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell> */}
                   <TableCell>
                     <div className="font-medium">
                       {formatDateTime(exam.examTime)}
@@ -265,47 +257,60 @@ export function ExamTable({
                           {exam.totalEnrollment || 0} enrolled
                         </span>
                       </div>
-                      {exam.averageScore !== undefined && (
-                        <div className="text-xs text-green-600">
-                          Avg: {exam.averageScore.toFixed(1)}
-                        </div>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical size={16} />
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu aria-label="Exam actions">
-                        <DropdownItem
-                          key="add-enrollment"
-                          startContent={<UserPlus size={16} />}
-                          onPress={() => handleAddEnrollmentClick(exam)}
-                        >
-                          Add Enrollment
-                        </DropdownItem>
-                        <DropdownItem
-                          key="edit"
-                          startContent={<Edit size={16} />}
-                        >
-                          Edit
-                        </DropdownItem>
-                        <DropdownItem
-                          key="delete"
-                          startContent={<Trash size={16} />}
-                        >
-                          Delete
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
+                    <div className="flex items-center gap-1">
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical size={16} />
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu aria-label="Exam actions">
+                          <DropdownItem
+                            key="add-enrollment"
+                            startContent={<UserPlus size={16} />}
+                            onPress={() => handleAddEnrollmentClick(exam)}
+                          >
+                            Add Enrollment
+                          </DropdownItem>
+                          <DropdownItem
+                            key="edit"
+                            startContent={<Edit size={16} />}
+                          >
+                            Edit
+                          </DropdownItem>
+                          <DropdownItem
+                            key="delete"
+                            startContent={<Trash size={16} />}
+                          >
+                            Delete
+                          </DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                      <Button
+                        isIconOnly
+                        className="ml-2"
+                        size="sm"
+                        variant="light"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(exam.id);
+                        }}
+                      >
+                        {expandedRows[exam.id] ? (
+                          <ChevronUp size={16} />
+                        ) : (
+                          <ChevronDown size={16} />
+                        )}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
                 {expandedRows[exam.id] && (
@@ -313,32 +318,12 @@ export function ExamTable({
                     <TableCell colSpan={columns.length}>
                       <div className="p-4 bg-gray-50 border-t">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div>
-                            <h4 className="font-semibold text-sm mb-2">
-                              Statistics
-                            </h4>
-                            <div className="space-y-1 text-xs text-gray-600">
-                              <div>Passed: {exam.totalPassed || 0}</div>
-                              <div>Failed: {exam.totalFailed || 0}</div>
-                              <div>
-                                Pass Rate:{" "}
-                                {exam.totalEnrollment > 0
-                                  ? (
-                                      ((exam.totalPassed || 0) /
-                                        exam.totalEnrollment) *
-                                      100
-                                    ).toFixed(1)
-                                  : 0}
-                                %
-                              </div>
-                            </div>
-                          </div>
                           {exam.academicClass && (
                             <div>
                               <h4 className="font-semibold text-sm mb-2">
                                 Class Info
                               </h4>
-                              <div className="space-y-1 text-xs text-gray-600">
+                              <div className="flex flex-row gap-6 text-xs text-gray-600">
                                 <div>
                                   Capacity: {exam.academicClass.capacity}
                                 </div>

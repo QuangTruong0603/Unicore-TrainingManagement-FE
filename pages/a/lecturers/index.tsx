@@ -144,6 +144,7 @@ export default function LecturersPage() {
       dispatch(setLoading(true));
       // Fetch the full lecturer data by ID
       const response = await lecturerService.getLecturerById(lecturer.id);
+
       setIsEdit(true);
       setSelectedLecturer(response.data);
       setIsModalOpen(true);

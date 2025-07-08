@@ -19,6 +19,8 @@ import {
 import { format } from "date-fns";
 
 import { useExamById } from "@/services/exam/exam.hooks";
+import { EnrollmentExamReadDto } from "@/services/exam/exam.schema";
+import DefaultLayout from "@/layouts/default";
 
 const examTypeMap: Record<number, string> = {
   1: "Midterm",
@@ -76,156 +78,166 @@ export default function ExamDetailsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
-        <Button
-          className="mb-4"
-          startContent={<ArrowLeft size={16} />}
-          variant="light"
-          onClick={handleBack}
-        >
-          Back to Exams
-        </Button>
+    <DefaultLayout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <Button
+            className="mb-4"
+            startContent={<ArrowLeft size={16} />}
+            variant="light"
+            onClick={handleBack}
+          >
+            Back to Exams
+          </Button>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Exam Details</h1>
-        <p className="text-gray-600">
-          View detailed information about this exam
-        </p>
-      </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Exam Details
+          </h1>
+          <p className="text-gray-600">
+            View detailed information about this exam
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Calendar size={20} />
-              Exam Information
-            </h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Exam Type:</span>
-              <Chip color="primary" variant="flat">
-                {examTypeMap[exam.type] || `Type ${exam.type}`}
-              </Chip>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Group:</span>
-              <Chip color="default" variant="flat">
-                Group {exam.group}
-              </Chip>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Date & Time:</span>
-              <div className="text-right">
-                <div className="font-medium">
-                  {formatDateTime(exam.examTime)}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Duration:</span>
-              <div className="flex items-center gap-1">
-                <Clock size={14} />
-                <span className="font-medium">
-                  {formatDuration(exam.duration)}
-                </span>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <BookOpen size={20} />
-              Class & Location
-            </h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Class:</span>
-              <span className="font-medium">
-                {exam.academicClass?.name || "N/A"}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Course ID:</span>
-              <span className="font-medium">
-                {exam.academicClass?.courseId || "N/A"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Room:</span>
-              <div className="flex items-center gap-1">
-                <MapPin size={14} />
-                <span className="font-medium">{exam.room?.name || "N/A"}</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Available Seats:</span>
-              <span className="font-medium">
-                {exam.room?.availableSeats || "N/A"}
-              </span>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Users size={20} />
-              Statistics
-            </h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Enrolled:</span>
-              <Chip color="success" variant="flat">
-                {exam.totalEnrollment || 0} students
-              </Chip>
-            </div>
-
-            {exam.averageScore !== undefined && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Calendar size={20} />
+                Exam Information
+              </h2>
+            </CardHeader>
+            <Divider />
+            <CardBody className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Average Score:</span>
-                <Chip
-                  color={
-                    exam.averageScore >= 7
-                      ? "success"
-                      : exam.averageScore >= 5
-                        ? "warning"
-                        : "danger"
-                  }
-                  variant="flat"
-                >
-                  {exam.averageScore.toFixed(1)}
+                <span className="text-gray-600">Exam Type:</span>
+                <Chip color="primary" variant="flat">
+                  {examTypeMap[exam.type] || `Type ${exam.type}`}
                 </Chip>
               </div>
-            )}
 
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Status:</span>
-              <Chip
-                color={
-                  new Date(exam.examTime) > new Date() ? "primary" : "default"
-                }
-                variant="flat"
-              >
-                {new Date(exam.examTime) > new Date()
-                  ? "Upcoming"
-                  : "Completed"}
-              </Chip>
-            </div>
-          </CardBody>
-        </Card>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Group:</span>
+                <Chip color="default" variant="flat">
+                  Group {exam.group}
+                </Chip>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Date & Time:</span>
+                <div className="text-right">
+                  <div className="font-medium">
+                    {formatDateTime(exam.examTime)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Duration:</span>
+                <div className="flex items-center gap-1">
+                  <Clock size={14} />
+                  <span className="font-medium">
+                    {formatDuration(exam.duration)}
+                  </span>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <BookOpen size={20} />
+                Class & Location
+              </h2>
+            </CardHeader>
+            <Divider />
+            <CardBody className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Class:</span>
+                <span className="font-medium">
+                  {exam.academicClass?.name || "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Room:</span>
+                <div className="flex items-center gap-1">
+                  <MapPin size={14} />
+                  <span className="font-medium">
+                    {exam.room?.name || "N/A"}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Available Seats:</span>
+                <span className="font-medium">
+                  {exam.room?.availableSeats || "N/A"}
+                </span>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Enrolled Students List */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Users size={20} />
+                Enrolled Students
+              </h2>
+            </CardHeader>
+            <Divider />
+            <CardBody>
+              {exam.enrollmentExams && exam.enrollmentExams.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          #
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Student Code
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Full Name
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                          Email
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {exam.enrollmentExams.map(
+                        (enrollment: EnrollmentExamReadDto, idx: number) => (
+                          <tr key={enrollment.id}>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {idx + 1}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {enrollment.student?.studentCode || "-"}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {enrollment.student?.user?.fullName || "-"}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {enrollment.student?.user?.email || "-"}
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-gray-500">
+                  No students enrolled in this exam.
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 }
