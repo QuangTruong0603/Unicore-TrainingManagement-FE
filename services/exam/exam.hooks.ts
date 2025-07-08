@@ -136,6 +136,16 @@ export const useStudentUpcomingExams = (studentId: string, days?: number) => {
   });
 };
 
+// Hook for getting all exams for a student
+export const useStudentExams = (studentId: string) => {
+  return useQuery({
+    queryKey: ["exams", "student", studentId],
+    queryFn: () => examService.getExamsByStudentId(studentId),
+    enabled: !!studentId,
+    select: (res) => res.data || [],
+  });
+};
+
 // Mutation for adding enrollment to exam
 export const useAddEnrollmentToExam = () => {
   const queryClient = useQueryClient();

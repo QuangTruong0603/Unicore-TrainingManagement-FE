@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { grpcStudentDataSchema } from "../enrollment/enrollment.schema";
+
 // Exam gRPC Room Data Schema
 export const examGrpcRoomDataSchema = z.object({
   id: z.string(),
@@ -30,27 +32,28 @@ export const examCreateSchema = z.object({
   roomId: z.string().min(1, "Room ID is required"),
 });
 
+// Enrollment Exam Read Schema
+export const enrollmentExamReadDtoSchema = z.object({
+  id: z.string(),
+  examId: z.string(),
+  enrollmentId: z.string(),
+  studentId: z.string(),
+  student: grpcStudentDataSchema.nullable(),
+});
+
 // Exam Read Schema
 export const examReadSchema = z.object({
   id: z.string(),
   group: z.number(),
   type: z.number(),
-  examTime: z.string(), // ISO date string
+  examTime: z.string(),
   duration: z.number(),
   academicClassId: z.string(),
   roomId: z.string(),
-  createdAt: z.string(), // ISO date string
-  updatedAt: z.string(), // ISO date string
-
-  // Statistics
   totalEnrollment: z.number(),
-  totalPassed: z.number(),
-  totalFailed: z.number(),
-  averageScore: z.number(),
-
-  // Navigation properties from gRPC calls
   room: examGrpcRoomDataSchema.nullable(),
   academicClass: examGrpcAcademicClassDataSchema.nullable(),
+  enrollmentExams: z.array(enrollmentExamReadDtoSchema).nullable(),
 });
 
 // Exam List Filter Schema
@@ -81,3 +84,4 @@ export type ExamRead = z.infer<typeof examReadSchema>;
 export type ExamListFilter = z.infer<typeof examListFilterSchema>;
 export type ExamQuery = z.infer<typeof examQuerySchema>;
 export type Exam = ExamRead;
+export type EnrollmentExamReadDto = z.infer<typeof enrollmentExamReadDtoSchema>;

@@ -982,6 +982,18 @@ export default function ClassesPage() {
                     Reject ({selectedClasses.length})
                   </Button>
                 )}
+                {selectedClasses.length > 0 &&
+                  classes
+                    .filter((cls) => selectedClasses.includes(cls.id))
+                    .every((cls) => cls.enrollmentStatus === 3) && (
+                    <Button
+                      color="success"
+                      startContent={<CheckCircle className="w-4 h-4" />}
+                      // TODO: Add onClick handler for completing class
+                    >
+                      Complete class ({selectedClasses.length})
+                    </Button>
+                  )}
                 <Button
                   color="warning"
                   startContent={<UserPlus className="w-4 h-4" />}

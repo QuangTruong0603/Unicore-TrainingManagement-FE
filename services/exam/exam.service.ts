@@ -186,4 +186,12 @@ export const examService = {
       }
     );
   },
+
+  getExamsByStudentId: async (studentId: string) => {
+    return enrollmentClient.get(`${API_ENDPOINTS.EXAMS}/student/${studentId}`, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
 };

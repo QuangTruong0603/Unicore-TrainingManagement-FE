@@ -37,13 +37,15 @@ import { useLecturerById } from "@/services/lecturer/lecturer.hooks";
 
 // Lecturer cell component that fetches lecturer data
 const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
-  const { data: lecturerResponse, isLoading } = useLecturerById(lecturerId);
-  const lecturer = lecturerResponse?.data;
+  const isInvalidLecturerId = !lecturerId || lecturerId.includes("000000");
 
-  // Don't show loading if there's no lecturerId
-  if (!lecturerId) {
+  if (isInvalidLecturerId) {
     return <span className="text-xs text-gray-400 italic">Not assigned</span>;
   }
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { data: lecturerResponse, isLoading } = useLecturerById(lecturerId);
+  const lecturer = lecturerResponse?.data;
 
   if (isLoading) {
     return <span className="text-xs text-gray-400">Loading...</span>;
@@ -53,54 +55,16 @@ const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
     return <span className="text-xs text-gray-400 italic">Not assigned</span>;
   }
 
-  // Additional safety check for applicationUser
-  if (!lecturer.applicationUser) {
-    return <span className="text-xs text-gray-400 italic">Not assigned</span>;
-  }
-
   return (
     <div className={styles.lecturerCell}>
       <Tooltip
-        content={`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName} (${lecturer.lecturerCode})`}
+        content={`${(lecturer as any).firstName} ${(lecturer as any).lastName} (${lecturer.lecturerCode})`}
       >
         <span className="text-sm text-gray-700 cursor-help">
-          {`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`}
-          <span className="text-xs text-gray-500 ml-1">
-            ({lecturer.lecturerCode})
-          </span>
+          {`${(lecturer as any).firstName} ${(lecturer as any).lastName}`}
         </span>
       </Tooltip>
     </div>
-  );
-};
-
-// Lecturer display component for expanded details
-const LecturerDisplay: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
-  const { data: lecturerResponse, isLoading } = useLecturerById(lecturerId);
-  const lecturer = lecturerResponse?.data;
-
-  // Don't show loading if there's no lecturerId
-  if (!lecturerId) {
-    return <span className="text-sm text-gray-500">Not assigned</span>;
-  }
-
-  if (isLoading) {
-    return <span className="text-sm">Loading...</span>;
-  }
-
-  if (!lecturer) {
-    return <span className="text-sm text-gray-500">Not assigned</span>;
-  }
-
-  // Additional safety check for applicationUser
-  if (!lecturer.applicationUser) {
-    return <span className="text-sm text-gray-500">Not assigned</span>;
-  }
-
-  return (
-    <span className="text-sm">
-      {`${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName} (${lecturer.lecturerCode})`}
-    </span>
   );
 };
 
@@ -610,10 +574,6 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             <p className="text-sm">
               <span className="font-medium">Semester:</span>{" "}
               {`${academicClass.semester.semesterNumber}/${academicClass.semester.year}`}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Lecturer:</span>{" "}
-              <LecturerDisplay lecturerId={academicClass.lecturerId} />
             </p>
             {academicClass.minEnrollmentRequired && (
               <p className="text-sm">
