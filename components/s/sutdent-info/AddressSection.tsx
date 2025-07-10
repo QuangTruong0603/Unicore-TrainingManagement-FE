@@ -30,11 +30,11 @@ const AddressSection: React.FC<AddressSectionProps> = ({
 
   // Create full address string
   const fullAddress = [
-    address.addressDetail,
-    address.ward,
-    address.district,
-    address.city,
-    address.country,
+    address?.addressDetail,
+    address?.ward,
+    address?.district,
+    address?.city,
+    address?.country,
   ]
     .filter(Boolean)
     .join(", ");
@@ -106,7 +106,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">Country</p>
                   <p className="text-sm text-gray-800">
-                    {address.country || "N/A"}
+                    {address?.country || "N/A"}
                   </p>
                 </div>
               </div>
@@ -116,7 +116,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">City</p>
                   <p className="text-sm text-gray-800">
-                    {address.city || "N/A"}
+                    {address?.city || "N/A"}
                   </p>
                 </div>
               </div>
@@ -128,7 +128,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">District</p>
                   <p className="text-sm text-gray-800">
-                    {address.district || "N/A"}
+                    {address?.district || "N/A"}
                   </p>
                 </div>
               </div>
@@ -138,7 +138,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">Ward</p>
                   <p className="text-sm text-gray-800">
-                    {address.ward || "N/A"}
+                    {address?.ward || "N/A"}
                   </p>
                 </div>
               </div>
@@ -148,7 +148,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 <div>
                   <p className="text-xs text-gray-500">Address Detail</p>
                   <p className="text-sm text-gray-800">
-                    {address.addressDetail || "N/A"}
+                    {address?.addressDetail || "N/A"}
                   </p>
                 </div>
               </div>

@@ -100,4 +100,7 @@ export const lecturerService = {
       }
     );
   },
+  getLecturerByLecturerId: async (lecturerId: string): Promise<any> => {
+    return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`);
+  },
 };

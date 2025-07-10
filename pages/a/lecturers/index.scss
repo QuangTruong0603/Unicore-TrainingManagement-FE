@@ -1,4 +1,8 @@
 /* Lecturer page styles */
+.lecturer-container {
+  height: calc(100vh - 60px);
+  overflow: auto;
+}
 .expanded-row {
   background-color: #f9fafb;
 }

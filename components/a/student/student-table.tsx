@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { Student } from "@/services/student/student.schema";
+import { useRouter } from "next/router";
 interface StudentTableProps {
   students: {
     success: boolean;
@@ -53,6 +54,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   onEdit,
   onUpdate,
 }) => {
+  const router = useRouter();
   const renderSortIcon = (columnKey: string) => {
     if (sortKey !== columnKey) return null;
 
@@ -168,7 +170,9 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                   <DropdownMenu
                     aria-label="Student Actions"
                     onAction={(key) => {
-                      if (key === "edit") {
+                      if (key === "view") {
+                        router.push(`/a/students/profile/${student.id}`);
+                      } else if (key === "edit") {
                         onEdit(student);
                       } else if (key === "update") {
                         if (onUpdate) onUpdate(student);
@@ -178,16 +182,16 @@ export const StudentTable: React.FC<StudentTableProps> = ({
                     }}
                   >
                     <DropdownItem
-                      key="edit"
+                      key="view"
                       startContent={<Pencil className="w-4 h-4" />}
                     >
-                      Edit
+                      View
                     </DropdownItem>
                     <DropdownItem
-                      key="update"
+                      key="edit"
                       startContent={<Edit className="w-4 h-4" />}
                     >
-                      Update
+                      Edit
                     </DropdownItem>
                     <DropdownItem
                       key="delete"

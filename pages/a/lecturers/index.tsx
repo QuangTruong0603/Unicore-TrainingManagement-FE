@@ -191,33 +191,44 @@ export default function LecturersPage() {
   const handleModalSubmit = async (data: Partial<Lecturer>) => {
     try {
       if (isEdit && selectedLecturer) {
-        await lecturerService.updateLecturer(
+        const response = await lecturerService.updateLecturer(
           selectedLecturer.lecturerCode,
           data
         );
-        addToast({
-          title: "Success",
-          description: "Lecturer has been updated successfully.",
-          color: "success",
-        });
+        if (response.success) {
+          addToast({
+            title: "Success",
+            description: "Lecturer has been updated successfully.",
+            color: "success",
+          });
+        } else {
+          addToast({
+            title: "Error",
+            description: response.errors[0],
+            color: "danger",
+          });
+        }
       } else {
-        await lecturerService.createLecturer(data);
-        addToast({
-          title: "Success",
-          description: "New lecturer has been created successfully.",
-          color: "success",
-        });
+        const response = await lecturerService.createLecturer(data);
+        console.log(response);
+        if (response.success) {
+          addToast({
+            title: "Success",
+            description: "New lecturer has been created successfully.",
+            color: "success",
+          });
+        } else {
+          addToast({
+            title: "Error",
+            description: response.errors[0],
+            color: "danger",
+          });
+        }
       }
       setIsModalOpen(false);
       fetchLecturers();
     } catch (error) {
       console.error("Error submitting lecturer data:", error);
-      addToast({
-        title: "Error",
-        description:
-          "Failed to save lecturer. Please check your input and try again.",
-        color: "danger",
-      });
     }
   };
 
@@ -225,7 +236,7 @@ export default function LecturersPage() {
 
   return (
     <DefaultLayout>
-      <div className="container mx-auto p-6">
+      <div className="lecturer-container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Lecturer Management</h1>
           <div className="flex items-center gap-2">

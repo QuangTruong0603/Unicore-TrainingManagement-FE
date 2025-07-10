@@ -151,6 +151,44 @@ export function LecturerModal({
     return !!errors[fieldName] && touchedFields[fieldName];
   };
 
+  const emptyValues = {
+    lecturerCode: "",
+    degree: "",
+    salary: 0,
+    departmentId: "",
+    workingStatus: 1,
+    joinDate: new Date().toISOString().split("T")[0],
+    mainMajor: "",
+    firstName: "",
+    lastName: "",
+    personId: "",
+    dob: "",
+    phoneNumber: "",
+    personEmail: "",
+  };
+
+  // Thêm hàm đóng modal để reset form và gọi onClose
+  const handleCloseModal = () => {
+    reset(isEdit && lecturer ? {
+      lecturerCode: lecturer.lecturerCode || "",
+      degree: lecturer.degree || "",
+      salary: lecturer.salary || 0,
+      departmentId: lecturer.departmentId || "",
+      workingStatus: lecturer.workingStatus || 1,
+      joinDate: lecturer.joinDate
+        ? new Date(lecturer.joinDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      mainMajor: lecturer.mainMajor || "",
+      firstName: lecturer.applicationUser?.firstName || "",
+      lastName: lecturer.applicationUser?.lastName || "",
+      personId: lecturer.applicationUser?.personId || "",
+      dob: lecturer.applicationUser?.dob || "",
+      phoneNumber: lecturer.applicationUser?.phoneNumber || "",
+      personEmail: lecturer.applicationUser?.email || "",
+    } : emptyValues);
+    onClose();
+  };
+
   return (
     <Modal isOpen={isOpen} size="3xl" onClose={onClose}>
       <ModalContent>
@@ -417,7 +455,7 @@ export function LecturerModal({
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="danger" variant="light" onPress={onClose}>
+            <Button color="danger" variant="light" onPress={handleCloseModal}>
               Cancel
             </Button>
             <Button color="primary" isLoading={isSubmitting} type="submit">

@@ -26,6 +26,7 @@ export const Navbar = () => {
   const handleLogout = useAuth().logout;
   const user = useAuth().user;
   const studentInfo = useAuth().studentInfo || null;
+  const lecturerInfo = useAuth().lecturerInfo || null;
 
   const searchInput = (
     <Input
@@ -81,7 +82,17 @@ export const Navbar = () => {
               </div>
             </DropdownTrigger>
             <DropdownMenu aria-label="User Actions">
-              <DropdownItem key="profile" as={Link} href="/s/profile">
+              <DropdownItem
+                key="profile"
+                as={Link}
+                href={
+                  user?.role === "Student"
+                    ? "/s/profile"
+                    : user?.role === "Lecturer"
+                      ? "/l/profile"
+                      : "/a/profile"
+                }
+              >
                 <div>View Profile</div>
               </DropdownItem>
               <DropdownItem
