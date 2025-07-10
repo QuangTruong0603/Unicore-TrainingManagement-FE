@@ -9,6 +9,7 @@ import {
   LecturersByMajorsResponse,
   LecturerResponse,
 } from "./lecturer.dto";
+import { Address } from "@/components/s/sutdent-info/types";
 
 export const lecturerService = {
   getLecturers: async (query: LecturerQuery): Promise<LecturerListResponse> => {
@@ -102,5 +103,13 @@ export const lecturerService = {
   },
   getLecturerByLecturerId: async (lecturerId: string): Promise<any> => {
     return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`);
+  },
+  updateLecturerAddress: async (
+    lecturerId: string,
+    address: Address
+  ): Promise<any> => {
+    return lecturerClient.put(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`, {
+      address: address ? address : {},
+    });
   },
 };

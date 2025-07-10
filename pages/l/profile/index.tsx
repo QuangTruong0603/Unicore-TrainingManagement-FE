@@ -8,6 +8,16 @@ import { PersonalInfoSection } from "@/components/l/lecturer-info/PersonalInfoSe
 import { AddressSection } from "@/components/l/lecturer-info/AddressSection";
 import { AcademicInfoSection } from "@/components/l/lecturer-info/AcademicInfoSection";
 import "./index.scss";
+import { addToast } from "@heroui/react";
+
+interface Address {
+  id: string;
+  country: string;
+  city: string;
+  district: string;
+  ward: string;
+  addressDetail: string;
+}
 
 interface LecturerProfile {
   id: string;
@@ -27,7 +37,7 @@ interface LecturerProfile {
   workingStatus: number;
   joinDate: string;
   mainMajor: string;
-  address: string | null;
+  address: Address | null;
 }
 
 export default function LecturerProfilePage() {
@@ -35,6 +45,25 @@ export default function LecturerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { lecturerInfo } = useAuth();
+
+  const handleUpdateAddress = async (newAddress: Address) => {
+    if (!profile) return;
+    try {
+      await lecturerService.updateLecturerAddress(profile.id, newAddress);
+      setProfile({ ...profile, address: newAddress });
+      addToast({
+        title: "Cập nhật địa chỉ thành công!",
+        description: "Địa chỉ đã được cập nhật.",
+        color: "success",
+      });
+    } catch (err) {
+      addToast({
+        title: "Cập nhật địa chỉ thất bại!",
+        description: "Vui lòng thử lại.",
+        color: "danger",
+      });
+    }
+  };
 
   useEffect(() => {
     if (lecturerInfo?.id) {
@@ -80,7 +109,7 @@ export default function LecturerProfilePage() {
         {/* Personal Info */}
         <PersonalInfoSection profile={profile} />
         {/* Address Info */}
-        <AddressSection address={profile.address} />
+        <AddressSection address={profile.address} onUpdate={handleUpdateAddress} />
         {/* Academic Info */}
         <AcademicInfoSection profile={profile} />
       </div>
