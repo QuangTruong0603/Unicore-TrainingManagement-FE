@@ -69,7 +69,11 @@ export const Navbar = () => {
                 {" "}
                 <Avatar
                   className="h-8 w-8"
-                  src={studentInfo?.applicationUser?.imageUrl || ""}
+                  src={
+                    studentInfo?.applicationUser?.imageUrl ||
+                    lecturerInfo?.applicationUser?.imageUrl ||
+                    ""
+                  }
                 />
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold">

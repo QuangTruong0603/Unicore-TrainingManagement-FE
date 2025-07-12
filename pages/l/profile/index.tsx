@@ -65,6 +65,27 @@ export default function LecturerProfilePage() {
     }
   };
 
+  const handleUpdateImage = async (imageFile: File) => {
+    if (!profile) return;
+    try {
+      await lecturerService.updateLecturerImage(profile.id, imageFile);
+      // Cập nhật lại profile để lấy imageUrl mới
+      const updatedProfile = await lecturerService.getLecturerByLecturerId(profile.id);
+      setProfile(updatedProfile.data);
+      addToast({
+        title: "Cập nhật avatar thành công!",
+        description: "Avatar đã được cập nhật.",
+        color: "success",
+      });
+    } catch (err) {
+      addToast({
+        title: "Cập nhật avatar thất bại!",
+        description: "Vui lòng thử lại.",
+        color: "danger",
+      });
+    }
+  };
+
   useEffect(() => {
     if (lecturerInfo?.id) {
       lecturerService.getLecturerByLecturerId(lecturerInfo.id)
@@ -105,7 +126,7 @@ export default function LecturerProfilePage() {
     <DefaultLayout>
       <div className="profile-page mx-auto mt-10">
         {/* Header */}
-        <LecturerProfileHeader profile={profile} />
+        <LecturerProfileHeader profile={profile} onUpdateImage={handleUpdateImage} />
         {/* Personal Info */}
         <PersonalInfoSection profile={profile} />
         {/* Address Info */}
