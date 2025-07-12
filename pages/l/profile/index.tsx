@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Spinner } from "@heroui/react";
+
 import DefaultLayout from "@/layouts/default";
 import { useAuth } from "@/hooks/useAuth";
 import { lecturerService } from "@/services/lecturer/lecturer.service";
@@ -7,6 +8,7 @@ import { LecturerProfileHeader } from "@/components/l/lecturer-info/LecturerProf
 import { PersonalInfoSection } from "@/components/l/lecturer-info/PersonalInfoSection";
 import { AddressSection } from "@/components/l/lecturer-info/AddressSection";
 import { AcademicInfoSection } from "@/components/l/lecturer-info/AcademicInfoSection";
+
 import "./index.scss";
 import { addToast } from "@heroui/react";
 
@@ -70,7 +72,9 @@ export default function LecturerProfilePage() {
     try {
       await lecturerService.updateLecturerImage(profile.id, imageFile);
       // Cập nhật lại profile để lấy imageUrl mới
-      const updatedProfile = await lecturerService.getLecturerByLecturerId(profile.id);
+      const updatedProfile = await lecturerService.getLecturerByLecturerId(
+        profile.id
+      );
       setProfile(updatedProfile.data);
       addToast({
         title: "Cập nhật avatar thành công!",
@@ -88,7 +92,8 @@ export default function LecturerProfilePage() {
 
   useEffect(() => {
     if (lecturerInfo?.id) {
-      lecturerService.getLecturerByLecturerId(lecturerInfo.id)
+      lecturerService
+        .getLecturerByLecturerId(lecturerInfo.id)
         .then((response) => {
           setProfile(response.data);
           setLoading(false);
@@ -126,11 +131,17 @@ export default function LecturerProfilePage() {
     <DefaultLayout>
       <div className="profile-page mx-auto mt-10">
         {/* Header */}
-        <LecturerProfileHeader profile={profile} onUpdateImage={handleUpdateImage} />
+        <LecturerProfileHeader
+          profile={profile}
+          onUpdateImage={handleUpdateImage}
+        />
         {/* Personal Info */}
         <PersonalInfoSection profile={profile} />
         {/* Address Info */}
-        <AddressSection address={profile.address} onUpdate={handleUpdateAddress} />
+        <AddressSection
+          address={profile.address}
+          onUpdate={handleUpdateAddress}
+        />
         {/* Academic Info */}
         <AcademicInfoSection profile={profile} />
       </div>

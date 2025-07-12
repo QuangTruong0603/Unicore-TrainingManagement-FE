@@ -9,6 +9,7 @@ import {
   LecturersByMajorsResponse,
   LecturerResponse,
 } from "./lecturer.dto";
+
 import { Address } from "@/components/s/sutdent-info/types";
 
 export const lecturerService = {
@@ -117,14 +118,19 @@ export const lecturerService = {
     imageFile: File
   ): Promise<any> => {
     const formData = new FormData();
+
     formData.append("Id", lecturerId);
     formData.append("ImageFile", imageFile);
 
-    return lecturerClient.put(`${API_ENDPOINTS.LECTURERS}/update-image`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        accept: "text/plain",
-      },
-    });
+    return lecturerClient.put(
+      `${API_ENDPOINTS.LECTURERS}/update-image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          accept: "text/plain",
+        },
+      }
+    );
   },
 };

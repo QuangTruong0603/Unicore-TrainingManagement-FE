@@ -140,10 +140,12 @@ export default function LecturersPage() {
   };
 
   const handleEditLecturer = async (lecturer: Lecturer) => {
+    console.log("143", lecturer);
     try {
       dispatch(setLoading(true));
       // Fetch the full lecturer data by ID
       const response = await lecturerService.getLecturerById(lecturer.id);
+
       setIsEdit(true);
       setSelectedLecturer(response.data);
       setIsModalOpen(true);
@@ -189,12 +191,15 @@ export default function LecturersPage() {
   };
 
   const handleModalSubmit = async (data: Partial<Lecturer>) => {
+    console.log("200", data);
     try {
       if (isEdit && selectedLecturer) {
+        console.log("194", selectedLecturer);
         const response = await lecturerService.updateLecturer(
-          selectedLecturer.lecturerCode,
+          selectedLecturer.id,
           data
         );
+
         if (response.success) {
           addToast({
             title: "Success",
@@ -210,7 +215,7 @@ export default function LecturersPage() {
         }
       } else {
         const response = await lecturerService.createLecturer(data);
-        console.log(response);
+
         if (response.success) {
           addToast({
             title: "Success",

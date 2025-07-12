@@ -27,7 +27,10 @@ interface AddressSectionProps {
   onUpdate?: (address: Address) => Promise<void>;
 }
 
-export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdate }) => {
+export const AddressSection: React.FC<AddressSectionProps> = ({
+  address,
+  onUpdate,
+}) => {
   const [showModal, setShowModal] = useState(false);
   const [editAddress, setEditAddress] = useState<Address | null>(
     address
@@ -57,9 +60,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdat
     : "";
 
   const handleChange = (field: keyof Address, value: string) => {
-    setEditAddress((prev) =>
-      prev ? { ...prev, [field]: value } : null
-    );
+    setEditAddress((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
   const handleSave = async () => {
@@ -68,7 +69,14 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdat
       try {
         // Chỉ gửi các trường cần thiết, không gửi id
         const { country, city, district, ward, addressDetail } = editAddress;
-        const addressToUpdate = { country, city, district, ward, addressDetail };
+        const addressToUpdate = {
+          country,
+          city,
+          district,
+          ward,
+          addressDetail,
+        };
+
         await onUpdate(addressToUpdate as any);
         setShowModal(false);
       } catch (error) {
@@ -130,14 +138,18 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdat
                 <Map className="text-gray-500 h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Country</p>
-                  <p className="text-sm text-gray-800">{address?.country || "N/A"}</p>
+                  <p className="text-sm text-gray-800">
+                    {address?.country || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <Building className="text-gray-500 h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">City</p>
-                  <p className="text-sm text-gray-800">{address?.city || "N/A"}</p>
+                  <p className="text-sm text-gray-800">
+                    {address?.city || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -146,21 +158,27 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdat
                 <MapPin className="text-gray-500 h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">District</p>
-                  <p className="text-sm text-gray-800">{address?.district || "N/A"}</p>
+                  <p className="text-sm text-gray-800">
+                    {address?.district || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="text-gray-500 h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Ward</p>
-                  <p className="text-sm text-gray-800">{address?.ward || "N/A"}</p>
+                  <p className="text-sm text-gray-800">
+                    {address?.ward || "N/A"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Home className="text-gray-500 h-4 w-4" />
                 <div>
                   <p className="text-xs text-gray-500">Address Detail</p>
-                  <p className="text-sm text-gray-800">{address?.addressDetail || "N/A"}</p>
+                  <p className="text-sm text-gray-800">
+                    {address?.addressDetail || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -275,4 +293,4 @@ export const AddressSection: React.FC<AddressSectionProps> = ({ address, onUpdat
       </Modal>
     </>
   );
-}; 
+};

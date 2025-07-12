@@ -14,7 +14,9 @@ interface PersonalInfoSectionProps {
   };
 }
 
-export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ profile }) => {
+export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
+  profile,
+}) => {
   return (
     <Card className="mb-6 overflow-visible" radius="sm">
       <CardHeader className="flex items-center gap-2 text-purple-700 pb-2">
@@ -35,7 +37,9 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ profil
               <User className="text-gray-500 h-4 w-4" />
               <div>
                 <p className="text-xs text-gray-500">Full Name</p>
-                <p className="text-sm text-gray-800">{profile.firstName} {profile.lastName}</p>
+                <p className="text-sm text-gray-800">
+                  {profile.firstName} {profile.lastName}
+                </p>
               </div>
             </div>
           </div>
@@ -62,7 +66,10 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ profil
               <span className="text-gray-500 h-4 w-4">●</span>
               <div>
                 <p className="text-xs text-gray-500">Status</p>
-                <p className="text-sm text-gray-800">{profile.status === 1 ? "Active" : "Inactive"} / {profile.workingStatus === 1 ? "Working" : "Retired"}</p>
+                <p className="text-sm text-gray-800">
+                  {profile.status === 1 ? "Active" : "Inactive"} /{" "}
+                  {profile.workingStatus === 1 ? "Working" : "Retired"}
+                </p>
               </div>
             </div>
           </div>
@@ -70,4 +77,4 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ profil
       </CardBody>
     </Card>
   );
-}; 
+};

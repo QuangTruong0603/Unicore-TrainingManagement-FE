@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-sort-props */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -13,9 +13,6 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import { z } from "zod";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
 import { Department } from "@/services/department/department.schema";
@@ -23,30 +20,28 @@ import { Department } from "@/services/department/department.schema";
 interface LecturerModalProps {
   isOpen: boolean;
   isEdit: boolean;
-  lecturer?: Lecturer;
+  lecturer?: Lecturer | any;
   departments: Department[];
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
 
-// Updated schema to match API requirements
-const lecturerFormSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  personEmail: z.string().email("Invalid email format"),
-  personId: z.string().min(1, "Person ID is required"),
-  phoneNumber: z.string().optional(),
-  dob: z.string().optional(),
-  degree: z.string().optional(),
-  salary: z.number().min(0, "Salary must be a positive number").optional(),
-  departmentId: z.string().min(1, "Department is required"),
-  mainMajor: z.string().optional(),
-  lecturerCode: z.string().optional(),
-  workingStatus: z.number().min(0).max(1).optional(),
-  joinDate: z.string().optional(),
-});
-
-type LecturerFormValues = z.infer<typeof lecturerFormSchema>;
+// Form data interface
+interface LecturerFormData {
+  lecturerCode: string;
+  degree: string;
+  salary: string | number;
+  departmentId: string;
+  workingStatus: string | number;
+  joinDate: string;
+  mainMajor: string;
+  firstName: string;
+  lastName: string;
+  personId: string;
+  dob: string;
+  phoneNumber: string;
+  personEmail: string;
+}
 
 export function LecturerModal({
   isOpen,
@@ -56,102 +51,7 @@ export function LecturerModal({
   onClose,
   onSubmit,
 }: LecturerModalProps) {
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors, isSubmitting, touchedFields },
-    trigger,
-  } = useForm<LecturerFormValues>({
-    resolver: zodResolver(lecturerFormSchema),
-    mode: "onChange",
-    defaultValues: {
-      lecturerCode: lecturer?.lecturerCode || "",
-      degree: lecturer?.degree || "",
-      salary: lecturer?.salary || 0,
-      departmentId: lecturer?.departmentId || "",
-      workingStatus: lecturer?.workingStatus || 1,
-      joinDate: lecturer?.joinDate
-        ? new Date(lecturer.joinDate).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      mainMajor: lecturer?.mainMajor || "",
-      firstName: lecturer?.applicationUser?.firstName || "",
-      lastName: lecturer?.applicationUser?.lastName || "",
-      personId: lecturer?.applicationUser?.personId || "",
-      dob: lecturer?.applicationUser?.dob || "",
-      phoneNumber: lecturer?.applicationUser?.phoneNumber || "",
-      personEmail: lecturer?.applicationUser?.email || "",
-    },
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      const defaultValues = {
-        lecturerCode: lecturer?.lecturerCode || "",
-        degree: lecturer?.degree || "",
-        salary: lecturer?.salary || 0,
-        departmentId: lecturer?.departmentId || "",
-        workingStatus: lecturer?.workingStatus || 1,
-        joinDate: lecturer?.joinDate
-          ? new Date(lecturer.joinDate).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        mainMajor: lecturer?.mainMajor || "",
-        firstName: lecturer?.applicationUser?.firstName || "",
-        lastName: lecturer?.applicationUser?.lastName || "",
-        personId: lecturer?.applicationUser?.personId || "",
-        dob: lecturer?.applicationUser?.dob || "",
-        phoneNumber: lecturer?.applicationUser?.phoneNumber || "",
-        personEmail: lecturer?.applicationUser?.email || "",
-      };
-
-      reset(defaultValues);
-
-      // Validate form after reset to clear any errors
-      setTimeout(() => {
-        trigger();
-      }, 100);
-    }
-  }, [isOpen, lecturer, reset, trigger]);
-
-  const onFormSubmit = async (data: LecturerFormValues) => {
-    try {
-      // Format data according to API requirements
-      const payload: any = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        personEmail: data.personEmail,
-        personId: data.personId,
-      };
-
-      // Add optional fields if they exist
-      if (data.phoneNumber) payload.phoneNumber = data.phoneNumber;
-      if (data.dob) payload.dob = data.dob;
-      if (data.degree) payload.degree = data.degree;
-      if (data.salary !== undefined) payload.salary = data.salary;
-      if (data.departmentId) payload.departmentId = data.departmentId;
-      if (data.mainMajor) payload.mainMajor = data.mainMajor;
-
-      // Add optional fields for edit mode
-      if (isEdit) {
-        if (data.lecturerCode) payload.lecturerCode = data.lecturerCode;
-        if (data.workingStatus !== undefined)
-          payload.workingStatus = data.workingStatus;
-        if (data.joinDate) payload.joinDate = data.joinDate;
-      }
-
-      await onSubmit(payload);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    }
-  };
-
-  // Helper function to determine if a field should show error
-  const shouldShowError = (fieldName: keyof LecturerFormValues) => {
-    return !!errors[fieldName] && touchedFields[fieldName];
-  };
-
-  const emptyValues = {
+  const [formData, setFormData] = useState<LecturerFormData>({
     lecturerCode: "",
     degree: "",
     salary: 0,
@@ -165,34 +65,169 @@ export function LecturerModal({
     dob: "",
     phoneNumber: "",
     personEmail: "",
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Partial<LecturerFormData>>({});
+
+  // Reset form when modal opens/closes or lecturer changes
+  useEffect(() => {
+    if (isOpen) {
+      if (isEdit && lecturer) {
+        // Edit mode - fill with lecturer data
+        const defaultValues = {
+          lecturerCode: lecturer.lecturerCode || "",
+          degree: lecturer.degree || "",
+          salary: lecturer.salary !== undefined ? lecturer.salary : 0,
+          departmentId: lecturer.departmentId || "",
+          workingStatus:
+            lecturer.workingStatus !== undefined ? lecturer.workingStatus : 1,
+          joinDate: lecturer.joinDate
+            ? new Date(lecturer.joinDate).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          mainMajor: lecturer.mainMajor || "",
+          firstName: lecturer.firstName || "",
+          lastName: lecturer.lastName || "",
+          personId: lecturer.personId || "",
+          dob: lecturer.dob || "",
+          phoneNumber: lecturer.phoneNumber || "",
+          personEmail: lecturer.personEmail || "",
+        };
+
+        setFormData(defaultValues);
+        setErrors({});
+      } else {
+        // Add mode - reset to empty values
+        const emptyValues = {
+          lecturerCode: "",
+          degree: "",
+          salary: 0,
+          departmentId: "",
+          workingStatus: 1,
+          joinDate: new Date().toISOString().split("T")[0],
+          mainMajor: "",
+          firstName: "",
+          lastName: "",
+          personId: "",
+          dob: "",
+          phoneNumber: "",
+          personEmail: "",
+        };
+
+        setFormData(emptyValues);
+        setErrors({});
+      }
+    }
+  }, [isOpen, isEdit, lecturer]);
+
+  const handleChange = (
+    field: keyof LecturerFormData,
+    value: string | number
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]:
+        field === "salary" || field === "workingStatus" ? Number(value) : value,
+    }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
-  // Thêm hàm đóng modal để reset form và gọi onClose
+  const validateForm = (): boolean => {
+    const newErrors: Partial<LecturerFormData> = {};
+
+    // if (!formData.firstName.trim()) {
+    //   newErrors.firstName = "First name is required";
+    // }
+
+    // if (!formData.lastName.trim()) {
+    //   newErrors.lastName = "Last name is required";
+    // }
+
+    // if (!formData.personEmail.trim()) {
+    //   newErrors.personEmail = "Email is required";
+    // } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personEmail)) {
+    //   newErrors.personEmail = "Invalid email format";
+    // }
+
+    // if (!formData.personId.trim()) {
+    //   newErrors.personId = "Person ID is required";
+    // }
+
+    // if (!formData.departmentId) {
+    //   newErrors.departmentId = "Department is required";
+    // }
+
+    // if (Number(formData.salary) < 0) {
+    //   newErrors.salary = "Salary must be a positive number";
+    // }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log("Form submitted with data:", formData);
+
+      // Format data according to API requirements
+      const payload: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        personEmail: formData.personEmail,
+        personId: formData.personId,
+      };
+
+      // Add optional fields if they exist
+      if (formData.phoneNumber) payload.phoneNumber = formData.phoneNumber;
+      if (formData.dob) payload.dob = formData.dob;
+      if (formData.degree) payload.degree = formData.degree;
+      if (formData.salary !== undefined && formData.salary !== "")
+        payload.salary = Number(formData.salary);
+      if (formData.departmentId) payload.departmentId = formData.departmentId;
+      if (formData.mainMajor) payload.mainMajor = formData.mainMajor;
+
+      // Add optional fields for edit mode
+      if (isEdit) {
+        if (formData.lecturerCode) payload.lecturerCode = formData.lecturerCode;
+        if (
+          formData.workingStatus !== undefined &&
+          formData.workingStatus !== ""
+        )
+          payload.workingStatus = Number(formData.workingStatus);
+        if (formData.joinDate) payload.joinDate = formData.joinDate;
+      }
+
+      console.log("Formatted payload:", payload);
+      await onSubmit(payload);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCloseModal = () => {
-    reset(isEdit && lecturer ? {
-      lecturerCode: lecturer.lecturerCode || "",
-      degree: lecturer.degree || "",
-      salary: lecturer.salary || 0,
-      departmentId: lecturer.departmentId || "",
-      workingStatus: lecturer.workingStatus || 1,
-      joinDate: lecturer.joinDate
-        ? new Date(lecturer.joinDate).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      mainMajor: lecturer.mainMajor || "",
-      firstName: lecturer.applicationUser?.firstName || "",
-      lastName: lecturer.applicationUser?.lastName || "",
-      personId: lecturer.applicationUser?.personId || "",
-      dob: lecturer.applicationUser?.dob || "",
-      phoneNumber: lecturer.applicationUser?.phoneNumber || "",
-      personEmail: lecturer.applicationUser?.email || "",
-    } : emptyValues);
     onClose();
   };
 
   return (
     <Modal isOpen={isOpen} size="3xl" onClose={onClose}>
       <ModalContent>
-        <form onSubmit={handleSubmit(onFormSubmit)}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           <ModalHeader>
             {isEdit ? "Edit Lecturer" : "Add New Lecturer"}
           </ModalHeader>
@@ -206,10 +241,11 @@ export function LecturerModal({
                   First Name *
                 </label>
                 <Input
-                  errorMessage={errors.firstName?.message}
+                  errorMessage={errors.firstName}
                   id="firstName"
-                  isInvalid={shouldShowError("firstName")}
-                  {...register("firstName")}
+                  isInvalid={!!errors.firstName}
+                  value={formData.firstName}
+                  onChange={(e) => handleChange("firstName", e.target.value)}
                 />
               </div>
 
@@ -221,28 +257,34 @@ export function LecturerModal({
                   Last Name *
                 </label>
                 <Input
-                  errorMessage={errors.lastName?.message}
+                  errorMessage={errors.lastName}
                   id="lastName"
-                  isInvalid={shouldShowError("lastName")}
-                  {...register("lastName")}
+                  isInvalid={!!errors.lastName}
+                  value={formData.lastName}
+                  onChange={(e) => handleChange("lastName", e.target.value)}
                 />
               </div>
 
-              <div>
-                <label
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                  htmlFor="personEmail"
-                >
-                  Email *
-                </label>
-                <Input
-                  errorMessage={errors.personEmail?.message}
-                  id="personEmail"
-                  isInvalid={shouldShowError("personEmail")}
-                  type="email"
-                  {...register("personEmail")}
-                />
-              </div>
+              {!isEdit && (
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="personEmail"
+                  >
+                    Email *
+                  </label>
+                  <Input
+                    errorMessage={errors.personEmail}
+                    id="personEmail"
+                    isInvalid={!!errors.personEmail}
+                    type="email"
+                    value={formData.personEmail}
+                    onChange={(e) =>
+                      handleChange("personEmail", e.target.value)
+                    }
+                  />
+                </div>
+              )}
 
               <div>
                 <label
@@ -252,10 +294,11 @@ export function LecturerModal({
                   Phone Number
                 </label>
                 <Input
-                  errorMessage={errors.phoneNumber?.message}
+                  errorMessage={errors.phoneNumber}
                   id="phoneNumber"
-                  isInvalid={shouldShowError("phoneNumber")}
-                  {...register("phoneNumber")}
+                  isInvalid={!!errors.phoneNumber}
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleChange("phoneNumber", e.target.value)}
                 />
               </div>
 
@@ -267,10 +310,11 @@ export function LecturerModal({
                   Person ID *
                 </label>
                 <Input
-                  errorMessage={errors.personId?.message}
+                  errorMessage={errors.personId}
                   id="personId"
-                  isInvalid={shouldShowError("personId")}
-                  {...register("personId")}
+                  isInvalid={!!errors.personId}
+                  value={formData.personId}
+                  onChange={(e) => handleChange("personId", e.target.value)}
                 />
               </div>
 
@@ -284,29 +328,12 @@ export function LecturerModal({
                 <Input
                   id="dob"
                   type="date"
-                  isInvalid={shouldShowError("dob")}
-                  errorMessage={errors.dob?.message}
-                  {...register("dob")}
+                  isInvalid={!!errors.dob}
+                  errorMessage={errors.dob}
+                  value={formData.dob}
+                  onChange={(e) => handleChange("dob", e.target.value)}
                 />
               </div>
-
-              {isEdit && (
-                <div>
-                  <label
-                    htmlFor="lecturerCode"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Lecturer Code
-                  </label>
-                  <Input
-                    id="lecturerCode"
-                    isInvalid={shouldShowError("lecturerCode")}
-                    errorMessage={errors.lecturerCode?.message}
-                    {...register("lecturerCode")}
-                    isDisabled={isEdit}
-                  />
-                </div>
-              )}
 
               <div>
                 <label
@@ -317,9 +344,10 @@ export function LecturerModal({
                 </label>
                 <Input
                   id="degree"
-                  isInvalid={shouldShowError("degree")}
-                  errorMessage={errors.degree?.message}
-                  {...register("degree")}
+                  isInvalid={!!errors.degree}
+                  errorMessage={errors.degree}
+                  value={formData.degree}
+                  onChange={(e) => handleChange("degree", e.target.value)}
                 />
               </div>
 
@@ -333,9 +361,10 @@ export function LecturerModal({
                 <Input
                   id="salary"
                   type="number"
-                  isInvalid={shouldShowError("salary")}
-                  errorMessage={errors.salary?.message}
-                  {...register("salary", { valueAsNumber: true })}
+                  isInvalid={!!errors.salary}
+                  errorMessage={errors.salary}
+                  value={formData.salary.toString()}
+                  onChange={(e) => handleChange("salary", e.target.value)}
                 />
               </div>
 
@@ -348,9 +377,10 @@ export function LecturerModal({
                 </label>
                 <Input
                   id="mainMajor"
-                  isInvalid={shouldShowError("mainMajor")}
-                  errorMessage={errors.mainMajor?.message}
-                  {...register("mainMajor")}
+                  isInvalid={!!errors.mainMajor}
+                  errorMessage={errors.mainMajor}
+                  value={formData.mainMajor}
+                  onChange={(e) => handleChange("mainMajor", e.target.value)}
                 />
               </div>
 
@@ -361,40 +391,34 @@ export function LecturerModal({
                 >
                   Department *
                 </label>
-                <Controller
-                  control={control}
-                  name="departmentId"
-                  render={({ field }) => (
-                    <Autocomplete
-                      id="departmentId"
-                      allowsCustomValue={false}
-                      defaultItems={departments}
-                      selectedKey={field.value}
-                      onSelectionChange={(key) =>
-                        field.onChange(key?.toString() || "")
-                      }
+                <Autocomplete
+                  id="departmentId"
+                  allowsCustomValue={false}
+                  defaultItems={departments}
+                  selectedKey={formData.departmentId}
+                  onSelectionChange={(key) =>
+                    handleChange("departmentId", key?.toString() || "")
+                  }
+                >
+                  {(department) => (
+                    <AutocompleteItem
+                      key={department.id}
+                      textValue={department.name || ""}
                     >
-                      {(department) => (
-                        <AutocompleteItem
-                          key={department.id}
-                          textValue={department.name || ""}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold">
-                              {department.name || "No name"}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {department.code}
-                            </span>
-                          </div>
-                        </AutocompleteItem>
-                      )}
-                    </Autocomplete>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {department.name || "No name"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {department.code}
+                        </span>
+                      </div>
+                    </AutocompleteItem>
                   )}
-                />
-                {errors.departmentId && touchedFields.departmentId && (
+                </Autocomplete>
+                {errors.departmentId && (
                   <p className="text-sm text-red-500 mt-1">
-                    {errors.departmentId.message}
+                    {errors.departmentId}
                   </p>
                 )}
               </div>
@@ -409,11 +433,12 @@ export function LecturerModal({
                       Join Date
                     </label>
                     <Input
-                      errorMessage={errors.joinDate?.message}
+                      errorMessage={errors.joinDate}
                       id="joinDate"
-                      isInvalid={shouldShowError("joinDate")}
+                      isInvalid={!!errors.joinDate}
                       type="date"
-                      {...register("joinDate")}
+                      value={formData.joinDate}
+                      onChange={(e) => handleChange("joinDate", e.target.value)}
                     />
                   </div>
 
@@ -424,29 +449,23 @@ export function LecturerModal({
                     >
                       Working Status
                     </label>
-                    <Controller
-                      control={control}
-                      name="workingStatus"
-                      render={({ field }) => (
-                        <Select
-                          id="workingStatus"
-                          selectedKeys={
-                            field.value !== undefined
-                              ? [field.value.toString()]
-                              : []
-                          }
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
-                        >
-                          <SelectItem key="1">Active</SelectItem>
-                          <SelectItem key="0">Inactive</SelectItem>
-                        </Select>
-                      )}
-                    />
-                    {errors.workingStatus && touchedFields.workingStatus && (
+                    <Select
+                      id="workingStatus"
+                      selectedKeys={
+                        formData.workingStatus !== undefined
+                          ? [formData.workingStatus.toString()]
+                          : ["1"]
+                      }
+                      onChange={(e) =>
+                        handleChange("workingStatus", e.target.value)
+                      }
+                    >
+                      <SelectItem key="1">Active</SelectItem>
+                      <SelectItem key="0">Inactive</SelectItem>
+                    </Select>
+                    {errors.workingStatus && (
                       <p className="text-sm text-red-500 mt-1">
-                        {errors.workingStatus.message}
+                        {errors.workingStatus}
                       </p>
                     )}
                   </div>
@@ -458,7 +477,7 @@ export function LecturerModal({
             <Button color="danger" variant="light" onPress={handleCloseModal}>
               Cancel
             </Button>
-            <Button color="primary" isLoading={isSubmitting} type="submit">
+            <Button color="primary" isLoading={isLoading} type="submit">
               {isEdit ? "Update" : "Create"}
             </Button>
           </ModalFooter>

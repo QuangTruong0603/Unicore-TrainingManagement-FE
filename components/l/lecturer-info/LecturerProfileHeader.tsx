@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Edit, Upload, Camera } from "lucide-react";
+import { Edit, Upload } from "lucide-react";
 import {
   Avatar,
   Chip,
@@ -40,6 +40,7 @@ export const LecturerProfileHeader: React.FC<LecturerProfileHeaderProps> = ({
   const handleFileChange = useCallback((file: File) => {
     setImageFile(file);
     const fileUrl = URL.createObjectURL(file);
+
     setPreviewUrl(fileUrl);
   }, []);
 
@@ -59,6 +60,7 @@ export const LecturerProfileHeader: React.FC<LecturerProfileHeaderProps> = ({
       setIsDragging(false);
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
+
         if (file.type.startsWith("image/")) {
           handleFileChange(file);
         }
