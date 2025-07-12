@@ -13,52 +13,71 @@ import {
   CardBody,
 } from "@heroui/react";
 
-import { Address } from "./types";
+interface Address {
+  id: string;
+  country: string;
+  city: string;
+  district: string;
+  ward: string;
+  addressDetail: string;
+}
 
 interface AddressSectionProps {
-  address: Address;
+  address: Address | null;
   onUpdate?: (address: Address) => Promise<void>;
 }
 
-const AddressSection: React.FC<AddressSectionProps> = ({
+export const AddressSection: React.FC<AddressSectionProps> = ({
   address,
   onUpdate,
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const [editAddress, setEditAddress] = useState<Address>({ ...address });
+  const [editAddress, setEditAddress] = useState<Address | null>(
+    address
+      ? { ...address }
+      : {
+          id: "",
+          country: "",
+          city: "",
+          district: "",
+          ward: "",
+          addressDetail: "",
+        }
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Create full address string
-  const fullAddress = [
-    address?.addressDetail,
-    address?.ward,
-    address?.district,
-    address?.city,
-    address?.country,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const fullAddress = address
+    ? [
+        address.addressDetail,
+        address.ward,
+        address.district,
+        address.city,
+        address.country,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   const handleChange = (field: keyof Address, value: string) => {
-    setEditAddress((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setEditAddress((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
   const handleSave = async () => {
-    if (onUpdate) {
+    if (onUpdate && editAddress) {
       setIsLoading(true);
       try {
-        // If id is empty string, remove the id property entirely
-        let addressToUpdate: any = { ...editAddress };
+        // Chỉ gửi các trường cần thiết, không gửi id
+        const { country, city, district, ward, addressDetail } = editAddress;
+        const addressToUpdate = {
+          country,
+          city,
+          district,
+          ward,
+          addressDetail,
+        };
 
-        if (addressToUpdate.id === "") {
-          // Remove the id property if it's empty
-          delete addressToUpdate.id;
-        }
-
-        await onUpdate(addressToUpdate);
+        await onUpdate(addressToUpdate as any);
         setShowModal(false);
       } catch (error) {
         console.error("Error updating address:", error);
@@ -78,18 +97,33 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             <MapPin className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Address Information</h2>
           </div>
-          <Button
-            isIconOnly
-            className="p-1 min-w-0 h-auto"
-            color="primary"
-            title="Edit address information"
-            variant="ghost"
-            onClick={() => setShowModal(true)}
-          >
-            <Edit size={16} />
-          </Button>
+          {onUpdate && (
+            <Button
+              isIconOnly
+              className="p-1 min-w-0 h-auto"
+              color="primary"
+              title="Edit address information"
+              variant="ghost"
+              onClick={() => {
+                setEditAddress(
+                  address
+                    ? { ...address }
+                    : {
+                        id: "",
+                        country: "",
+                        city: "",
+                        district: "",
+                        ward: "",
+                        addressDetail: "",
+                      }
+                );
+                setShowModal(true);
+              }}
+            >
+              <Edit size={16} />
+            </Button>
+          )}
         </CardHeader>
-
         <CardBody className="overflow-visible">
           <div className="flex items-center gap-2 mb-4">
             <Navigation className="text-gray-500 h-4 w-4" />
@@ -98,7 +132,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
               <p className="text-sm text-gray-800">{fullAddress || "N/A"}</p>
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -110,7 +143,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2 mb-4">
                 <Building className="text-gray-500 h-4 w-4" />
                 <div>
@@ -121,7 +153,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 </div>
               </div>
             </div>
-
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="text-gray-500 h-4 w-4" />
@@ -132,7 +163,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="text-gray-500 h-4 w-4" />
                 <div>
@@ -142,7 +172,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
                 <Home className="text-gray-500 h-4 w-4" />
                 <div>
@@ -156,7 +185,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
           </div>
         </CardBody>
       </Card>
-
       {/* Address Edit Modal */}
       <Modal
         isOpen={showModal}
@@ -178,11 +206,10 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   disabled={isLoading}
                   id="country"
                   placeholder="Enter country"
-                  value={editAddress.country || ""}
+                  value={editAddress?.country || ""}
                   onChange={(e) => handleChange("country", e.target.value)}
                 />
               </div>
-
               <div className="mb-4">
                 <label
                   className="block text-sm font-medium text-gray-700 mb-1"
@@ -194,11 +221,10 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   disabled={isLoading}
                   id="city"
                   placeholder="Enter city"
-                  value={editAddress.city || ""}
+                  value={editAddress?.city || ""}
                   onChange={(e) => handleChange("city", e.target.value)}
                 />
               </div>
-
               <div className="mb-4">
                 <label
                   className="block text-sm font-medium text-gray-700 mb-1"
@@ -210,11 +236,10 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   disabled={isLoading}
                   id="district"
                   placeholder="Enter district"
-                  value={editAddress.district || ""}
+                  value={editAddress?.district || ""}
                   onChange={(e) => handleChange("district", e.target.value)}
                 />
               </div>
-
               <div className="mb-4">
                 <label
                   className="block text-sm font-medium text-gray-700 mb-1"
@@ -226,12 +251,11 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                   disabled={isLoading}
                   id="ward"
                   placeholder="Enter ward"
-                  value={editAddress.ward || ""}
+                  value={editAddress?.ward || ""}
                   onChange={(e) => handleChange("ward", e.target.value)}
                 />
               </div>
             </div>
-
             <div className="mb-4">
               <label
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -243,7 +267,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
                 disabled={isLoading}
                 id="addressDetail"
                 placeholder="Enter address details"
-                value={editAddress.addressDetail || ""}
+                value={editAddress?.addressDetail || ""}
                 onChange={(e) => handleChange("addressDetail", e.target.value)}
               />
             </div>
@@ -270,5 +294,3 @@ const AddressSection: React.FC<AddressSectionProps> = ({
     </>
   );
 };
-
-export default AddressSection;

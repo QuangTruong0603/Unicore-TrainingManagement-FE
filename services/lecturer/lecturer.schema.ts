@@ -20,7 +20,7 @@ export const lecturerSchema = z.object({
   departmentId: z.string().min(1, "Department is required"),
   workingStatus: z.number().min(0).max(1),
   joinDate: z.string().min(1, "Join date is required"),
-  mainMajor: z.string().min(1, "Main major is required"),
+  mainMajor: z.string().optional(),
   applicationUser: applicationUserSchema,
 });
 

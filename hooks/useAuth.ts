@@ -139,6 +139,12 @@ export const useAuth = () => {
             // Only fetch if we don't have data
             fetchStudentInfo(parsedUser.email);
           }
+        } else if (parsedUser.role === "Lecturer") {
+          const lecturerData = getLocalStorage("lecturerInfo");
+
+          if (lecturerData) {
+            setLecturerInfo(JSON.parse(lecturerData));
+          }
         }
       }
     } catch (error) {

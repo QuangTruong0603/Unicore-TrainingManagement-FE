@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/router";
 import {
   Button,
   Pagination,
@@ -36,6 +37,7 @@ import "./index.scss";
 
 export default function LecturersPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { query, isLoading } = useSelector(
     (state: RootState) => state.lecturer
   );
@@ -141,6 +143,7 @@ export default function LecturersPage() {
   };
 
   const handleEditLecturer = async (lecturer: Lecturer) => {
+    console.log("143", lecturer);
     try {
       dispatch(setLoading(true));
       // Fetch the full lecturer data by ID
@@ -159,6 +162,11 @@ export default function LecturersPage() {
     } finally {
       dispatch(setLoading(false));
     }
+  };
+
+  const handleViewDetail = (lecturer: Lecturer) => {
+    console.log("167", lecturer.id);
+    router.push(`/a/lecturers/profile/${lecturer.applicationUser.email}`);
   };
 
   const handleDeleteLecturer = (lecturerId: string, lecturerName: string) => {
@@ -191,35 +199,49 @@ export default function LecturersPage() {
   };
 
   const handleModalSubmit = async (data: Partial<Lecturer>) => {
+    console.log("200", data);
     try {
       if (isEdit && selectedLecturer) {
-        await lecturerService.updateLecturer(
-          selectedLecturer.lecturerCode,
+        console.log("194", selectedLecturer);
+        const response = await lecturerService.updateLecturer(
+          selectedLecturer.id,
           data
         );
-        addToast({
-          title: "Success",
-          description: "Lecturer has been updated successfully.",
-          color: "success",
-        });
+
+        if (response.success) {
+          addToast({
+            title: "Success",
+            description: "Lecturer has been updated successfully.",
+            color: "success",
+          });
+        } else {
+          addToast({
+            title: "Error",
+            description: response.errors[0],
+            color: "danger",
+          });
+        }
       } else {
-        await lecturerService.createLecturer(data);
-        addToast({
-          title: "Success",
-          description: "New lecturer has been created successfully.",
-          color: "success",
-        });
+        const response = await lecturerService.createLecturer(data);
+
+        if (response.success) {
+          addToast({
+            title: "Success",
+            description: "New lecturer has been created successfully.",
+            color: "success",
+          });
+        } else {
+          addToast({
+            title: "Error",
+            description: response.errors[0],
+            color: "danger",
+          });
+        }
       }
       setIsModalOpen(false);
       fetchLecturers();
     } catch (error) {
       console.error("Error submitting lecturer data:", error);
-      addToast({
-        title: "Error",
-        description:
-          "Failed to save lecturer. Please check your input and try again.",
-        color: "danger",
-      });
     }
   };
 
@@ -227,7 +249,7 @@ export default function LecturersPage() {
 
   return (
     <DefaultLayout>
-      <div className="container mx-auto p-6">
+      <div className="lecturer-container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Lecturer Management</h1>
           <div className="flex items-center gap-2">
@@ -279,6 +301,7 @@ export default function LecturersPage() {
               onEdit={handleEditLecturer}
               onRowToggle={handleRowToggle}
               onSort={handleSort}
+              onViewDetail={handleViewDetail}
             />
           )}
         </div>
