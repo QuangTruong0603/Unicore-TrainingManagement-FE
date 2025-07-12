@@ -113,6 +113,7 @@ export default function LecturersPage() {
         ...query,
         by: key,
         isDesc: query.by === key ? !query.isDesc : false,
+        pageNumber: 1,
       })
     );
   };

@@ -229,4 +229,102 @@ export const classService = {
       }
     );
   },
+
+  getClassAnalytics: async (query: AcademicClassQuery): Promise<any> => {
+    let params: Record<string, string> = {
+      "Pagination.PageNumber": query.pageNumber.toString(),
+      "Pagination.ItemsPerpage": query.itemsPerpage.toString(),
+    };
+
+    if (query.orderBy) {
+      params["Order.By"] =
+        query.orderBy.charAt(0).toUpperCase() + query.orderBy.slice(1);
+    }
+
+    if (query.isDesc !== undefined) {
+      params["Order.IsDesc"] = query.isDesc.toString();
+    }
+
+    if (query.filters?.name) {
+      params["Filter.Name"] = query.filters.name;
+    }
+    if (query.filters?.minCapacity !== undefined) {
+      params["Filter.MinCapacity"] = query.filters.minCapacity.toString();
+    }
+    if (query.filters?.maxCapacity !== undefined) {
+      params["Filter.MaxCapacity"] = query.filters.maxCapacity.toString();
+    }
+    if (query.filters?.isRegistrable !== undefined) {
+      params["Filter.IsRegistrable"] = query.filters.isRegistrable.toString();
+    }
+    if (query.filters?.courseId) {
+      params["Filter.CourseId"] = query.filters.courseId;
+    }
+    if (query.filters?.semesterId) {
+      params["Filter.SemesterId"] = query.filters.semesterId;
+    }
+    if (query.filters?.roomId) {
+      params["Filter.RoomId"] = query.filters.roomId;
+    }
+    if (query.filters?.shiftId) {
+      params["Filter.ShiftId"] = query.filters.shiftId;
+    }
+    if (query.filters?.enrollmentStatus !== undefined) {
+      params["Filter.EnrollmentStatus"] =
+        query.filters.enrollmentStatus.toString();
+    }
+    if (query.filters?.lecturerId) {
+      params["Filter.LecturerId"] = query.filters.lecturerId;
+    }
+
+    const searchParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      searchParams.append(key, value);
+    });
+    if (query.filters?.scheduleInDayIds?.length) {
+      query.filters.scheduleInDayIds.forEach((id) => {
+        searchParams.append("Filter.ScheduleInDayIds", id);
+      });
+    }
+
+    return courseClient.get(`${API_ENDPOINTS.CLASSES}/analytics`, {
+      params: searchParams,
+      paramsSerializer: (params) => params.toString(),
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+
+  getClassAnalyticsSummary: async (filters: any): Promise<any> => {
+    // Build query params for filters
+    const params = new URLSearchParams();
+
+    if (filters?.name) params.append("Name", filters.name);
+    if (filters?.minCapacity !== undefined)
+      params.append("MinCapacity", filters.minCapacity);
+    if (filters?.maxCapacity !== undefined)
+      params.append("MaxCapacity", filters.maxCapacity);
+    if (filters?.isRegistrable !== undefined)
+      params.append("IsRegistrable", filters.isRegistrable);
+    if (filters?.courseId) params.append("CourseId", filters.courseId);
+    if (filters?.semesterId) params.append("SemesterId", filters.semesterId);
+    if (filters?.roomId) params.append("RoomId", filters.roomId);
+    if (filters?.shiftId) params.append("ShiftId", filters.shiftId);
+    if (filters?.enrollmentStatus !== undefined)
+      params.append("EnrollmentStatus", filters.enrollmentStatus);
+    if (filters?.lecturerId) params.append("LecturerId", filters.lecturerId);
+    if (filters?.scheduleInDayIds?.length) {
+      filters.scheduleInDayIds.forEach((id: string) =>
+        params.append("ScheduleInDayIds", id)
+      );
+    }
+
+    return courseClient.get(`${API_ENDPOINTS.CLASSES}/analytics-summary`, {
+      params,
+      paramsSerializer: (params: any) => params.toString(),
+      headers: { accept: "text/plain" },
+    });
+  },
 };

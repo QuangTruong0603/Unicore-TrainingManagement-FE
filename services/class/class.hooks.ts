@@ -161,3 +161,11 @@ export const useCreateClassRegistrationScheduleWithCustomHook = () => {
     }
   );
 };
+
+// React Query implementation for analytics endpoint
+export const useClassAnalytics = (query: AcademicClassQuery) => {
+  return useQuery({
+    queryKey: ["classAnalytics", query],
+    queryFn: () => classService.getClassAnalytics(query),
+  });
+};
