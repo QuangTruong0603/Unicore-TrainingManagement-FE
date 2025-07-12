@@ -20,6 +20,7 @@ import {
   Pencil,
   Trash2,
   MoreVertical,
+  Eye,
 } from "lucide-react";
 
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
@@ -35,6 +36,7 @@ interface LecturerTableProps {
   onEdit: (lecturer: Lecturer) => void;
   onDelete: (lecturerId: string, lecturerName: string) => void;
   onRowToggle: (lecturerId: string) => void;
+  onViewDetail: (lecturer: Lecturer) => void;
 }
 
 export function LecturerTable({
@@ -47,6 +49,7 @@ export function LecturerTable({
   onEdit,
   onDelete,
   onRowToggle,
+  onViewDetail,
 }: LecturerTableProps) {
   const renderSortIcon = (columnKey: string) => {
     if (sortKey !== columnKey) return null;
@@ -79,6 +82,8 @@ export function LecturerTable({
       );
     } else if (key === "details") {
       onRowToggle(lecturer.id);
+    } else if (key === "viewDetail") {
+      onViewDetail(lecturer);
     }
   };
 
@@ -189,6 +194,12 @@ export function LecturerTable({
                       aria-label="Lecturer Actions"
                       onAction={(key) => handleAction(key.toString(), lecturer)}
                     >
+                      <DropdownItem
+                        key="viewDetail"
+                        startContent={<Eye className="w-4 h-4" />}
+                      >
+                        View Detail
+                      </DropdownItem>
                       <DropdownItem
                         key="edit"
                         startContent={<Pencil className="w-4 h-4" />}

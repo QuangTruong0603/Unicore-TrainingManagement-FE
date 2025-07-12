@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/router";
 import {
   Button,
   Pagination,
@@ -36,6 +37,7 @@ import "./index.scss";
 
 export default function LecturersPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { query, isLoading } = useSelector(
     (state: RootState) => state.lecturer
   );
@@ -159,6 +161,11 @@ export default function LecturersPage() {
     } finally {
       dispatch(setLoading(false));
     }
+  };
+
+  const handleViewDetail = (lecturer: Lecturer) => {
+    console.log("167", lecturer.id);
+    router.push(`/a/lecturers/profile/${lecturer.applicationUser.email}`);
   };
 
   const handleDeleteLecturer = (lecturerId: string, lecturerName: string) => {
@@ -293,6 +300,7 @@ export default function LecturersPage() {
               onEdit={handleEditLecturer}
               onRowToggle={handleRowToggle}
               onSort={handleSort}
+              onViewDetail={handleViewDetail}
             />
           )}
         </div>
