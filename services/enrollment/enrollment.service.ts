@@ -54,8 +54,8 @@ export const enrollmentService = {
       params["Filter.CourseId"] = query.filters.courseId;
     }
 
-    if (query.filters?.studentCode) {
-      params["Filter.StudentCode"] = query.filters.studentCode;
+    if (query.filters?.search) {
+      params["Filter.Search"] = query.filters.search;
     }
 
     if (query.filters?.fromDate) {

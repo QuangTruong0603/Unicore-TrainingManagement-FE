@@ -119,7 +119,7 @@ export const enrollmentFilterSchema = z.object({
   academicClassId: z.string().optional(),
   semesterId: z.string().optional(),
   courseId: z.string().optional(),
-  studentCode: z.string().optional(),
+  search: z.string().optional(),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
 });
