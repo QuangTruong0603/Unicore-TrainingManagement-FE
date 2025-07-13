@@ -10,6 +10,8 @@ import {
   LecturerResponse,
 } from "./lecturer.dto";
 
+import { Address } from "@/components/s/sutdent-info/types";
+
 export const lecturerService = {
   getLecturers: async (query: LecturerQuery): Promise<LecturerListResponse> => {
     const params: Record<string, string> = {
@@ -95,6 +97,37 @@ export const lecturerService = {
       {
         headers: {
           "Content-Type": "application/json",
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+  getLecturerByLecturerId: async (lecturerId: string): Promise<any> => {
+    return lecturerClient.get(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`);
+  },
+  updateLecturerAddress: async (
+    lecturerId: string,
+    address: Address
+  ): Promise<any> => {
+    return lecturerClient.put(`${API_ENDPOINTS.LECTURERS}/${lecturerId}`, {
+      address: address ? address : {},
+    });
+  },
+  updateLecturerImage: async (
+    lecturerId: string,
+    imageFile: File
+  ): Promise<any> => {
+    const formData = new FormData();
+
+    formData.append("Id", lecturerId);
+    formData.append("ImageFile", imageFile);
+
+    return lecturerClient.put(
+      `${API_ENDPOINTS.LECTURERS}/update-image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
           accept: "text/plain",
         },
       }

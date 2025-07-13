@@ -46,7 +46,7 @@ export const PersonalInfoSection = ({
 
   return (
     <>
-      <Card className="overflow-visible" radius="sm">
+      <Card className="overflow-visible mb-6" radius="sm">
         <CardHeader className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2 text-purple-700">
             <User className="h-5 w-5" />
