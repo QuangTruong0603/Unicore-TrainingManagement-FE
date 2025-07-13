@@ -36,6 +36,22 @@ export const useTrainingRoadmap = (id: string) => {
   });
 };
 
+// Get a single training roadmap by major ID and batch ID
+export const useTrainingRoadmapByMajorIdAndBatchId = (
+  majorId: string,
+  batchId: string
+) => {
+  return useQuery({
+    queryKey: ["trainingRoadmap", "major", majorId, "batch", batchId],
+    queryFn: () =>
+      trainingRoadmapService.getTrainingRoadmapByMajorIdAndBatchId(
+        majorId,
+        batchId
+      ),
+    enabled: !!majorId && !!batchId,
+  });
+};
+
 // Using our custom hooks directly (alternative approach)
 export const useTrainingRoadmapsWithCustomHook = (
   query: TrainingRoadmapQuery

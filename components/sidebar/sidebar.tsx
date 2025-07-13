@@ -17,7 +17,6 @@ import {
   MapPin,
   School,
   UserPlus,
-  DollarSign,
   ClipboardList,
   Bell,
 } from "lucide-react";
@@ -148,11 +147,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
           key: "/s/academic/roadmap",
           title: "My Roadmap",
           icon: <Map size={20} />,
-        },
-        {
-          key: "/s/academic/tuition",
-          title: "Tuition",
-          icon: <DollarSign size={20} />,
         },
       ],
     },

@@ -84,7 +84,8 @@ const ClassResultPage = () => {
   //   }
   // };
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null | undefined) => {
+    if (score === null || score === undefined) return "default";
     if (score >= 8.5) return "success";
     if (score >= 7.0) return "primary";
     if (score >= 5.5) return "warning";
@@ -100,11 +101,17 @@ const ClassResultPage = () => {
     return isPassed ? "Passed" : "Failed";
   };
 
-  const formatScore = (score: number) => {
+  const formatScore = (score: number | null | undefined) => {
+    if (score === null || score === undefined) {
+      return "-";
+    }
+
     return score.toFixed(1);
   };
 
   const getComponentScore = (scores: any[], scoreType: number) => {
+    if (!scores || scores.length === 0) return null;
+
     const score = scores.find((s) => s.scoreType === scoreType);
 
     return score ? score.score : null;
@@ -118,7 +125,11 @@ const ClassResultPage = () => {
     let totalCredits = 0;
 
     scores.forEach((score) => {
-      if (score.isPassed) {
+      if (
+        score.isPassed &&
+        score.overallScore !== null &&
+        score.overallScore !== undefined
+      ) {
         // Convert score to grade points (assuming 10-point scale)
         let gradePoints = 0;
 
@@ -128,8 +139,8 @@ const ClassResultPage = () => {
         else if (score.overallScore >= 4.0) gradePoints = 1.0;
         else gradePoints = 0.0;
 
-        totalGradePoints += gradePoints * score.totalCredits;
-        totalCredits += score.totalCredits;
+        totalGradePoints += gradePoints * (score.totalCredits || 0);
+        totalCredits += score.totalCredits || 0;
       }
     });
 
@@ -138,7 +149,10 @@ const ClassResultPage = () => {
 
   // Calculate total credits for the semester
   const calculateTotalCredits = (scores: StudentScore[]) => {
-    return scores.reduce((total, score) => total + score.totalCredits, 0);
+    return scores.reduce(
+      (total, score) => total + (score.totalCredits || 0),
+      0
+    );
   };
 
   if (!user || !studentInfo) {
@@ -359,7 +373,7 @@ const ClassResultPage = () => {
                                 className="w-16"
                                 color={getScoreColor(score.overallScore)}
                                 size="sm"
-                                value={score.overallScore * 10}
+                                value={(score.overallScore || 0) * 10}
                               />
                             </div>
                           </TableCell>
@@ -421,12 +435,14 @@ const ClassResultPage = () => {
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-info">
-                      {(
-                        scoresResponse.data.reduce(
-                          (sum, score) => sum + score.overallScore,
-                          0
-                        ) / scoresResponse.data.length
-                      ).toFixed(1)}
+                      {scoresResponse.data.length > 0
+                        ? (
+                            scoresResponse.data.reduce(
+                              (sum, score) => sum + (score.overallScore || 0),
+                              0
+                            ) / scoresResponse.data.length
+                          ).toFixed(1)
+                        : "0.0"}
                     </p>
                     <p className="text-sm text-gray-600">Average Score</p>
                   </div>
