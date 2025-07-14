@@ -39,7 +39,7 @@ export default function EnrollmentsPage() {
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [searchInputValue, setSearchInputValue] = useState<string>(
-    query.filters?.studentCode || ""
+    query.filters?.search || ""
   );
   const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<string[]>(
     []
@@ -69,14 +69,14 @@ export default function EnrollmentsPage() {
 
   // Update query when debounced search value changes
   useEffect(() => {
-    if (debouncedSearchValue !== (query.filters?.studentCode || "")) {
+    if (debouncedSearchValue !== (query.filters?.search || "")) {
       dispatch(
         setQuery({
           ...query,
           pageNumber: 1,
           filters: {
             ...query.filters,
-            studentCode: debouncedSearchValue || undefined,
+            search: debouncedSearchValue || undefined,
           },
         })
       );
@@ -118,11 +118,11 @@ export default function EnrollmentsPage() {
   useEffect(() => {
     const newChips: FilterChip[] = [];
 
-    // Student Code filter
-    if (query.filters?.studentCode) {
+    // Search filter
+    if (query.filters?.search) {
       newChips.push({
-        id: "studentCode",
-        label: `Student: ${query.filters.studentCode}`,
+        id: "search",
+        label: `Search: ${query.filters.search}`,
       });
     }
 
@@ -290,7 +290,7 @@ export default function EnrollmentsPage() {
             <div className="relative flex-1">
               <Input
                 className="pl-10 w-full rounded-xl"
-                placeholder="Search by student code..."
+                placeholder="Search by student code, class..."
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
               />
