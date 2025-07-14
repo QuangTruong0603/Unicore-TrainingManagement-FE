@@ -25,6 +25,7 @@ import { useClassAnalytics } from "@/services/class/class.hooks";
 import { useSemesters } from "@/services/semester/semester.hooks";
 import { useCourses } from "@/services/course/course.hooks";
 import { AnalyticsTable } from "@/components/a/analytics/analytics-table";
+import { getStatusLabel } from "@/services/class/class.constants";
 import "./index.scss";
 import { classService } from "@/services/class/class.service";
 
@@ -54,7 +55,7 @@ export default function AnalyticsPage() {
         ...(selectedSemester && { semesterId: selectedSemester }),
         ...(selectedCourse && { courseId: selectedCourse }),
       },
-      sortBy: sortKey || "name",
+      orderBy: sortKey || "name",
     }),
     [selectedSemester, selectedCourse, currentPage, sortKey, sortDirection]
   );
@@ -109,6 +110,7 @@ export default function AnalyticsPage() {
       totalPassed: cls.totalPassed,
       totalFailed: cls.totalFailed,
       averageScore: cls.averageScore,
+      status: cls.status,
     }));
 
     return data;
@@ -125,6 +127,7 @@ export default function AnalyticsPage() {
       totalPassed: cls.totalPassed,
       totalFailed: cls.totalFailed,
       averageScore: cls.averageScore,
+      status: cls.status,
       passRate:
         cls.enrollmentCount > 0
           ? (cls.totalPassed / cls.enrollmentCount) * 100
@@ -175,10 +178,20 @@ export default function AnalyticsPage() {
   };
 
   const handleSort = (key: string) => {
-    if (sortKey === key) {
+    // Map UI column keys to backend field names for sorting
+    const fieldMap: Record<string, string> = {
+      name: "name",
+      status: "status",
+      course: "course",
+    };
+
+    // Use the mapped field name if it exists, otherwise use the original key
+    const orderBy = fieldMap[key] || key;
+
+    if (sortKey === orderBy) {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
-      setSortKey(key);
+      setSortKey(orderBy);
       setSortDirection("desc");
     }
     // Reset to first page when sorting
@@ -413,6 +426,7 @@ export default function AnalyticsPage() {
                                 <div>
                                   <strong>{label}</strong>
                                 </div>
+                                <div>Status: {getStatusLabel(data.status)}</div>
                                 <div>Students: {data.students}</div>
                                 <div>Passed: {data.totalPassed}</div>
                                 <div>Failed: {data.totalFailed}</div>

@@ -31,6 +31,11 @@ import {
 
 import styles from "./analytics-table.module.scss";
 
+import {
+  getStatusLabel,
+  getStatusColor,
+} from "@/services/class/class.constants";
+
 interface AnalyticsData {
   id: string;
   name: string;
@@ -40,6 +45,7 @@ interface AnalyticsData {
   averageScore: number;
   passRate: number;
   failRate: number;
+  status: number;
   course: {
     code: string;
     name: string;
@@ -168,10 +174,43 @@ export const AnalyticsTable: React.FC<AnalyticsTableProps> = ({
     {
       key: "name",
       title: "Class Name",
-      sortable: false,
+      sortable: true,
       render: (data: AnalyticsData) => (
         <div className="max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis font-semibold text-primary">
           {data.name}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Class Status",
+      sortable: true,
+      render: (data: AnalyticsData) => {
+        const statusLabel = getStatusLabel(data.status);
+        const statusColor = getStatusColor(data.status);
+
+        return (
+          <div className="text-center">
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "course",
+      title: "Course",
+      sortable: true,
+      render: (data: AnalyticsData) => (
+        <div className="max-w-[120px] overflow-hidden">
+          <Tooltip content={data.course.name}>
+            <div className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs cursor-help">
+              {data.course.code}
+            </div>
+          </Tooltip>
         </div>
       ),
     },
@@ -282,20 +321,6 @@ export const AnalyticsTable: React.FC<AnalyticsTableProps> = ({
       ),
     },
     {
-      key: "course",
-      title: "Course",
-      sortable: false,
-      render: (data: AnalyticsData) => (
-        <div className="max-w-[120px] overflow-hidden">
-          <Tooltip content={data.course.name}>
-            <div className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs cursor-help">
-              {data.course.code}
-            </div>
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
       key: "semester",
       title: "Semester",
       sortable: false,
@@ -377,8 +402,12 @@ export const AnalyticsTable: React.FC<AnalyticsTableProps> = ({
     },
   ];
 
-  // Remove handleSort or make it a no-op
-  const handleSort = (_key: string) => {};
+  // Handle sorting
+  const handleSort = (key: string) => {
+    if (onSort) {
+      onSort(key);
+    }
+  };
 
   // Expanded detail view for analytics data
   const renderExpandedDetails = (data: AnalyticsData) => {
@@ -409,6 +438,14 @@ export const AnalyticsTable: React.FC<AnalyticsTableProps> = ({
                   className={`text-sm font-medium ${getPassRateColor(data.passRate)}`}
                 >
                   {data.passRate?.toFixed(1) || 0}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Class Status:</span>
+                <span
+                  className={`text-sm font-medium px-2 py-1 rounded-full ${getStatusColor(data.status)}`}
+                >
+                  {getStatusLabel(data.status)}
                 </span>
               </div>
             </div>

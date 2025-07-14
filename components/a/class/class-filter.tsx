@@ -180,6 +180,7 @@ export function ClassFilter({
     { key: "2", label: "Approved" },
     { key: "3", label: "Started" },
     { key: "6", label: "Rejected" },
+    { key: "7", label: "Ended" },
   ];
 
   return (

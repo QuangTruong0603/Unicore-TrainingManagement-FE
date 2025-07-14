@@ -370,11 +370,6 @@ export default function ClassScorePage() {
                       <TableColumn key="practice">Practice</TableColumn>,
                       <TableColumn key="midterm">Midterm</TableColumn>,
                       <TableColumn key="final">Final</TableColumn>,
-                      //   ...scoreTypes.map((type) => (
-                      //     <TableColumn key={type.id}>
-                      //       {type.name} ({type.percentage}%)
-                      //     </TableColumn>
-                      //   )),
                       <TableColumn key="actions">Actions</TableColumn>,
                     ]}
                   </TableHeader>
@@ -551,23 +546,6 @@ export default function ClassScorePage() {
                                 getScore(sv, "4")
                               )}
                             </TableCell>,
-                            // ...scoreTypes.map((type) => {
-                            //   const result = sv.results.find(
-                            //     (r) => r.scoreTypeId === type.id
-                            //   );
-                            //   return (
-                            //     <TableCell
-                            //       key={type.id}
-                            //       className="text-center"
-                            //     >
-                            //       {result
-                            //         ? result.score === -1
-                            //           ? "-"
-                            //           : result.score
-                            //         : "-"}
-                            //     </TableCell>
-                            //   );
-                            // }),
                             <TableCell key="actions">
                               {isEditing ? (
                                 <>
@@ -649,6 +627,7 @@ export default function ClassScorePage() {
                               ) : (
                                 <Button
                                   color="secondary"
+                                  disabled={classInfo?.enrollmentStatus === 7}
                                   size="sm"
                                   onClick={() =>
                                     dispatch(startEdit(sv.studentCode))
