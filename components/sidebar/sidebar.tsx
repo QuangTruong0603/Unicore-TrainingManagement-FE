@@ -185,7 +185,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
   ];
 
   const lecturerMenuItems: IMenuItem[] = [
-    { key: "/l", title: "Lecturer", icon: <User size={20} /> },
     {
       key: "/l/score",
       title: "Score Mangement",

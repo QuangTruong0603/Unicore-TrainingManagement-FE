@@ -38,6 +38,11 @@ export interface AssignLecturerToClassesDto {
   academicClassIds: string[];
 }
 
+export interface BulkChangeStatusDto {
+  academicClassIds: string[];
+  status: number;
+}
+
 export interface AcademicClassResponse extends BaseResponse<AcademicClass> {}
 
 export interface AcademicClassListResponse

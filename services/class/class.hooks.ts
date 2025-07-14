@@ -9,6 +9,7 @@ import {
   AcademicClassCreateDto,
   ClassRegistrationScheduleDto,
   AssignLecturerToClassesDto,
+  BulkChangeStatusDto,
 } from "./class.dto";
 import { classService } from "./class.service";
 
@@ -142,6 +143,14 @@ export const useAssignLecturerToClasses = () => {
   return useMutation({
     mutationFn: (assignData: AssignLecturerToClassesDto) =>
       classService.assignLecturerToClasses(assignData),
+  });
+};
+
+// Mutation for bulk changing status of classes
+export const useBulkChangeStatus = () => {
+  return useMutation({
+    mutationFn: (bulkChangeData: BulkChangeStatusDto) =>
+      classService.bulkChangeStatus(bulkChangeData),
   });
 };
 

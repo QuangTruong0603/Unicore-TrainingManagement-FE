@@ -31,6 +31,7 @@ import {
 import { classService } from "@/services/class/class.service";
 import { enrollmentService } from "@/services/enrollment/enrollment.service";
 import { Enrollment } from "@/services/enrollment/enrollment.schema";
+import { ACADEMIC_CLASS_STATUS } from "@/services/class/class.constants";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setClasses,
@@ -485,6 +486,7 @@ export default function ClassesPage() {
       }
     );
   };
+
   const handleRejectAllEnrollments = (academicClass: AcademicClass) => {
     confirmDialog(
       async () => {
@@ -642,7 +644,9 @@ export default function ClassesPage() {
 
     // Check if all selected classes are closed and have pending enrollments
     const hasInvalidClasses = selectedClassesData.some(
-      (cls) => cls.isRegistrable || cls.enrollmentStatus !== 1
+      (cls) =>
+        cls.isRegistrable ||
+        cls.enrollmentStatus !== ACADEMIC_CLASS_STATUS.PENDING
     );
 
     if (hasInvalidClasses) {
@@ -660,14 +664,22 @@ export default function ClassesPage() {
       async () => {
         try {
           setIsSubmitting(true);
+
+          // Update enrollment status
           await enrollmentService.bulkChangeEnrollmentStatus(
             selectedClasses,
-            2
+            ACADEMIC_CLASS_STATUS.APPROVED
           );
+
+          // Update class status
+          await classService.bulkChangeStatus({
+            academicClassIds: selectedClasses,
+            status: ACADEMIC_CLASS_STATUS.APPROVED,
+          });
 
           addToast({
             title: "Success",
-            description: `All enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been approved successfully.`,
+            description: `All enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been approved successfully.`,
             color: "success",
           });
 
@@ -682,23 +694,25 @@ export default function ClassesPage() {
         } catch (error) {
           addToast({
             title: "Error",
-            description: "Failed to approve enrollments. Please try again.",
+            description:
+              "Failed to approve enrollments and classes. Please try again.",
             color: "danger",
           });
           // eslint-disable-next-line no-console
-          console.error("Error approving enrollments:", error);
+          console.error("Error approving enrollments and classes:", error);
         } finally {
           setIsSubmitting(false);
         }
       },
       {
         title: "Confirm Bulk Approval",
-        message: `Are you sure you want to approve all enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Pending to Approved.`,
+        message: `Are you sure you want to approve all enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Pending to Approved.`,
         confirmText: "Approve All",
         cancelText: "Cancel",
       }
     );
   };
+
   const handleBulkStartEnrollments = () => {
     const selectedClassesData = classes.filter((cls) =>
       selectedClasses.includes(cls.id)
@@ -706,7 +720,9 @@ export default function ClassesPage() {
 
     // Check if all selected classes are closed and have approved enrollments
     const hasInvalidClasses = selectedClassesData.some(
-      (cls) => cls.isRegistrable || cls.enrollmentStatus !== 2
+      (cls) =>
+        cls.isRegistrable ||
+        cls.enrollmentStatus !== ACADEMIC_CLASS_STATUS.APPROVED
     );
 
     if (hasInvalidClasses) {
@@ -724,14 +740,22 @@ export default function ClassesPage() {
       async () => {
         try {
           setIsSubmitting(true);
+
+          // Update enrollment status
           await enrollmentService.bulkChangeEnrollmentStatus(
             selectedClasses,
-            3
+            ACADEMIC_CLASS_STATUS.STARTED
           );
+
+          // Update class status
+          await classService.bulkChangeStatus({
+            academicClassIds: selectedClasses,
+            status: ACADEMIC_CLASS_STATUS.STARTED,
+          });
 
           addToast({
             title: "Success",
-            description: `All enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been started successfully.`,
+            description: `All enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been started successfully.`,
             color: "success",
           });
 
@@ -746,23 +770,25 @@ export default function ClassesPage() {
         } catch (error) {
           addToast({
             title: "Error",
-            description: "Failed to start enrollments. Please try again.",
+            description:
+              "Failed to start enrollments and classes. Please try again.",
             color: "danger",
           });
           // eslint-disable-next-line no-console
-          console.error("Error starting enrollments:", error);
+          console.error("Error starting enrollments and classes:", error);
         } finally {
           setIsSubmitting(false);
         }
       },
       {
         title: "Confirm Bulk Start",
-        message: `Are you sure you want to start all enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Approved to Started.`,
+        message: `Are you sure you want to start all enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Approved to Started.`,
         confirmText: "Start All",
         cancelText: "Cancel",
       }
     );
   };
+
   const handleBulkRejectEnrollments = () => {
     const selectedClassesData = classes.filter((cls) =>
       selectedClasses.includes(cls.id)
@@ -770,7 +796,9 @@ export default function ClassesPage() {
 
     // Check if all selected classes are closed and have pending enrollments
     const hasInvalidClasses = selectedClassesData.some(
-      (cls) => cls.isRegistrable || cls.enrollmentStatus !== 1
+      (cls) =>
+        cls.isRegistrable ||
+        cls.enrollmentStatus !== ACADEMIC_CLASS_STATUS.PENDING
     );
 
     if (hasInvalidClasses) {
@@ -788,14 +816,22 @@ export default function ClassesPage() {
       async () => {
         try {
           setIsSubmitting(true);
+
+          // Update enrollment status
           await enrollmentService.bulkChangeEnrollmentStatus(
             selectedClasses,
-            6
+            ACADEMIC_CLASS_STATUS.REJECTED
           );
+
+          // Update class status
+          await classService.bulkChangeStatus({
+            academicClassIds: selectedClasses,
+            status: ACADEMIC_CLASS_STATUS.REJECTED,
+          });
 
           addToast({
             title: "Success",
-            description: `All enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been rejected successfully.`,
+            description: `All enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been rejected successfully.`,
             color: "success",
           });
 
@@ -810,19 +846,89 @@ export default function ClassesPage() {
         } catch (error) {
           addToast({
             title: "Error",
-            description: "Failed to reject enrollments. Please try again.",
+            description:
+              "Failed to reject enrollments and classes. Please try again.",
             color: "danger",
           });
           // eslint-disable-next-line no-console
-          console.error("Error rejecting enrollments:", error);
+          console.error("Error rejecting enrollments and classes:", error);
         } finally {
           setIsSubmitting(false);
         }
       },
       {
         title: "Confirm Bulk Rejection",
-        message: `Are you sure you want to reject all enrollments for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Pending to Rejected.`,
+        message: `Are you sure you want to reject all enrollments and classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the status from Pending to Rejected.`,
         confirmText: "Reject All",
+        cancelText: "Cancel",
+      }
+    );
+  };
+
+  const handleBulkEndClasses = () => {
+    const selectedClassesData = classes.filter((cls) =>
+      selectedClasses.includes(cls.id)
+    );
+
+    // Check if all selected classes are closed and have started enrollments
+    const hasInvalidClasses = selectedClassesData.some(
+      (cls) =>
+        cls.isRegistrable ||
+        cls.enrollmentStatus !== ACADEMIC_CLASS_STATUS.STARTED
+    );
+
+    if (hasInvalidClasses) {
+      addToast({
+        title: "Invalid Operation",
+        description:
+          "All selected classes must be closed (registration disabled) and have started enrollments to end.",
+        color: "danger",
+      });
+
+      return;
+    }
+
+    confirmDialog(
+      async () => {
+        try {
+          setIsSubmitting(true);
+
+          // Update only class status (not enrollment status)
+          await classService.bulkChangeStatus({
+            academicClassIds: selectedClasses,
+            status: ACADEMIC_CLASS_STATUS.ENDED,
+          });
+
+          addToast({
+            title: "Success",
+            description: `All classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""} have been ended successfully.`,
+            color: "success",
+          });
+
+          // Refresh the classes list
+          const response = await classService.getClasses(query);
+
+          dispatch(setClasses(response.data.data));
+          dispatch(setTotal(response.data.total));
+
+          // Clear selection
+          setSelectedClasses([]);
+        } catch (error) {
+          addToast({
+            title: "Error",
+            description: "Failed to end classes. Please try again.",
+            color: "danger",
+          });
+          // eslint-disable-next-line no-console
+          console.error("Error ending classes:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      {
+        title: "Confirm Bulk End",
+        message: `Are you sure you want to end all classes for ${selectedClasses.length} selected class${selectedClasses.length !== 1 ? "es" : ""}? This will change the class status from Started to Ended.`,
+        confirmText: "End All",
         cancelText: "Cancel",
       }
     );
@@ -834,9 +940,11 @@ export default function ClassesPage() {
       selectedClasses.includes(cls.id)
     );
 
-    // All selected classes must be closed (not registrable) and have pending enrollments
+    // All selected classes must be closed (not registrable) and have pending enrollments (enrollmentStatus === 1)
     return selectedClassesData.every(
-      (cls) => !cls.isRegistrable && cls.enrollmentStatus === 1
+      (cls) =>
+        !cls.isRegistrable &&
+        cls.enrollmentStatus === ACADEMIC_CLASS_STATUS.PENDING
     );
   };
 
@@ -846,9 +954,11 @@ export default function ClassesPage() {
       selectedClasses.includes(cls.id)
     );
 
-    // All selected classes must be closed (not registrable) and have approved enrollments
+    // All selected classes must be closed (not registrable) and have approved enrollments (enrollmentStatus === 2)
     return selectedClassesData.every(
-      (cls) => !cls.isRegistrable && cls.enrollmentStatus === 2
+      (cls) =>
+        !cls.isRegistrable &&
+        cls.enrollmentStatus === ACADEMIC_CLASS_STATUS.APPROVED
     );
   };
 
@@ -858,9 +968,25 @@ export default function ClassesPage() {
       selectedClasses.includes(cls.id)
     );
 
-    // All selected classes must be closed (not registrable) and have pending enrollments
+    // All selected classes must be closed (not registrable) and have pending enrollments (enrollmentStatus === 1)
     return selectedClassesData.every(
-      (cls) => !cls.isRegistrable && cls.enrollmentStatus === 1
+      (cls) =>
+        !cls.isRegistrable &&
+        cls.enrollmentStatus === ACADEMIC_CLASS_STATUS.PENDING
+    );
+  };
+
+  const canEndSelected = () => {
+    if (selectedClasses.length === 0) return false;
+    const selectedClassesData = classes.filter((cls) =>
+      selectedClasses.includes(cls.id)
+    );
+
+    // All selected classes must be closed (not registrable) and have started enrollments (enrollmentStatus === 3)
+    return selectedClassesData.every(
+      (cls) =>
+        !cls.isRegistrable &&
+        cls.enrollmentStatus === ACADEMIC_CLASS_STATUS.STARTED
     );
   };
 
@@ -964,15 +1090,6 @@ export default function ClassesPage() {
                     Approve ({selectedClasses.length})
                   </Button>
                 )}
-                {canStartSelected() && (
-                  <Button
-                    color="primary"
-                    startContent={<Play className="w-4 h-4" />}
-                    onClick={handleBulkStartEnrollments}
-                  >
-                    Start ({selectedClasses.length})
-                  </Button>
-                )}
                 {canRejectSelected() && (
                   <Button
                     color="danger"
@@ -982,18 +1099,24 @@ export default function ClassesPage() {
                     Reject ({selectedClasses.length})
                   </Button>
                 )}
-                {selectedClasses.length > 0 &&
-                  classes
-                    .filter((cls) => selectedClasses.includes(cls.id))
-                    .every((cls) => cls.enrollmentStatus === 3) && (
-                    <Button
-                      color="success"
-                      startContent={<CheckCircle className="w-4 h-4" />}
-                      // TODO: Add onClick handler for completing class
-                    >
-                      Complete class ({selectedClasses.length})
-                    </Button>
-                  )}
+                {canStartSelected() && (
+                  <Button
+                    color="primary"
+                    startContent={<Play className="w-4 h-4" />}
+                    onClick={handleBulkStartEnrollments}
+                  >
+                    Start ({selectedClasses.length})
+                  </Button>
+                )}
+                {canEndSelected() && (
+                  <Button
+                    color="secondary"
+                    startContent={<CheckCircle className="w-4 h-4" />}
+                    onClick={handleBulkEndClasses}
+                  >
+                    End ({selectedClasses.length})
+                  </Button>
+                )}
                 <Button
                   color="warning"
                   startContent={<UserPlus className="w-4 h-4" />}
@@ -1060,7 +1183,7 @@ export default function ClassesPage() {
           )}
         </div>
         {/* Classes Table */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow max-w-[74rem] overflow-x-auto">
           <ClassTable
             allowMultiSelect={true}
             classes={classes}

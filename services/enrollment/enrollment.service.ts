@@ -295,7 +295,7 @@ export const enrollmentService = {
   },
   updateStudentScores: async (
     classId: string,
-    scores: ScoreEditItem[]
+    scores: { scores: ScoreEditItem[] }
   ): Promise<BaseResponse<any>> => {
     return enrollmentClient.post(
       `${API_ENDPOINTS.STUDENT_RESULTS}/update-scores/${classId}`,
