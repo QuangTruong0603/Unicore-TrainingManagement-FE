@@ -45,7 +45,8 @@ interface TrainingRoadmapFormProps {
   batches: Batch[];
   onSubmit: (data: TrainingRoadmapFormData) => void;
   isSubmitting?: boolean;
-  mode: "create"; // Only create mode is supported
+  mode: "create" | "update";
+  initialData?: TrainingRoadmapFormData;
 }
 
 export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
@@ -53,7 +54,8 @@ export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
   batches,
   onSubmit,
   isSubmitting = false,
-  mode: _mode = "create",
+  mode = "create",
+  initialData,
 }) => {
   // Get current year for the start year field
   const currentYear = new Date().getFullYear();
@@ -65,7 +67,13 @@ export const TrainingRoadmapForm: React.FC<TrainingRoadmapFormProps> = ({
     formState: { errors },
   } = useForm<TrainingRoadmapFormData>({
     resolver: zodResolver(trainingRoadmapFormSchema),
-    defaultValues: {
+    defaultValues: mode === "update" && initialData ? {
+      majorId: initialData.majorId,
+      name: initialData.name,
+      description: initialData.description,
+      startYear: initialData.startYear,
+      batchIds: initialData.batchIds,
+    } : {
       majorId: "",
       name: "",
       description: "",

@@ -4,6 +4,7 @@ import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
 import { StudentQuery } from "./student.schema";
+import { CreateStudentDto } from "./student.dto";
 
 export const useStudents = (query: StudentQuery) => {
   const params: Record<string, string> = {
@@ -35,5 +36,18 @@ export const useStudents = (query: StudentQuery) => {
     queryKey: ["students", query],
     queryFn: () =>
       studentClient.get(`${API_ENDPOINTS.STUDENTS}/all`, { params }),
+  });
+};
+
+export const useCreateStudent = () => {
+  return useQuery({
+    queryKey: ["createStudent"],
+    queryFn: (data: CreateStudentDto) =>
+      studentClient.post(`${API_ENDPOINTS.STUDENTS}/register`, data, {
+        headers: {
+          accept: "text/plain",
+          "Content-Type": "application/json",
+        },
+      }),
   });
 };

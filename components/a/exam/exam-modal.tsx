@@ -230,10 +230,9 @@ export function ExamModal({
                         }}
                       >
                         {semesters.map((semester) => (
-                          <SelectItem
-                            key={semester.id}
-                            textValue={`Semester ${semester.semesterNumber} - ${semester.year}`}
-                          />
+                          <SelectItem key={semester.id}>
+                            {`Semester ${semester.semesterNumber} - ${semester.year}`}
+                          </SelectItem>
                         ))}
                       </Select>
                     )}
@@ -259,10 +258,9 @@ export function ExamModal({
                             }}
                           >
                             {examTypes.map((type) => (
-                              <SelectItem
-                                key={type.key}
-                                textValue={type.label}
-                              />
+                              <SelectItem key={type.key}>
+                                {type.label}
+                              </SelectItem>
                             ))}
                           </Select>
                         )}
@@ -345,10 +343,9 @@ export function ExamModal({
                         onSelectionChange={(key) => field.onChange(key)}
                       >
                         {academicClasses.map((cls) => (
-                          <AutocompleteItem
-                            key={cls.id}
-                            textValue={`${cls.name} (Group ${cls.groupNumber})`}
-                          />
+                          <AutocompleteItem key={cls.id}>
+                            {`${cls.name} (Group ${cls.groupNumber})`}
+                          </AutocompleteItem>
                         ))}
                       </Autocomplete>
                     )}
@@ -370,10 +367,9 @@ export function ExamModal({
                         onSelectionChange={(key) => field.onChange(key)}
                       >
                         {rooms.map((room) => (
-                          <AutocompleteItem
-                            key={room.id}
-                            textValue={`${room.name} (${room.availableSeats} seats)`}
-                          />
+                          <AutocompleteItem key={room.id}>
+                            {`${room.name} (${room.availableSeats} seats)`}
+                          </AutocompleteItem>
                         ))}
                       </Autocomplete>
                     )}

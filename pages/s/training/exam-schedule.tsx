@@ -10,7 +10,7 @@ import {
   Autocomplete,
   AutocompleteItem,
 } from "@heroui/react";
-import { Clock, MapPin, Users } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSemesters } from "@/services/semester/semester.hooks";
@@ -71,7 +71,7 @@ const StudentExamTable: React.FC<{ exams: Exam[]; isLoading: boolean }> = ({
         <TableColumn className="font-semibold w-28">Duration</TableColumn>
         <TableColumn className="font-semibold w-40">Class</TableColumn>
         <TableColumn className="font-semibold w-40">Room</TableColumn>
-        <TableColumn className="font-semibold w-32">Enrolled</TableColumn>
+        {/* <TableColumn className="font-semibold w-32">Enrolled</TableColumn> */}
       </TableHeader>
       <TableBody>
         {exams.length === 0 ? (
@@ -133,14 +133,14 @@ const StudentExamTable: React.FC<{ exams: Exam[]; isLoading: boolean }> = ({
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 <div className="flex items-center gap-1 text-sm">
                   <Users size={12} />
                   <span className="text-xs">
                     {exam.totalEnrollment || 0} enrolled
                   </span>
                 </div>
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           ))
         )}

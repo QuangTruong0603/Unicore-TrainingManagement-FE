@@ -4,6 +4,7 @@ import { studentClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
 
 import { Student } from "./student.schema";
+import { CreateStudentDto } from "./student.dto";
 
 export const useCreateStudent = () => {
   const queryClient = useQueryClient();
@@ -11,6 +12,23 @@ export const useCreateStudent = () => {
   return useMutation({
     mutationFn: (data: Partial<Student>) =>
       studentClient.post(API_ENDPOINTS.STUDENTS, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
+};
+
+export const useCreateStudentWithDto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateStudentDto) =>
+      studentClient.post(`${API_ENDPOINTS.STUDENTS}/register`, data, {
+        headers: {
+          accept: "text/plain",
+          "Content-Type": "application/json",
+        },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
     },

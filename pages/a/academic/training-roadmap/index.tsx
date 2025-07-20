@@ -24,7 +24,6 @@ import {
   setTotal,
   setLoading,
   setError,
-  updateRoadmapStatus,
 } from "@/store/slices/trainingRoadmapSlice";
 import { trainingRoadmapService } from "@/services/training-roadmap/training-roadmap.service";
 import "./index.scss";
@@ -73,19 +72,38 @@ const TrainingRoadmapPage: React.FC = () => {
     onOpenChange: onCreateModalOpenChange,
   } = useDisclosure();
 
+  const {
+    isOpen: updateModalOpen,
+    onOpen: onUpdateModalOpen,
+    onOpenChange: onUpdateModalOpenChange,
+  } = useDisclosure();
+
   // State for form submission
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+  const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
+  const [selectedRoadmap, setSelectedRoadmap] =
+    useState<TrainingRoadmap | null>(null);
 
   // Fetch majors and batches on component mount
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchMajors = async () => {
       try {
         const response = await majorService.getMajors();
 
-        setMajors(response.data || []);
+        if (isMounted) {
+          setMajors(response.data || []);
+        }
       } catch (error) {
-        console.error("Failed to fetch majors:", error);
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError"
+        ) {
+          console.error("Failed to fetch majors:", error);
+        }
       }
     };
 
@@ -93,36 +111,69 @@ const TrainingRoadmapPage: React.FC = () => {
       try {
         const response = await batchService.getBatches();
 
-        setBatches(response.data || []);
+        if (isMounted) {
+          setBatches(response.data || []);
+        }
       } catch (error) {
-        console.error("Failed to fetch batches:", error);
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError"
+        ) {
+          console.error("Failed to fetch batches:", error);
+        }
       }
     };
 
     fetchMajors();
     fetchBatches();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch training roadmaps when query changes
   useEffect(() => {
+    let isMounted = true;
+
     const fetchRoadmaps = async () => {
       try {
-        dispatch(setLoading(true));
+        if (isMounted) {
+          dispatch(setLoading(true));
+        }
+
         const response =
           await trainingRoadmapService.getTrainingRoadmaps(query);
 
-        dispatch(setRoadmaps(response.data.data));
-        dispatch(setTotal(response.data.total));
+        if (isMounted) {
+          dispatch(setRoadmaps(response.data.data));
+          dispatch(setTotal(response.data.total));
+        }
       } catch (error) {
-        dispatch(
-          setError(error instanceof Error ? error.message : "An error occurred")
-        );
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError"
+        ) {
+          dispatch(
+            setError(
+              error instanceof Error ? error.message : "An error occurred"
+            )
+          );
+        }
       } finally {
-        dispatch(setLoading(false));
+        if (isMounted) {
+          dispatch(setLoading(false));
+        }
       }
     };
 
     fetchRoadmaps();
+
+    return () => {
+      isMounted = false;
+    };
   }, [query, dispatch]);
 
   // Effect for handling debounced search
@@ -141,38 +192,6 @@ const TrainingRoadmapPage: React.FC = () => {
       ...prev,
       [roadmapId]: !prev[roadmapId],
     }));
-  };
-
-  // Handle active status toggle
-  const handleActiveToggle = async (roadmap: TrainingRoadmap) => {
-    try {
-      dispatch(setLoading(true));
-
-      if (roadmap.isActive) {
-        // Deactivate
-        await trainingRoadmapService.deactivateTrainingRoadmap(roadmap.id);
-      } else {
-        // Activate
-        await trainingRoadmapService.activateTrainingRoadmap(roadmap.id);
-      }
-
-      // Update the roadmap status in the Redux store
-      dispatch(
-        updateRoadmapStatus({ id: roadmap.id, isActive: !roadmap.isActive })
-      );
-    } catch (error) {
-      console.error(
-        `Failed to ${roadmap.isActive ? "deactivate" : "activate"} roadmap:`,
-        error
-      );
-      dispatch(
-        setError(
-          `Failed to ${roadmap.isActive ? "deactivate" : "activate"} roadmap`
-        )
-      );
-    } finally {
-      dispatch(setLoading(false));
-    }
   };
 
   // Handle sort
@@ -212,6 +231,37 @@ const TrainingRoadmapPage: React.FC = () => {
     } finally {
       setIsCreateSubmitting(false);
     }
+  };
+
+  // Handle update roadmap submission
+  const handleUpdateSubmit = async (data: TrainingRoadmapFormData) => {
+    if (!selectedRoadmap) return;
+
+    try {
+      setIsUpdateSubmitting(true);
+      await trainingRoadmapService.updateTrainingRoadmap(
+        selectedRoadmap.id,
+        data
+      );
+      onUpdateModalOpenChange();
+      setSelectedRoadmap(null);
+
+      // Refresh roadmaps after updating
+      const response = await trainingRoadmapService.getTrainingRoadmaps(query);
+
+      dispatch(setRoadmaps(response.data.data));
+      dispatch(setTotal(response.data.total));
+    } catch (error) {
+      console.error("Failed to update roadmap:", error);
+    } finally {
+      setIsUpdateSubmitting(false);
+    }
+  };
+
+  // Handle edit roadmap
+  const handleEditRoadmap = (roadmap: TrainingRoadmap) => {
+    setSelectedRoadmap(roadmap);
+    onUpdateModalOpen();
   };
   // Delete roadmap mutation
   const deleteRoadmapMutation = useDeleteTrainingRoadmap();
@@ -270,11 +320,8 @@ const TrainingRoadmapPage: React.FC = () => {
             roadmaps={Array.isArray(roadmaps) ? roadmaps : []}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
-            onActiveToggle={handleActiveToggle}
             onDelete={handleDeleteRoadmap}
-            onEdit={(roadmap) => {
-              console.log("Edit roadmap requested:", roadmap);
-            }}
+            onEdit={handleEditRoadmap}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
           />
@@ -297,6 +344,28 @@ const TrainingRoadmapPage: React.FC = () => {
           mode="create"
           onOpenChange={onCreateModalOpenChange}
           onSubmit={handleCreateSubmit}
+        />
+        {/* Modal for updating roadmap */}
+        <TrainingRoadmapModal
+          batches={batches}
+          initialData={
+            selectedRoadmap
+              ? {
+                  majorId: selectedRoadmap.majorId,
+                  name: selectedRoadmap.name,
+                  description: selectedRoadmap.description || "",
+                  startYear: new Date().getFullYear(), // You might want to get this from the roadmap data
+                  batchIds:
+                    selectedRoadmap.batchDatas?.map((batch) => batch.id) || [],
+                }
+              : undefined
+          }
+          isOpen={updateModalOpen}
+          isSubmitting={isUpdateSubmitting}
+          majors={majors}
+          mode="update"
+          onOpenChange={onUpdateModalOpenChange}
+          onSubmit={handleUpdateSubmit}
         />
       </div>
     </DefaultLayout>

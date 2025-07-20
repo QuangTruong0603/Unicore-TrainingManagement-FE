@@ -7,6 +7,7 @@ import { BaseResponse } from "../api/api-response";
 
 import { StudentQuery } from "./student.schema";
 import { StudentListResponse } from "./student.dto";
+import { CreateStudentDto, CreateStudentResponse } from "./student.dto";
 
 import {
   StudentProfile,
@@ -224,6 +225,16 @@ export const studentService = {
   },
   createStudent: async (data: Partial<any>): Promise<any> => {
     return studentClient.post(`${API_ENDPOINTS.STUDENTS}`, data);
+  },
+  createStudentWithDto: async (
+    data: CreateStudentDto
+  ): Promise<BaseResponse<CreateStudentResponse>> => {
+    return studentClient.post(`${API_ENDPOINTS.STUDENTS}/register`, data, {
+      headers: {
+        accept: "text/plain",
+        "Content-Type": "application/json",
+      },
+    });
   },
   deleteStudent: async (studentId: string): Promise<any> => {
     return studentClient.delete(`${API_ENDPOINTS.STUDENTS}/${studentId}`);

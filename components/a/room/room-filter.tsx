@@ -39,6 +39,8 @@ export function RoomFilter({
 
   // Fetch all buildings and floors
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchAllBuildings = async () => {
       try {
         // Use the new method to fetch buildings by location if locationId exists
@@ -62,19 +64,24 @@ export function RoomFilter({
             ? (response as { data: Building[] }).data
             : null;
 
-        if (Array.isArray(buildings)) {
+        if (Array.isArray(buildings) && isMounted) {
           setAllBuildings(buildings);
-        } else {
+        } else if (isMounted) {
           // eslint-disable-next-line no-console
           console.error("Buildings data is not an array:", response);
           setAllBuildings([]); // Initialize with empty array as fallback
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error fetching buildings:", error);
-        setAllBuildings([]); // Initialize with empty array on error
+        // Only log if it's not a cancellation error
+        if (error instanceof Error && error.name !== 'CanceledError' && !error.message?.includes('canceled')) {
+          console.error("Error fetching buildings:", error);
+        }
+        if (isMounted) {
+          setAllBuildings([]); // Initialize with empty array on error
+        }
       }
     };
+    
     const fetchAllFloors = async () => {
       try {
         // Use the new method to fetch floors based on location or building ID
@@ -101,21 +108,30 @@ export function RoomFilter({
             ? (response as { data: Floor[] }).data
             : null;
 
-        if (Array.isArray(floors)) {
+        if (Array.isArray(floors) && isMounted) {
           setAllFloors(floors);
-        } else {
+        } else if (isMounted) {
           // eslint-disable-next-line no-console
           console.error("Floors data is not an array:", response);
           setAllFloors([]); // Initialize with empty array as fallback
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error fetching floors:", error);
-        setAllFloors([]); // Initialize with empty array on error
+        // Only log if it's not a cancellation error
+        if (error instanceof Error && error.name !== 'CanceledError' && !error.message?.includes('canceled')) {
+          console.error("Error fetching floors:", error);
+        }
+        if (isMounted) {
+          setAllFloors([]); // Initialize with empty array on error
+        }
       }
     };
+    
     fetchAllBuildings();
     fetchAllFloors();
+
+    return () => {
+      isMounted = false;
+    };
   }, [query.filter?.locationId, query.filter?.buildingId, locationId]);
 
   // When the debounced search value changes, update the query
@@ -130,7 +146,7 @@ export function RoomFilter({
         pageNumber: 1, // Reset to first page on new search
       });
     }
-  }, [debouncedSearch, query, onQueryChange]);
+  }, [debouncedSearch, query.filter?.name, onQueryChange]);
 
   // When locationId prop changes, update the filter in the query
   useEffect(() => {
@@ -143,7 +159,7 @@ export function RoomFilter({
         },
       });
     }
-  }, [locationId, query, onQueryChange]);
+  }, [locationId, query.filter?.locationId, onQueryChange]);
 
   // Handle search input change
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {

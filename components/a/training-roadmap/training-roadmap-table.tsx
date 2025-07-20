@@ -12,8 +12,6 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronUp,
-  Power,
-  PowerOff,
   MoreVertical,
   Edit,
   Trash2,
@@ -42,7 +40,6 @@ interface TrainingRoadmapTableProps {
   onRowToggle: (roadmapId: string) => void;
   onEdit: (roadmap: TrainingRoadmap) => void;
   onDelete: (roadmap: TrainingRoadmap) => void;
-  onActiveToggle: (roadmap: TrainingRoadmap) => void;
 }
 
 interface Column {
@@ -62,7 +59,6 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
   onRowToggle,
   onEdit,
   onDelete,
-  onActiveToggle,
 }) => {
   const renderSortIcon = (key: string) => {
     if (sortKey !== key) return null;
@@ -140,21 +136,7 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
         </div>
       ),
     },
-    {
-      key: "status",
-      title: "Status",
-      sortable: true,
-      render: (roadmap: TrainingRoadmap) => (
-        <Chip
-          className="text-xs"
-          color={roadmap.isActive ? "success" : "danger"}
-          size="sm"
-          variant="flat"
-        >
-          {roadmap.isActive ? "Active" : "Inactive"}
-        </Chip>
-      ),
-    },
+
     {
       key: "actions",
       title: "Actions",
@@ -179,17 +161,6 @@ export const TrainingRoadmapTable: React.FC<TrainingRoadmapTableProps> = ({
               }}
             >
               Update
-            </DropdownItem>
-            <DropdownItem
-              key="toggle-status"
-              startContent={
-                roadmap.isActive ? <PowerOff size={16} /> : <Power size={16} />
-              }
-              onPress={() => {
-                onActiveToggle(roadmap);
-              }}
-            >
-              {roadmap.isActive ? "Deactivate" : "Activate"}
             </DropdownItem>
             <DropdownItem
               key="delete"

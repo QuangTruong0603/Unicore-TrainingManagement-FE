@@ -55,6 +55,8 @@ export function ClassFilter({
           isDesc: true,
         });
 
+        console.log("Semester response:", semesterResponse);
+
         setSemesters(semesterResponse.data.data);
       } catch {
         // Handle errors silently

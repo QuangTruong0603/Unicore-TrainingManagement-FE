@@ -1,21 +1,12 @@
 import React, { useEffect } from "react";
 import {
   Button,
-  Chip,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import {
-  ArrowDown,
-  ArrowUp,
-  Power,
-  PowerOff,
-  Edit,
-  Trash2,
-  MoreVertical,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, Edit, Trash2, MoreVertical } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -86,20 +77,20 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
       sortable: true,
       render: (semester: Semester) => semester.year,
     },
-    {
-      key: "isActive",
-      title: "Status",
-      sortable: true,
-      render: (semester: Semester) => (
-        <Chip
-          color={semester.isActive ? "success" : "danger"}
-          size="sm"
-          variant="flat"
-        >
-          {semester.isActive ? "Active" : "Inactive"}
-        </Chip>
-      ),
-    },
+    // {
+    //   key: "isActive",
+    //   title: "Status",
+    //   sortable: true,
+    //   render: (semester: Semester) => (
+    //     <Chip
+    //       color={semester.isActive ? "success" : "danger"}
+    //       size="sm"
+    //       variant="flat"
+    //     >
+    //       {semester.isActive ? "Active" : "Inactive"}
+    //     </Chip>
+    //   ),
+    // },
     {
       key: "startDate",
       title: "Start Date",
@@ -149,7 +140,7 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
               >
                 Delete
               </DropdownItem>
-              <DropdownItem
+              {/* <DropdownItem
                 key="toggle-active"
                 startContent={
                   semester.isActive ? (
@@ -161,7 +152,7 @@ export const SemesterTable: React.FC<SemesterTableProps> = ({
                 onPress={() => onActiveToggle(semester)}
               >
                 {semester.isActive ? "Deactivate" : "Activate"}
-              </DropdownItem>
+              </DropdownItem> */}
             </DropdownMenu>
           </Dropdown>
         </div>

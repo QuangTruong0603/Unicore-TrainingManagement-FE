@@ -1,7 +1,6 @@
-import { ArrowDown, ArrowUp, Power, PowerOff, Edit, MoreVertical, Trash } from "lucide-react";
+import { ArrowDown, ArrowUp, Edit, MoreVertical, Trash } from "lucide-react";
 import {
   Button,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -24,7 +23,6 @@ interface RoomTableProps {
   sortKey?: string;
   sortDirection?: string;
   onSort?: (key: string) => void;
-  onActiveToggle?: (room: Room) => void;
   onEdit?: (room: Room) => void;
   onDeleteRoom?: (room: Room) => void;
 }
@@ -35,7 +33,6 @@ export const RoomTable = ({
   sortKey,
   sortDirection = "asc",
   onSort,
-  onActiveToggle,
   onEdit,
   onDeleteRoom,
 }: RoomTableProps) => {
@@ -81,14 +78,6 @@ export const RoomTable = ({
             Available Seats {renderSortIcon("availableSeats")}
           </div>
         </TableColumn>
-        <TableColumn
-          className={`cursor-pointer ${sortKey === "isActive" ? "text-primary" : ""}`}
-          onClick={() => handleSort("isActive")}
-        >
-          <div className="flex items-center">
-            Status {renderSortIcon("isActive")}
-          </div>
-        </TableColumn>
         <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody
@@ -104,15 +93,6 @@ export const RoomTable = ({
             <TableCell>{room.floor?.name || "N/A"}</TableCell>
             <TableCell>{room.floor?.building?.name || "N/A"}</TableCell>
             <TableCell>{room.availableSeats}</TableCell>
-            <TableCell>
-              <Chip
-                color={room.isActive ? "success" : "danger"}
-                size="sm"
-                variant="flat"
-              >
-                {room.isActive ? "Active" : "Inactive"}
-              </Chip>
-            </TableCell>
             <TableCell>
               <div className="flex gap-2 justify-end pr-2">
                 <Dropdown>
@@ -132,41 +112,26 @@ export const RoomTable = ({
                     aria-label="Room Actions"
                     onAction={(key) => {
                       switch (key) {
-                        case "edit":
+                        case "update":
                           if (onEdit) onEdit(room);
                           break;
                         case "delete":
                           if (onDeleteRoom) onDeleteRoom(room);
                           break;
-                        case "activate":
-                          if (onActiveToggle) onActiveToggle(room);
-                          break;
                       }
                     }}
                   >
                     <DropdownItem
-                      key="edit"
+                      key="update"
                       startContent={<Edit className="w-4 h-4" />}
                     >
-                      Edit
+                      Update
                     </DropdownItem>
                     <DropdownItem
                       key="delete"
                       startContent={<Trash className="w-4 h-4" />}
                     >
                       Delete
-                    </DropdownItem>
-                    <DropdownItem
-                      key="activate"
-                      startContent={
-                        room.isActive ? (
-                          <PowerOff className="w-4 h-4" />
-                        ) : (
-                          <Power className="w-4 h-4" />
-                        )
-                      }
-                    >
-                      {room.isActive ? "Deactivate" : "Activate"}
                     </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>

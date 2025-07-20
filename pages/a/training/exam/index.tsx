@@ -4,10 +4,12 @@ import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
 import { ExamFilter } from "@/components/a/exam/exam-filter";
 import { ExamModal } from "@/components/a/exam/exam-modal";
+import { ExamUpdateModal } from "@/components/a/exam/exam-update-modal";
 import { ExamTable } from "@/components/a/exam/exam-table";
 import DefaultLayout from "@/layouts/default";
 import { Exam } from "@/services/exam/exam.schema";
 import { examService } from "@/services/exam/exam.service";
+import { ExamUpdateDto } from "@/services/exam/exam.dto";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import useConfirmDialog from "@/hooks/useConfirmDialog";
 import {
@@ -49,6 +51,8 @@ export default function ExamSchedulePage() {
   );
 
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+  const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [searchInputValue, setSearchInputValue] = useState<string>("");
   const debouncedSearchValue = useDebounce<string>(searchInputValue, 600);
   // Add state to track expanded rows
@@ -59,6 +63,13 @@ export default function ExamSchedulePage() {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
     onOpenChange: onCreateOpenChange,
+  } = useDisclosure();
+
+  // Update modal
+  const {
+    isOpen: isUpdateOpen,
+    onOpen: onUpdateOpen,
+    onOpenChange: onUpdateOpenChange,
   } = useDisclosure();
 
   const { confirmDialog } = useConfirmDialog();
@@ -108,6 +119,42 @@ export default function ExamSchedulePage() {
       // Error handling without console.error
     } finally {
       setIsCreateSubmitting(false);
+    }
+  };
+
+  const handleUpdateExam = (exam: Exam) => {
+    setSelectedExam(exam);
+    onUpdateOpen();
+  };
+
+  const onUpdateSubmit = async (data: Partial<Exam>) => {
+    try {
+      if (!selectedExam) return;
+
+      setIsUpdateSubmitting(true);
+      
+      // Convert the data to match ExamUpdateDto format
+      const updateData: ExamUpdateDto = {};
+      if (data.examTime !== undefined) updateData.examTime = new Date(data.examTime as string);
+      if (data.type !== undefined) updateData.type = data.type;
+      if (data.group !== undefined) updateData.group = data.group;
+      if (data.duration !== undefined) updateData.duration = data.duration;
+      if (data.academicClassId !== undefined) updateData.academicClassId = data.academicClassId;
+      if (data.roomId !== undefined) updateData.roomId = data.roomId;
+      if ('semesterId' in data && data.semesterId !== undefined) updateData.semesterId = data.semesterId as string;
+      
+      await examService.updateExam(selectedExam.id, updateData);
+      onUpdateOpenChange();
+      setSelectedExam(null);
+      
+      // Refetch exams after updating
+      const response = await examService.getExams(query);
+      dispatch(setExams(response.data.data));
+      dispatch(setTotal(response.data.total));
+    } catch {
+      // Error handling without console.error
+    } finally {
+      setIsUpdateSubmitting(false);
     }
   };
 
@@ -231,6 +278,7 @@ export default function ExamSchedulePage() {
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
             onDeleteExam={handleDeleteExam}
+            onUpdateExam={handleUpdateExam}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
           />
@@ -251,6 +299,15 @@ export default function ExamSchedulePage() {
           mode="create"
           onOpenChange={onCreateOpenChange}
           onSubmit={onCreateSubmit}
+        />
+
+        {/* Update Exam Modal */}
+        <ExamUpdateModal
+          exam={selectedExam}
+          isOpen={isUpdateOpen}
+          isSubmitting={isUpdateSubmitting}
+          onOpenChange={onUpdateOpenChange}
+          onSubmit={onUpdateSubmit}
         />
       </div>
     </DefaultLayout>

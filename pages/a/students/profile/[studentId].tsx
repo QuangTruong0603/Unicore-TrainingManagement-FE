@@ -2,17 +2,20 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Spinner, Button } from "@heroui/react";
 import { ArrowLeft } from "lucide-react";
+import { useDispatch } from "react-redux";
+
 import DefaultLayout from "@/layouts/default";
-import { studentService, updateStudentProfileImage } from "@/services/student/student.service";
+import {
+  studentService,
+  updateStudentProfileImage,
+} from "@/services/student/student.service";
 import { ProfileHeader } from "@/components/s/sutdent-info/ProfileHeader";
 import { PersonalInfoSection } from "@/components/s/sutdent-info/PersonalInfoSection";
 import AddressSection from "@/components/s/sutdent-info/AddressSection";
 import { GuardiansSection } from "@/components/s/sutdent-info/GuardiansSection";
-import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 
 import "./profile.scss";
-
 
 export default function StudentProfileAdminPage() {
   const router = useRouter();
@@ -23,19 +26,57 @@ export default function StudentProfileAdminPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
+    let isMounted = true;
+
     if (studentId) {
-      setLoading(true);
-      studentService
-        .getStudentProfile(studentId as string)
-        .then((res) => {
-          setProfile(res.data);
-          setLoading(false);
-        })
-        .catch(() => {
-          setError("Failed to fetch student profile");
-          setLoading(false);
-        });
+      // Add a small delay to prevent rapid successive calls
+      const timeoutId = setTimeout(() => {
+        if (!isMounted) return;
+
+        setLoading(true);
+        setError(null);
+
+        studentService
+          .getStudentProfile(studentId as string)
+          .then((res) => {
+            if (!isMounted) return;
+
+            if (res.success) {
+              setProfile(res.data);
+              setError(null);
+            } else {
+              setError("Failed to fetch student profile");
+            }
+            setLoading(false);
+          })
+          .catch((error) => {
+            if (!isMounted) return;
+
+            // Don't show error for canceled requests
+            if (
+              error?.name === "CanceledError" ||
+              error?.message?.includes("canceled")
+            ) {
+              console.log("Request was canceled");
+
+              return;
+            }
+
+            console.error("Error fetching student profile:", error);
+            setError("Failed to fetch student profile");
+            setLoading(false);
+          });
+      }, 100); // 100ms delay
+
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutId);
+      };
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [studentId]);
 
   // Hàm update cho PersonalInfoSection và AddressSection (không update guardians)
@@ -52,7 +93,9 @@ export default function StudentProfileAdminPage() {
   const handleUpdateImage = async (imageFile: File) => {
     if (!profile) return;
     try {
-      await dispatch(updateStudentProfileImage({ studentId: profile.id, imageFile }));
+      await dispatch(
+        updateStudentProfileImage({ studentId: profile.id, imageFile })
+      );
     } catch (err) {}
   };
 
@@ -82,20 +125,23 @@ export default function StudentProfileAdminPage() {
     <DefaultLayout>
       <div className="profile-page p-4  mx-auto mt-10">
         <Button
-          variant="light"
+          className="mb-4"
           color="primary"
           startContent={<ArrowLeft className="w-4 h-4" />}
-          className="mb-4"
+          variant="light"
           onClick={() => router.push("/a/students")}
         >
           Back to Student Management
         </Button>
         <ProfileHeader profile={profile} onUpdateImage={handleUpdateImage} />
         <PersonalInfoSection profile={profile} onUpdate={handleUpdate} />
-        <AddressSection address={profile.address || null} onUpdate={handleUpdate} />
+        <AddressSection
+          address={profile.address || null}
+          onUpdate={handleUpdate}
+        />
         {/* Không cho edit người nhà */}
         <GuardiansSection guardians={profile.guardians} onUpdate={undefined} />
       </div>
     </DefaultLayout>
   );
-} 
+}

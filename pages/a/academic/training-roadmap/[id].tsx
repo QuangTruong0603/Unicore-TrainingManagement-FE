@@ -95,10 +95,6 @@ const TrainingRoadmapDetailPage: React.FC = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500">Total Semesters</p>
-                  </div>
-
-                  <div>
                     <p className="text-sm text-gray-500">Total Courses</p>
                     <p className="text-2xl font-bold">
                       {roadmap.trainingRoadmapCourses.length || 0}

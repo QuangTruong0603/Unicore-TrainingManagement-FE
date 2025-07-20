@@ -59,7 +59,6 @@ interface LecturerInfo {
   };
 }
 
-
 // Helper function to safely access localStorage
 const getLocalStorage = (key: string): string | null => {
   if (typeof window !== "undefined") {
@@ -231,9 +230,9 @@ export const useAuth = () => {
 
       // Redirect based on role
       if (userData.role === "Student") {
-        router.push("/s");
+        router.push("/s/profile");
       } else if (userData.role === "Lecturer") {
-        router.push("/l");
+        router.push("/l/profile");
       } else if (userData.role === "TrainingManager") {
         router.push("/t");
       } else if (userData.role === "Admin") {

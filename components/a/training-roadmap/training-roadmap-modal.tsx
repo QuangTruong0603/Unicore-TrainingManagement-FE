@@ -23,7 +23,8 @@ interface TrainingRoadmapModalProps {
   batches: Batch[];
   onSubmit: (data: TrainingRoadmapFormData) => void;
   isSubmitting: boolean;
-  mode: "create"; // Only create mode is supported
+  mode: "create" | "update";
+  initialData?: TrainingRoadmapFormData;
 }
 
 export function TrainingRoadmapModal({
@@ -34,6 +35,7 @@ export function TrainingRoadmapModal({
   onSubmit,
   isSubmitting,
   mode,
+  initialData,
 }: TrainingRoadmapModalProps) {
   return (
     <Modal isOpen={isOpen} size="3xl" onOpenChange={onOpenChange}>
@@ -41,12 +43,15 @@ export function TrainingRoadmapModal({
         {(onClose) => (
           <>
             <ModalHeader>
-              <h2 className="text-xl font-semibold">Create Training Roadmap</h2>
+              <h2 className="text-xl font-semibold">
+                {mode === "create" ? "Create Training Roadmap" : "Update Training Roadmap"}
+              </h2>
             </ModalHeader>
 
             <ModalBody>
               <TrainingRoadmapForm
                 batches={batches}
+                initialData={initialData}
                 isSubmitting={isSubmitting}
                 majors={majors}
                 mode={mode}
@@ -64,7 +69,10 @@ export function TrainingRoadmapModal({
                 form="roadmap-form"
                 type="submit"
               >
-                {isSubmitting ? "Creating..." : "Create Roadmap"}
+                {isSubmitting 
+                  ? (mode === "create" ? "Creating..." : "Updating...") 
+                  : (mode === "create" ? "Create Roadmap" : "Update Roadmap")
+                }
               </Button>
             </ModalFooter>
           </>

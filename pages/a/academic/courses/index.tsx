@@ -4,6 +4,7 @@ import { Button, Input, Pagination, useDisclosure } from "@heroui/react";
 
 import { CourseFilter } from "@/components/a/course/course-filter";
 import { CourseModal } from "@/components/a/course/course-modal";
+import { CourseUpdateModal } from "@/components/a/course/course-update-modal";
 import { CourseTable } from "@/components/a/course/course-table";
 import DefaultLayout from "@/layouts/default";
 import { Course } from "@/services/course/course.schema";
@@ -57,6 +58,7 @@ export default function CoursesPage() {
   );
   const [majors, setMajors] = useState<Major[]>([]);
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [filterChips, setFilterChips] = useState<FilterChip[]>([]);
   const [searchInputValue, setSearchInputValue] = useState<string>(
     query.filters?.name || ""
@@ -71,54 +73,100 @@ export default function CoursesPage() {
     onOpenChange: onCreateOpenChange,
   } = useDisclosure();
 
+  // Edit modal
+  const {
+    isOpen: isUpdateOpen,
+    onOpen: onUpdateOpen,
+    onOpenChange: onUpdateOpenChange,
+  } = useDisclosure();
+
   const { confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchMajors = async () => {
       try {
         const response = await majorService.getMajors();
 
-        setMajors(response.data);
+        if (isMounted) {
+          setMajors(response.data);
+        }
       } catch (_error) {
         // Error handling without console.error
       }
     };
 
     fetchMajors();
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // Effect for handling debounced search
   useEffect(() => {
-    const currentFilters = query.filters || {};
+    if (debouncedSearchValue !== (query.filters?.name || "")) {
+      const currentFilters = query.filters || {};
 
-    dispatch(
-      setQuery({
-        ...query,
-        filters: { ...currentFilters, name: debouncedSearchValue || undefined },
-        pageNumber: 1,
-      })
-    );
-  }, [debouncedSearchValue, dispatch]); // Removed query from dependencies
+      dispatch(
+        setQuery({
+          ...query,
+          filters: {
+            ...currentFilters,
+            name: debouncedSearchValue || undefined,
+          },
+          pageNumber: 1,
+        })
+      );
+    }
+  }, [debouncedSearchValue, dispatch, query]);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCourses = async () => {
       try {
         dispatch(setLoading(true));
         const response = await courseService.getCourses(query);
 
-        dispatch(setCourses(response.data.data));
-        dispatch(setTotal(response.data.total));
+        if (isMounted) {
+          dispatch(setCourses(response.data.data));
+          dispatch(setTotal(response.data.total));
+        }
       } catch (error) {
-        dispatch(
-          setError(error instanceof Error ? error.message : "An error occurred")
-        );
+        // Only set error if it's not a cancellation error
+        if (
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          if (isMounted) {
+            dispatch(
+              setError(
+                error instanceof Error ? error.message : "An error occurred"
+              )
+            );
+          }
+        }
       } finally {
-        dispatch(setLoading(false));
+        if (isMounted) {
+          dispatch(setLoading(false));
+        }
       }
     };
 
-    fetchCourses();
+    // Add a small delay to prevent rapid successive calls
+    const timeoutId = setTimeout(() => {
+      fetchCourses();
+      // Update filter chips whenever query changes
+      if (isMounted) {
+        updateFilterChipsFromQuery();
+      }
+    }, 100);
 
-    // Update filter chips whenever query changes
-    updateFilterChipsFromQuery();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [query, dispatch]);
   // Update filter chips based on current query
   const updateFilterChipsFromQuery = () => {
@@ -255,6 +303,24 @@ export default function CoursesPage() {
       // Error handling without console.error
     } finally {
       setIsCreateSubmitting(false);
+    }
+  };
+
+  const handleUpdateCourse = (course: Course) => {
+    setSelectedCourse(course);
+    onUpdateOpen();
+  };
+
+  const handleUpdateSuccess = async () => {
+    // Refetch courses after successful update
+    try {
+      const response = await courseService.getCourses(query);
+
+      dispatch(setCourses(response.data.data));
+      dispatch(setTotal(response.data.total));
+      setSelectedCourse(null); // Clear selected course
+    } catch (error) {
+      console.error("Failed to refresh courses after update", error);
     }
   };
 
@@ -403,6 +469,7 @@ export default function CoursesPage() {
             onDeleteCourse={handleDeleteCourse}
             onRowToggle={handleRowToggle}
             onSort={handleSort}
+            onUpdateCourse={handleUpdateCourse}
           />
         </div>
 
@@ -422,6 +489,14 @@ export default function CoursesPage() {
           mode="create"
           onOpenChange={onCreateOpenChange}
           onSubmit={onCreateSubmit}
+        />
+
+        {/* Update Course Modal */}
+        <CourseUpdateModal
+          course={selectedCourse}
+          isOpen={isUpdateOpen}
+          onOpenChange={onUpdateOpenChange}
+          onSuccess={handleUpdateSuccess}
         />
       </div>
     </DefaultLayout>

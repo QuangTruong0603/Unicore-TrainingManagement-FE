@@ -33,6 +33,8 @@ export function CourseFilter({
 
   // Fetch all courses for the dropdowns
   useEffect(() => {
+    let isMounted = true;
+
     const fetchAllCourses = async () => {
       try {
         // Use a larger page size to get most courses in one request
@@ -43,14 +45,26 @@ export function CourseFilter({
           isDesc: false,
         });
 
-        setCourses(response.data.data);
+        if (isMounted) {
+          setCourses(response.data.data);
+        }
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to fetch courses", error);
+        // Only log if it's not a cancellation error
+        if (
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          console.error("Failed to fetch courses", error);
+        }
       }
     };
 
     fetchAllCourses();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
   // Immediate filter handler
 

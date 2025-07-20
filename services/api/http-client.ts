@@ -159,9 +159,28 @@ class HttpClient {
   private getRequestId(config: AxiosRequestConfig): string {
     const method = config.method || "get";
     const url = config.url || "";
-    const timestamp = Date.now();
+    
+    // For GET requests with params, include a hash of the params to group similar requests
+    if (method.toLowerCase() === 'get' && config.params) {
+      const paramsString = JSON.stringify(config.params);
+      const paramsHash = this.hashString(paramsString);
+      return `${method}-${url}-${paramsHash}`;
+    }
 
-    return `${method}-${url}-${timestamp}`;
+    return `${method}-${url}`;
+  }
+
+  /**
+   * Simple hash function for string
+   */
+  private hashString(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString();
   }
 
   /**

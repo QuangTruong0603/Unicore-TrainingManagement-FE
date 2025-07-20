@@ -18,6 +18,7 @@ import {
 
 import { ClassFilter } from "@/components/a/class/class-filter";
 import { ClassModal } from "@/components/a/class/class-modal";
+import { ClassUpdateModal } from "@/components/a/class/class-update-modal";
 import { ClassTable } from "@/components/a/class/class-table";
 import { ClassRegistrationModal } from "@/components/a/class/class-registration-modal";
 import { MoveEnrollmentsModal } from "@/components/a/class/move-enrollments-modal";
@@ -86,6 +87,12 @@ export default function ClassesPage() {
     isOpen: isUpdateOpen,
     onOpen: onUpdateOpen,
     onOpenChange: onUpdateOpenChange,
+  } = useDisclosure();
+
+  const {
+    isOpen: isClassUpdateOpen,
+    onOpen: onClassUpdateOpen,
+    onOpenChange: onClassUpdateOpenChange,
   } = useDisclosure();
 
   // Registration schedule modal
@@ -417,6 +424,27 @@ export default function ClassesPage() {
     }
   };
 
+  const handleClassUpdate = async (data: Partial<AcademicClass>) => {
+    try {
+      if (!selectedClass) return;
+
+      setIsSubmitting(true);
+      await classService.updateClassPartial(selectedClass.id, data);
+
+      // Refresh data
+      const response = await classService.getClasses(query);
+
+      dispatch(setClasses(response.data.data));
+
+      onClassUpdateOpenChange();
+      dispatch(setSelectedClass(null));
+    } catch {
+      dispatch(setError("Failed to update class"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteClass = (academicClass: AcademicClass) => {
     confirmDialog(
       async () => {
@@ -527,7 +555,7 @@ export default function ClassesPage() {
   };
   const handleUpdateClassFromTable = (academicClass: AcademicClass) => {
     dispatch(setSelectedClass(academicClass));
-    onUpdateOpen();
+    onClassUpdateOpen();
   };
 
   const handleToggleActivation = (academicClass: AcademicClass) => {
@@ -1229,6 +1257,15 @@ export default function ClassesPage() {
           mode="update"
           onOpenChange={onUpdateOpenChange}
           onSubmit={handleUpdateClass}
+        />
+
+        {/* Class Update Modal */}
+        <ClassUpdateModal
+          academicClass={selectedClass}
+          isOpen={isClassUpdateOpen}
+          isSubmitting={isSubmitting}
+          onOpenChange={onClassUpdateOpenChange}
+          onSubmit={handleClassUpdate}
         />
         {/* Registration Schedule Modal */}
         <ClassRegistrationModal

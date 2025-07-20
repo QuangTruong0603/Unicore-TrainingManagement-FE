@@ -19,6 +19,9 @@ import DefaultLayout from "@/layouts/default";
 import { useDepartments } from "@/services/department/department.hooks";
 import { useMajorGroups } from "@/services/major-group/major-group.hooks";
 import { useMajors } from "@/services/major/major.hooks";
+import { majorService } from "@/services/major/major.service";
+import { majorGroupService } from "@/services/major-group/major-group.service";
+import { departmentService } from "@/services/department/department.service";
 import { useAppDispatch } from "@/store/hooks";
 import useConfirmDialog from "@/hooks/useConfirmDialog";
 import { setQuery as setDepartmentQuery } from "@/store/slices/departmentSlice";
@@ -56,6 +59,8 @@ export default function MajorPage() {
     onOpenChange: onMajorModalChange,
   } = useDisclosure();
   const [isMajorSubmitting, setIsMajorSubmitting] = useState(false);
+  const [selectedMajor, setSelectedMajor] = useState<any>(null);
+  const [majorModalMode, setMajorModalMode] = useState<"create" | "update">("create");
 
   const {
     isOpen: isMajorGroupModalOpen,
@@ -63,6 +68,8 @@ export default function MajorPage() {
     onOpenChange: onMajorGroupModalChange,
   } = useDisclosure();
   const [isMajorGroupSubmitting, setIsMajorGroupSubmitting] = useState(false);
+  const [selectedMajorGroup, setSelectedMajorGroup] = useState<any>(null);
+  const [majorGroupModalMode, setMajorGroupModalMode] = useState<"create" | "update">("create");
 
   const {
     isOpen: isDepartmentModalOpen,
@@ -70,6 +77,8 @@ export default function MajorPage() {
     onOpenChange: onDepartmentModalChange,
   } = useDisclosure();
   const [isDepartmentSubmitting, setIsDepartmentSubmitting] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+  const [departmentModalMode, setDepartmentModalMode] = useState<"create" | "update">("create");
 
   const { confirmDialog } = useConfirmDialog();
 
@@ -91,12 +100,18 @@ export default function MajorPage() {
   const handleAddButtonClick = () => {
     switch (activeTab) {
       case "majors":
+        setSelectedMajor(null);
+        setMajorModalMode("create");
         onMajorModalOpen();
         break;
       case "majorGroups":
+        setSelectedMajorGroup(null);
+        setMajorGroupModalMode("create");
         onMajorGroupModalOpen();
         break;
       case "departments":
+        setSelectedDepartment(null);
+        setDepartmentModalMode("create");
         onDepartmentModalOpen();
         break;
     }
@@ -292,6 +307,25 @@ export default function MajorPage() {
     [dispatch, departmentQuery]
   );
   
+  // Update handlers
+  const handleMajorUpdate = (major: any) => {
+    setSelectedMajor(major);
+    setMajorModalMode("update");
+    onMajorModalOpen();
+  };
+
+  const handleMajorGroupUpdate = (majorGroup: any) => {
+    setSelectedMajorGroup(majorGroup);
+    setMajorGroupModalMode("update");
+    onMajorGroupModalOpen();
+  };
+
+  const handleDepartmentUpdate = (department: any) => {
+    setSelectedDepartment(department);
+    setDepartmentModalMode("update");
+    onDepartmentModalOpen();
+  };
+
   // Delete handlers
   const handleMajorDelete = (major: any) => {
     confirmDialog(
@@ -400,12 +434,8 @@ export default function MajorPage() {
                 majors={majors}
                 sortDirection={majorQuery.isDesc ? "desc" : "asc"}
                 sortKey={majorQuery.orderBy}
-                onActiveToggle={(major) =>
-                  major.isActive
-                    ? deactivateMajor(major.id)
-                    : activateMajor(major.id)
-                }
                 onDeleteMajor={handleMajorDelete}
+                onUpdateMajor={handleMajorUpdate}
                 onSort={handleMajorSort}
               />
             </div>
@@ -446,12 +476,8 @@ export default function MajorPage() {
                 majorGroups={majorGroups}
                 sortDirection={majorGroupQuery.isDesc ? "desc" : "asc"}
                 sortKey={majorGroupQuery.orderBy}
-                onActiveToggle={(majorGroup) =>
-                  majorGroup.isActive
-                    ? deactivateMajorGroup(majorGroup.id)
-                    : activateMajorGroup(majorGroup.id)
-                }
                 onDeleteMajorGroup={handleMajorGroupDelete}
+                onUpdateMajorGroup={handleMajorGroupUpdate}
                 onSort={handleMajorGroupSort}
               />
             </div>
@@ -494,13 +520,9 @@ export default function MajorPage() {
                 isLoading={isDepartmentLoading}
                 sortDirection={departmentQuery.isDesc ? "desc" : "asc"}
                 sortKey={departmentQuery.orderBy}
-                onActiveToggle={(department) =>
-                  department.isActive
-                    ? deactivateDepartment(department.id)
-                    : activateDepartment(department.id)
-                }
                 onCreateDepartment={createDepartment}
                 onDeleteDepartment={handleDepartmentDelete}
+                onUpdateDepartment={handleDepartmentUpdate}
                 onSort={handleDepartmentSort}
               />
             </div>
@@ -521,12 +543,18 @@ export default function MajorPage() {
         <MajorModal
           isOpen={isMajorModalOpen}
           isSubmitting={isMajorSubmitting}
-          mode="create"
+          mode={majorModalMode}
+          major={selectedMajor}
           onOpenChange={onMajorModalChange}
           onSubmit={async (data) => {
             setIsMajorSubmitting(true);
             try {
-              await createMajor(data);
+              if (majorModalMode === "create") {
+                await createMajor(data);
+              } else if (majorModalMode === "update" && selectedMajor) {
+                await majorService.updateMajor(selectedMajor.id, data);
+                await fetchMajors(); // Refresh the list
+              }
             } finally {
               setIsMajorSubmitting(false);
             }
@@ -536,26 +564,32 @@ export default function MajorPage() {
         <MajorGroupModal
           isOpen={isMajorGroupModalOpen}
           isSubmitting={isMajorGroupSubmitting}
-          mode="create"
+          mode={majorGroupModalMode}
+          majorGroup={selectedMajorGroup}
           onOpenChange={onMajorGroupModalChange}
           onSubmit={async (data) => {
             setIsMajorGroupSubmitting(true);
             try {
-              if (
-                data.name &&
-                data.isActive !== undefined &&
-                data.departmentId
-              ) {
-                await createMajorGroup(
-                  data as {
-                    name: string;
-                    isActive: boolean;
-                    departmentId: string;
-                  }
-                );
-              } else {
-                // eslint-disable-next-line no-console
-                console.error("Invalid data: Missing required fields.");
+              if (majorGroupModalMode === "create") {
+                if (
+                  data.name &&
+                  data.isActive !== undefined &&
+                  data.departmentId
+                ) {
+                  await createMajorGroup(
+                    data as {
+                      name: string;
+                      isActive: boolean;
+                      departmentId: string;
+                    }
+                  );
+                } else {
+                  // eslint-disable-next-line no-console
+                  console.error("Invalid data: Missing required fields.");
+                }
+              } else if (majorGroupModalMode === "update" && selectedMajorGroup) {
+                await majorGroupService.updateMajorGroup(selectedMajorGroup.id, data);
+                await fetchMajorGroups(); // Refresh the list
               }
             } finally {
               setIsMajorGroupSubmitting(false);
@@ -566,12 +600,18 @@ export default function MajorPage() {
         <DepartmentModal
           isOpen={isDepartmentModalOpen}
           isSubmitting={isDepartmentSubmitting}
-          mode="create"
+          mode={departmentModalMode}
+          department={selectedDepartment}
           onOpenChange={onDepartmentModalChange}
           onSubmit={async (data) => {
             setIsDepartmentSubmitting(true);
             try {
-              await createDepartment(data);
+              if (departmentModalMode === "create") {
+                await createDepartment(data);
+              } else if (departmentModalMode === "update" && selectedDepartment) {
+                await departmentService.updateDepartment(selectedDepartment.id, data);
+                await fetchDepartments(); // Refresh the list
+              }
             } finally {
               setIsDepartmentSubmitting(false);
             }

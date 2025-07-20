@@ -93,7 +93,11 @@ export function SemesterModal({
   // Auto-calculate endDate when startDate or numberOfWeeks changes
   useEffect(() => {
     if (startDate && numberOfWeeks && numberOfWeeks > 0) {
-      const startDateObj = new Date(startDate);
+      const startDateObj =
+        startDate instanceof Date ? startDate : new Date(startDate);
+
+      if (isNaN(startDateObj.getTime())) return; // Invalid date
+
       const mondayStart = getNextMonday(startDateObj);
       const sundayEnd = calculateEndSunday(mondayStart, numberOfWeeks);
 
@@ -115,12 +119,22 @@ export function SemesterModal({
           numberOfWeeks: 15,
         });
       } else if (semester) {
+        // Convert string dates to Date objects for editing
+        const startDate =
+          typeof semester.startDate === "string"
+            ? new Date(semester.startDate)
+            : semester.startDate;
+        const endDate =
+          typeof semester.endDate === "string"
+            ? new Date(semester.endDate)
+            : semester.endDate;
+
         reset({
           semesterNumber: semester.semesterNumber,
           year: semester.year,
           isActive: semester.isActive,
-          startDate: semester.startDate,
-          endDate: semester.endDate,
+          startDate: startDate,
+          endDate: endDate,
           numberOfWeeks: semester.numberOfWeeks,
         });
       }
@@ -132,12 +146,21 @@ export function SemesterModal({
     data: CreateSemesterData | UpdateSemesterData
   ) => {
     try {
-      // Ensure we send the Monday start date to the backend
+      // Ensure dates are properly converted to Date objects
       const adjustedData = {
         ...data,
-        startDate: data.startDate
-          ? getNextMonday(new Date(data.startDate))
-          : data.startDate,
+        startDate:
+          data.startDate instanceof Date
+            ? getNextMonday(new Date(data.startDate))
+            : data.startDate
+              ? getNextMonday(new Date(data.startDate))
+              : undefined,
+        endDate:
+          data.endDate instanceof Date
+            ? new Date(data.endDate)
+            : data.endDate
+              ? new Date(data.endDate)
+              : undefined,
       };
 
       await onSubmit(adjustedData);
@@ -226,7 +249,7 @@ export function SemesterModal({
                       isInvalid={!!errors.startDate}
                       label="Start Date"
                       value={
-                        field.value
+                        field.value && field.value instanceof Date
                           ? parseDate(
                               `${field.value.getFullYear()}-${String(
                                 field.value.getMonth() + 1
@@ -257,6 +280,53 @@ export function SemesterModal({
                   )}
                   rules={{
                     required: "Start date is required",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1" htmlFor="endDate">
+                  End Date* (automatically calculated)
+                </label>
+                <Controller
+                  control={control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <DatePicker
+                      errorMessage={errors.endDate?.message}
+                      isInvalid={!!errors.endDate}
+                      label="End Date"
+                      value={
+                        field.value && field.value instanceof Date
+                          ? parseDate(
+                              `${field.value.getFullYear()}-${String(
+                                field.value.getMonth() + 1
+                              ).padStart(2, "0")}-${String(
+                                field.value.getDate()
+                              ).padStart(2, "0")}`
+                            )
+                          : null
+                      }
+                      onChange={(date) => {
+                        if (date) {
+                          const jsDate = new Date(
+                            date.year,
+                            date.month - 1,
+                            date.day,
+                            12,
+                            0,
+                            0
+                          );
+
+                          field.onChange(jsDate);
+                        } else {
+                          field.onChange(null);
+                        }
+                      }}
+                    />
+                  )}
+                  rules={{
+                    required: "End date is required",
                   }}
                 />
               </div>

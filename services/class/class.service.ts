@@ -119,6 +119,17 @@ export const classService = {
     });
   },
 
+  updateClassPartial: async (
+    id: string,
+    data: Partial<AcademicClassCreateDto>
+  ): Promise<AcademicClassResponse> => {
+    return courseClient.put(`${API_ENDPOINTS.CLASSES}/${id}`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+
   getClassById: async (id: string): Promise<AcademicClassResponse> => {
     return courseClient.get(`${API_ENDPOINTS.CLASSES}/${id}`, {
       headers: {
