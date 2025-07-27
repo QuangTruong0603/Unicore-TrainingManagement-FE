@@ -34,10 +34,12 @@ import styles from "./class-table.module.scss";
 
 import { AcademicClass } from "@/services/class/class.schema";
 import { useLecturerById } from "@/services/lecturer/lecturer.hooks";
+import router, { useRouter } from "next/router";
 
 // Lecturer cell component that fetches lecturer data
 const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
   const isInvalidLecturerId = !lecturerId || lecturerId.includes("000000");
+  const router = useRouter();
 
   if (isInvalidLecturerId) {
     return <span className="text-xs text-gray-400 italic">Not assigned</span>;
@@ -298,14 +300,14 @@ export const ClassTable: React.FC<ClassTableProps> = ({
           return <span className="text-xs text-gray-400 italic">Not assigned</span>;
         }
         
-        const rooms = academicClass.scheduleInDays.map((schedule: any) => schedule.room.name);
-        const uniqueRooms = [...new Set(rooms)];
+        const rooms = academicClass.scheduleInDays.map((schedule: any) => schedule.room.name as string);
+        const uniqueRooms = Array.from(new Set(rooms));
         
         return (
           <div className="max-w-[120px]">
             <Tooltip content={uniqueRooms.join(", ")}>
               <span className="text-xs text-gray-700 cursor-help">
-                {uniqueRooms.length > 1 ? `${uniqueRooms[0]}...` : uniqueRooms[0]}
+                {uniqueRooms.length > 1 ? `${String(uniqueRooms[0])}...` : String(uniqueRooms[0] || "")}
               </span>
             </Tooltip>
           </div>
@@ -329,7 +331,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
           <div className="max-w-[150px]">
             <Tooltip content={
               <div className="space-y-1">
-                {schedules.map((sched, index) => (
+                {schedules.map((sched: string, index: number) => (
                   <div key={index} className="text-xs">{sched}</div>
                 ))}
               </div>
@@ -436,6 +438,45 @@ export const ClassTable: React.FC<ClassTableProps> = ({
           }`}
         >
           {"Active"}
+        </div>
+      ),
+    },
+    {
+      key: "view_actions",
+      title: "View",
+      sortable: false,
+      render: (academicClass: AcademicClass) => (
+        <div className="flex gap-2 justify-center">
+          <Tooltip content="View Materials">
+            <Button
+              size="sm"
+              variant="flat"
+              color="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof window !== 'undefined') {
+                  router.push(`/l/class/${academicClass.id}/materials`);
+                }
+              }}
+            >
+              Materials
+            </Button>
+          </Tooltip>
+          <Tooltip content="View Scores">
+            <Button
+              size="sm"
+              variant="flat"
+              color="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (typeof window !== 'undefined') {
+                  router.push(`/l/class/${academicClass.id}/score`);
+                }
+              }}
+            >
+              Scores
+            </Button>
+          </Tooltip>
         </div>
       ),
     },
