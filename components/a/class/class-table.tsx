@@ -290,6 +290,66 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
+      key: "room",
+      title: "Room",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        if (!academicClass.scheduleInDays || academicClass.scheduleInDays.length === 0) {
+          return <span className="text-xs text-gray-400 italic">Not assigned</span>;
+        }
+        
+        const rooms = academicClass.scheduleInDays.map((schedule: any) => schedule.room.name);
+        const uniqueRooms = [...new Set(rooms)];
+        
+        return (
+          <div className="max-w-[120px]">
+            <Tooltip content={uniqueRooms.join(", ")}>
+              <span className="text-xs text-gray-700 cursor-help">
+                {uniqueRooms.length > 1 ? `${uniqueRooms[0]}...` : uniqueRooms[0]}
+              </span>
+            </Tooltip>
+          </div>
+        );
+      },
+    },
+    {
+      key: "schedule",
+      title: "Schedule",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        if (!academicClass.scheduleInDays || academicClass.scheduleInDays.length === 0) {
+          return <span className="text-xs text-gray-400 italic">Not scheduled</span>;
+        }
+        
+        const schedules = academicClass.scheduleInDays.map((schedule: any) => 
+          `${schedule.dayOfWeek}: ${schedule.shift.startTime.substring(0, 5)}-${schedule.shift.endTime.substring(0, 5)}`
+        );
+        
+        return (
+          <div className="max-w-[150px]">
+            <Tooltip content={
+              <div className="space-y-1">
+                {schedules.map((sched, index) => (
+                  <div key={index} className="text-xs">{sched}</div>
+                ))}
+              </div>
+            }>
+              <div className="text-xs text-gray-700 cursor-help">
+                {schedules.length > 1 ? (
+                  <div>
+                    <div>{schedules[0]}</div>
+                    <div className="text-gray-400">+{schedules.length - 1} more</div>
+                  </div>
+                ) : (
+                  schedules[0]
+                )}
+              </div>
+            </Tooltip>
+          </div>
+        );
+      },
+    },
+    {
       key: "enrollmentStatus",
       title: "Enrollment Status",
       sortable: true,
