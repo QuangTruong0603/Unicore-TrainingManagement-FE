@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { StudentTable } from "@/components/a/student/student-table";
 import { StudentFilter } from "@/components/a/student/student-filter";
 import { StudentModal } from "@/components/a/student/student-modal";
+import { StudentCreateModal } from "@/components/a/student/student-create-modal";
 import { StudentImportModal } from "@/components/a/student/student-import-modal";
 import { Student, StudentQuery } from "@/services/student/student.schema";
 import { Major } from "@/services/major/major.schema";
@@ -25,6 +26,7 @@ import {
   setError,
 } from "@/store/slices/studentSlice";
 import { studentService } from "@/services/student/student.service";
+import { CreateStudentDto } from "@/services/student/student.dto";
 import "./index.scss";
 
 export default function StudentsPage() {
@@ -34,6 +36,7 @@ export default function StudentsPage() {
   );
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
   const [selectedStudent, setSelectedStudent] = React.useState<
     Student | undefined
@@ -45,7 +48,46 @@ export default function StudentsPage() {
   const [batches, setBatches] = React.useState<Batch[]>([]);
   const [searchQuery, setSearchQuery] = React.useState(query.searchQuery || "");
 
-  const fetchStudents = React.useCallback(async () => {
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const fetchStudentsWithCleanup = async () => {
+      try {
+        dispatch(setLoading(true));
+        const response = (await studentService.getStudents(
+          query
+        )) as unknown as PaginatedResponse;
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          dispatch(setStudents(response));
+        }
+      } catch (error: any) {
+        // Only set error if it's not a cancellation error and component is still mounted
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          dispatch(setError(error.message || "Failed to fetch students"));
+        }
+      } finally {
+        if (isMounted) {
+          dispatch(setLoading(false));
+        }
+      }
+    };
+
+    fetchStudentsWithCleanup();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [query, dispatch]);
+
+  const fetchStudents = async () => {
     try {
       dispatch(setLoading(true));
       const response = (await studentService.getStudents(
@@ -53,15 +95,19 @@ export default function StudentsPage() {
       )) as unknown as PaginatedResponse;
       dispatch(setStudents(response));
     } catch (error: any) {
-      dispatch(setError(error.message || "Failed to fetch students"));
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        dispatch(setError(error.message || "Failed to fetch students"));
+      }
     } finally {
       dispatch(setLoading(false));
     }
-  }, [dispatch, query]);
+  };
 
-  React.useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
   // New handlers for unified filter
   const handleFilterChange = (newQuery: StudentQuery) => {
     dispatch(setQuery(newQuery));
@@ -93,30 +139,64 @@ export default function StudentsPage() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchMajors = async () => {
       try {
         const response = await majorService.getMajors();
 
-        setMajors(response.data);
+        if (isMounted) {
+          setMajors(response.data);
+        }
       } catch (error) {
-        console.error("Error fetching majors:", error);
+        // Only log error if it's not a cancellation error and component is still mounted
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          console.error("Error fetching majors:", error);
+        }
       }
     };
 
     fetchMajors();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchBatches = async () => {
       try {
         const response = await batchService.getBatches();
-        setBatches(response.data);
+        if (isMounted) {
+          setBatches(response.data);
+        }
       } catch (error) {
-        console.error("Error fetching batches:", error);
+        // Only log error if it's not a cancellation error and component is still mounted
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          console.error("Error fetching batches:", error);
+        }
       }
     };
 
     fetchBatches();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSort = (key: string) => {
@@ -147,7 +227,44 @@ export default function StudentsPage() {
 
   const handleCreate = () => {
     setSelectedStudent(undefined);
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateStudent = async (data: CreateStudentDto) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await studentService.createStudentWithDto(data);
+
+      if (response.success) {
+        addToast({
+          title: "Success",
+          description: `Student created successfully. Student Code: ${response.data.studentCode}, Email: ${response.data.email}`,
+          color: "success",
+        });
+        await fetchStudents(); // Refresh the list after create
+        setIsCreateModalOpen(false);
+      } else {
+        throw new Error(
+          response.errors?.join(", ") || "Failed to create student"
+        );
+      }
+    } catch (error: any) {
+      // Only show error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        dispatch(setError(error.message || "Failed to create student"));
+        addToast({
+          title: "Error",
+          description: error.message || "Failed to create student",
+          color: "danger",
+        });
+      }
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
 
   const handleEdit = (student: Student) => {
@@ -174,12 +291,19 @@ export default function StudentsPage() {
             });
             await fetchStudents(); // Refresh the list after deletion
           } catch (error: any) {
-            dispatch(setError(error.message || "Failed to delete student"));
-            addToast({
-              title: "Error",
-              description: error.message || "Failed to delete student",
-              color: "danger",
-            });
+            // Only show error if it's not a cancellation error
+            if (
+              error instanceof Error &&
+              error.name !== "CanceledError" &&
+              !error.message?.includes("canceled")
+            ) {
+              dispatch(setError(error.message || "Failed to delete student"));
+              addToast({
+                title: "Error",
+                description: error.message || "Failed to delete student",
+                color: "danger",
+              });
+            }
           } finally {
             dispatch(setLoading(false));
           }
@@ -191,44 +315,42 @@ export default function StudentsPage() {
   const handleSubmit = async (data: Partial<Student>) => {
     try {
       dispatch(setLoading(true));
-      if (selectedStudent) {
-        // Prepare payload for edit API
-        const payload = {
-          accumulateCredits: data.accumulateCredits ?? 0,
-          accumulateScore: data.accumulateScore ?? 0,
-          accumulateActivityScore: data.accumulateActivityScore ?? 0,
-          majorId: data.majorId,
-          batchId: data.batchId,
-          firstName: data.applicationUser?.firstName,
-          lastName: data.applicationUser?.lastName,
-          personId: data.applicationUser?.personId,
-          dob: data.applicationUser?.dob,
-          phoneNumber: data.applicationUser?.phoneNumber,
-          status: data.applicationUser?.status,
-        };
-        await studentService.updateStudent(selectedStudent.id, payload);
-        addToast({
-          title: "Success",
-          description: "Student updated successfully",
-          color: "success",
-        });
-      } else {
-        await studentService.createStudent(data);
-        addToast({
-          title: "Success",
-          description: "Student created successfully",
-          color: "success",
-        });
-      }
-      await fetchStudents(); // Refresh the list after create/update
+      // Prepare payload for edit API
+      const payload = {
+        accumulateCredits: data.accumulateCredits ?? 0,
+        accumulateScore: data.accumulateScore ?? 0,
+        accumulateActivityScore: data.accumulateActivityScore ?? 0,
+        majorId: data.majorId,
+        batchId: data.batchId,
+        firstName: data.applicationUser?.firstName,
+        lastName: data.applicationUser?.lastName,
+        personId: data.applicationUser?.personId,
+        dob: data.applicationUser?.dob,
+        phoneNumber: data.applicationUser?.phoneNumber,
+        status: data.applicationUser?.status,
+      };
+      await studentService.updateStudent(selectedStudent!.id, payload);
+      addToast({
+        title: "Success",
+        description: "Student updated successfully",
+        color: "success",
+      });
+      await fetchStudents(); // Refresh the list after update
       setIsModalOpen(false);
     } catch (error: any) {
-      dispatch(setError(error.message || "Failed to save student"));
-      addToast({
-        title: "Error",
-        description: error.message || "Failed to save student",
-        color: "danger",
-      });
+      // Only show error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        dispatch(setError(error.message || "Failed to update student"));
+        addToast({
+          title: "Error",
+          description: error.message || "Failed to update student",
+          color: "danger",
+        });
+      }
     } finally {
       dispatch(setLoading(false));
     }
@@ -246,12 +368,19 @@ export default function StudentsPage() {
       await fetchStudents(); // Refresh the list after import
       setIsImportModalOpen(false);
     } catch (error: any) {
-      dispatch(setError(error.message || "Failed to import students"));
-      addToast({
-        title: "Error",
-        description: error.message || "Failed to import students",
-        color: "danger",
-      });
+      // Only show error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        dispatch(setError(error.message || "Failed to import students"));
+        addToast({
+          title: "Error",
+          description: error.message || "Failed to import students",
+          color: "danger",
+        });
+      }
     } finally {
       dispatch(setLoading(false));
     }
@@ -336,6 +465,13 @@ export default function StudentsPage() {
           student={selectedStudent}
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
+        />
+        <StudentCreateModal
+          batches={batches}
+          isOpen={isCreateModalOpen}
+          majors={majors}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateStudent}
         />
         <StudentImportModal
           batches={batches}

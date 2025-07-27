@@ -54,12 +54,74 @@ export default function LecturersPage() {
 
   // Fetch lecturers when query changes
   useEffect(() => {
-    fetchLecturers();
-  }, [query]);
+    let isMounted = true;
+
+    const fetchLecturersWithCleanup = async () => {
+      try {
+        dispatch(setLoading(true));
+        const response = await lecturerService.getLecturers(query);
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          dispatch(setLecturers(response));
+          dispatch(setTotal(response.data.total));
+        }
+      } catch (error) {
+        // Only set error if it's not a cancellation error and component is still mounted
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          console.error("Error fetching lecturers:", error);
+          dispatch(setError("Failed to fetch lecturers"));
+        }
+      } finally {
+        if (isMounted) {
+          dispatch(setLoading(false));
+        }
+      }
+    };
+
+    fetchLecturersWithCleanup();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [query, dispatch]);
 
   // Fetch departments only once when component mounts
   useEffect(() => {
-    fetchDepartments();
+    let isMounted = true;
+
+    const fetchDepartmentsWithCleanup = async () => {
+      try {
+        const response = await departmentService.getDepartments();
+
+        if (isMounted) {
+          setDepartments(response.data);
+        }
+      } catch (error) {
+        // Only log error if it's not a cancellation error and component is still mounted
+        if (
+          isMounted &&
+          error instanceof Error &&
+          error.name !== "CanceledError" &&
+          !error.message?.includes("canceled")
+        ) {
+          console.error("Error fetching departments:", error);
+        }
+      }
+    };
+
+    fetchDepartmentsWithCleanup();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const fetchLecturers = async () => {
@@ -67,12 +129,18 @@ export default function LecturersPage() {
       dispatch(setLoading(true));
       const response = await lecturerService.getLecturers(query);
 
-      // Now the types should match correctly
       dispatch(setLecturers(response));
       dispatch(setTotal(response.data.total));
     } catch (error) {
-      console.error("Error fetching lecturers:", error);
-      dispatch(setError("Failed to fetch lecturers"));
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        console.error("Error fetching lecturers:", error);
+        dispatch(setError("Failed to fetch lecturers"));
+      }
     } finally {
       dispatch(setLoading(false));
     }
@@ -153,12 +221,19 @@ export default function LecturersPage() {
       setSelectedLecturer(response.data);
       setIsModalOpen(true);
     } catch (error) {
-      console.error("Error fetching lecturer details:", error);
-      addToast({
-        title: "Error",
-        description: "Failed to fetch lecturer details. Please try again.",
-        color: "danger",
-      });
+      // Only show error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        console.error("Error fetching lecturer details:", error);
+        addToast({
+          title: "Error",
+          description: "Failed to fetch lecturer details. Please try again.",
+          color: "danger",
+        });
+      }
     } finally {
       dispatch(setLoading(false));
     }

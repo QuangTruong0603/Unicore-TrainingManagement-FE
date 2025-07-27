@@ -21,9 +21,9 @@ import {
   MoreVertical,
   Edit,
 } from "lucide-react";
+import { useRouter } from "next/router";
 
 import { Student } from "@/services/student/student.schema";
-import { useRouter } from "next/router";
 interface StudentTableProps {
   students: {
     success: boolean;
@@ -128,16 +128,6 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         </TableColumn>
 
         <TableColumn>Date of Birth</TableColumn>
-        <TableColumn
-          key="status"
-          className={`cursor-pointer text-center ${sortKey === "status" ? "text-primary" : ""}`}
-          onClick={() => onSort("status")}
-        >
-          <div className="flex items-center gap-2">
-            Status
-            {renderSortIcon("status")}
-          </div>
-        </TableColumn>
         <TableColumn className="text-center">Action</TableColumn>
       </TableHeader>
       <TableBody>
@@ -149,17 +139,6 @@ export const StudentTable: React.FC<StudentTableProps> = ({
               <TableCell>{student.applicationUser.email}</TableCell>
               <TableCell>{student.applicationUser.phoneNumber}</TableCell>
               <TableCell>{student.applicationUser.dob}</TableCell>
-              <TableCell>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    student.applicationUser.status === 1
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {student.applicationUser.status === 1 ? "Active" : "Inactive"}
-                </span>
-              </TableCell>
               <TableCell className="text-center">
                 <Dropdown>
                   <DropdownTrigger>

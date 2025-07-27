@@ -1,15 +1,6 @@
-import {
-  ArrowDown,
-  ArrowUp,
-  Power,
-  PowerOff,
-  MoreVertical,
-  Edit,
-  Trash,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, MoreVertical, Edit, Trash } from "lucide-react";
 import {
   Button,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -32,7 +23,6 @@ interface MajorTableProps {
   sortKey?: string;
   sortDirection?: string;
   onSort?: (key: string) => void;
-  onActiveToggle?: (major: Major) => void;
   onDeleteMajor?: (major: Major) => void;
   onUpdateMajor?: (major: Major) => void;
 }
@@ -43,7 +33,6 @@ export const MajorTable = ({
   sortKey,
   sortDirection = "asc",
   onSort,
-  onActiveToggle,
   onDeleteMajor,
   onUpdateMajor,
 }: MajorTableProps) => {
@@ -99,14 +88,6 @@ export const MajorTable = ({
             Major Group {renderSortIcon("majorGroup")}
           </div>
         </TableColumn>
-        <TableColumn
-          className={`cursor-pointer ${sortKey === "isActive" ? "text-primary" : ""}`}
-          onClick={() => handleSort("isActive")}
-        >
-          <div className="flex items-center">
-            Status {renderSortIcon("isActive")}
-          </div>
-        </TableColumn>
         <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody
@@ -124,15 +105,6 @@ export const MajorTable = ({
             </TableCell>
             <TableCell>${major.costPerCredit.toFixed(2)}</TableCell>
             <TableCell>{major.majorGroup?.name || "N/A"}</TableCell>
-            <TableCell>
-              <Chip
-                color={major.isActive ? "success" : "danger"}
-                size="sm"
-                variant="flat"
-              >
-                {major.isActive ? "Active" : "Inactive"}
-              </Chip>
-            </TableCell>
             <TableCell>
               <div className="flex gap-2 justify-end pr-2">
                 <Dropdown>
@@ -158,9 +130,6 @@ export const MajorTable = ({
                         case "delete":
                           if (onDeleteMajor) onDeleteMajor(major);
                           break;
-                        case "activate":
-                          if (onActiveToggle) onActiveToggle(major);
-                          break;
                       }
                     }}
                   >
@@ -175,18 +144,6 @@ export const MajorTable = ({
                       startContent={<Trash className="w-4 h-4" />}
                     >
                       Delete
-                    </DropdownItem>
-                    <DropdownItem
-                      key="activate"
-                      startContent={
-                        major.isActive ? (
-                          <PowerOff className="w-4 h-4" />
-                        ) : (
-                          <Power className="w-4 h-4" />
-                        )
-                      }
-                    >
-                      {major.isActive ? "Deactivate" : "Activate"}
                     </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>

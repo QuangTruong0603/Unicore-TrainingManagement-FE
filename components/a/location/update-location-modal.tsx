@@ -28,7 +28,8 @@ export function UpdateLocationModal({
   onSubmit,
   location,
   isSubmitting,
-}: UpdateLocationModalProps) {  const {
+}: UpdateLocationModalProps) {
+  const {
     register,
     handleSubmit,
     reset,
@@ -92,12 +93,17 @@ export function UpdateLocationModal({
       <ModalContent>
         {(_onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Edit Location</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">
+              Edit Location
+            </ModalHeader>
             <form onSubmit={handleSubmit(handleFormSubmit)}>
               <ModalBody>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="name">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="name"
+                    >
                       Name
                     </label>
                     <Input
@@ -111,21 +117,29 @@ export function UpdateLocationModal({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="country">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="country"
+                    >
                       Country
                     </label>
                     <Input
                       id="country"
                       placeholder="Enter country"
                       type="text"
-                      {...register("country", { required: "Country is required" })}
+                      {...register("country", {
+                        required: "Country is required",
+                      })}
                       errorMessage={errors.country?.message}
                       isInvalid={!!errors.country}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="city">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="city"
+                    >
                       City
                     </label>
                     <Input
@@ -139,21 +153,29 @@ export function UpdateLocationModal({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="district">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="district"
+                    >
                       District
                     </label>
                     <Input
                       id="district"
                       placeholder="Enter district"
                       type="text"
-                      {...register("district", { required: "District is required" })}
+                      {...register("district", {
+                        required: "District is required",
+                      })}
                       errorMessage={errors.district?.message}
                       isInvalid={!!errors.district}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="ward">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="ward"
+                    >
                       Ward
                     </label>
                     <Input
@@ -166,28 +188,19 @@ export function UpdateLocationModal({
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="imageURL">
-                      Image URL (optional)
-                    </label>
-                    <Input
-                      id="imageURL"
-                      placeholder="Enter image URL"
-                      type="text"
-                      {...register("imageURL")}
-                      errorMessage={errors.imageURL?.message}
-                      isInvalid={!!errors.imageURL}
-                    />
-                  </div>
-
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-small font-medium text-default-700" htmlFor="addressDetail">
+                    <label
+                      className="text-small font-medium text-default-700"
+                      htmlFor="addressDetail"
+                    >
                       Address Details
                     </label>
                     <Textarea
                       id="addressDetail"
                       placeholder="Enter detailed address"
-                      {...register("addressDetail", { required: "Address detail is required" })}
+                      {...register("addressDetail", {
+                        required: "Address detail is required",
+                      })}
                       errorMessage={errors.addressDetail?.message}
                       isInvalid={!!errors.addressDetail}
                     />

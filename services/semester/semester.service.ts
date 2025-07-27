@@ -89,6 +89,7 @@ export const semesterService = {
       },
     });
   },
+
   updateSemester: async (
     id: string,
     data: UpdateSemesterData

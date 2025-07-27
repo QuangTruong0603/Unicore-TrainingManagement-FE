@@ -9,6 +9,7 @@ import {
   AcademicClassCreateDto,
   ClassRegistrationScheduleDto,
   AssignLecturerToClassesDto,
+  BulkChangeStatusDto,
 } from "./class.dto";
 
 export const classService = {
@@ -110,6 +111,17 @@ export const classService = {
   updateClass: async (
     id: string,
     data: AcademicClassCreateDto
+  ): Promise<AcademicClassResponse> => {
+    return courseClient.put(`${API_ENDPOINTS.CLASSES}/${id}`, data, {
+      headers: {
+        accept: "text/plain",
+      },
+    });
+  },
+
+  updateClassPartial: async (
+    id: string,
+    data: Partial<AcademicClassCreateDto>
   ): Promise<AcademicClassResponse> => {
     return courseClient.put(`${API_ENDPOINTS.CLASSES}/${id}`, data, {
       headers: {
@@ -222,6 +234,20 @@ export const classService = {
     return courseClient.put(
       `${API_ENDPOINTS.CLASSES}/assign-lecturer`,
       assignData,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
+  bulkChangeStatus: async (
+    bulkChangeData: BulkChangeStatusDto
+  ): Promise<BaseResponse<string>> => {
+    return courseClient.put(
+      `${API_ENDPOINTS.CLASSES}/bulk-change-status`,
+      bulkChangeData,
       {
         headers: {
           accept: "text/plain",

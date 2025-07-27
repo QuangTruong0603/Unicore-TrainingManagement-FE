@@ -1,15 +1,12 @@
 import {
   ArrowDown,
   ArrowUp,
-  Power,
-  PowerOff,
   Edit,
   Trash2,
   MoreVertical,
 } from "lucide-react";
 import {
   Button,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -32,7 +29,6 @@ interface FloorTableProps {
   sortKey?: string;
   sortDirection?: string;
   onSort?: (key: string) => void;
-  onActiveToggle?: (floor: Floor) => void;
   onEdit?: (floor: Floor) => void;
 }
 
@@ -42,7 +38,6 @@ export const FloorTable = ({
   sortKey,
   sortDirection = "asc",
   onSort,
-  onActiveToggle,
   onEdit,
 }: FloorTableProps) => {
   const renderSortIcon = (key: string) => {
@@ -79,14 +74,6 @@ export const FloorTable = ({
         </TableColumn>
         <TableColumn>Building</TableColumn>
         <TableColumn>Total Rooms</TableColumn>
-        <TableColumn
-          className={`cursor-pointer ${sortKey === "isActive" ? "text-primary" : ""}`}
-          onClick={() => handleSort("isActive")}
-        >
-          <div className="flex items-center">
-            Status {renderSortIcon("isActive")}
-          </div>
-        </TableColumn>
         <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody
@@ -102,15 +89,6 @@ export const FloorTable = ({
             <TableCell>{floor.building?.name || "N/A"}</TableCell>
             <TableCell>{floor.totalRoom}</TableCell>
             <TableCell>
-              <Chip
-                color={floor.isActive ? "success" : "danger"}
-                size="sm"
-                variant="flat"
-              >
-                {floor.isActive ? "Active" : "Inactive"}
-              </Chip>
-            </TableCell>
-            <TableCell>
               <Dropdown>
                 <DropdownTrigger>
                   <Button
@@ -124,12 +102,12 @@ export const FloorTable = ({
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Floor Actions">
                   <DropdownItem
-                    key="edit"
+                    key="update"
                     isDisabled={!onEdit}
                     startContent={<Edit size={16} />}
                     onPress={() => onEdit?.(floor)}
                   >
-                    Edit
+                    Update
                   </DropdownItem>
                   <DropdownItem
                     key="delete"
@@ -140,20 +118,6 @@ export const FloorTable = ({
                     }}
                   >
                     Delete
-                  </DropdownItem>
-                  <DropdownItem
-                    key="toggle-active"
-                    isDisabled={!onActiveToggle}
-                    startContent={
-                      floor.isActive ? (
-                        <PowerOff size={16} />
-                      ) : (
-                        <Power size={16} />
-                      )
-                    }
-                    onPress={() => onActiveToggle?.(floor)}
-                  >
-                    {floor.isActive ? "Deactivate" : "Activate"}
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>

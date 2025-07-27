@@ -72,11 +72,6 @@ const TrainingRoadmapDetailPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500">Start Year</p>
-                    <p className="font-medium">{roadmap.startYear}</p>
-                  </div>
-
-                  <div>
                     <p className="text-sm text-gray-500">Major</p>
                     <p className="font-medium">
                       {roadmap.majorData
@@ -99,10 +94,6 @@ const TrainingRoadmapDetailPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4">Summary</h2>
 
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Semesters</p>
-                  </div>
-
                   <div>
                     <p className="text-sm text-gray-500">Total Courses</p>
                     <p className="text-2xl font-bold">

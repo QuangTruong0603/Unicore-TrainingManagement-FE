@@ -283,6 +283,7 @@ export function ExamTable({
                           <DropdownItem
                             key="edit"
                             startContent={<Edit size={16} />}
+                            onPress={() => _onUpdateExam?.(exam)}
                           >
                             Edit
                           </DropdownItem>

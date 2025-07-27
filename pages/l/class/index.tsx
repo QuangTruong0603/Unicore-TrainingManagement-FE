@@ -242,7 +242,7 @@ export default function ClassPage() {
   return (
     <DefaultLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Lớp học của tôi</h1>
+        <h1 className="text-2xl font-bold mb-6">My Classes</h1>
         {/* Search and Filter Section */}
         <div className="mb-6">
           {/* Search and filter row */}
@@ -250,7 +250,7 @@ export default function ClassPage() {
             <div className="relative flex-1">
               <Input
                 className="w-full rounded-xl"
-                placeholder="Tìm kiếm lớp..."
+                placeholder="Search class..."
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
                 onClear={() => setSearchInputValue("")}
@@ -292,11 +292,11 @@ export default function ClassPage() {
             selectedClasses={[]}
             sortDirection={query.isDesc ? "desc" : "asc"}
             sortKey={query.orderBy}
+            onClassNameClick={handleClassNameClick}
             onRegistrationToggle={() => {}}
             onRowToggle={toggleRow}
             onSelectedClassesChange={() => {}}
             onSort={handleSort}
-            onClassNameClick={handleClassNameClick}
           />
           {/* Pagination */}
           <div className="px-4 py-3 border-t flex justify-end">

@@ -1,14 +1,12 @@
 import {
   ArrowDown,
   ArrowUp,
-  Power,
-  PowerOff,
+  Edit,
   MoreVertical,
   Trash,
 } from "lucide-react";
 import {
   Button,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -31,7 +29,6 @@ interface MajorGroupTableProps {
   sortKey?: string;
   sortDirection?: string;
   onSort?: (key: string) => void;
-  onActiveToggle?: (majorGroup: MajorGroup) => void;
   onDeleteMajorGroup?: (majorGroup: MajorGroup) => void;
   onUpdateMajorGroup?: (majorGroup: MajorGroup) => void;
 }
@@ -42,7 +39,6 @@ export const MajorGroupTable = ({
   sortKey,
   sortDirection = "asc",
   onSort,
-  onActiveToggle,
   onDeleteMajorGroup,
   onUpdateMajorGroup,
 }: MajorGroupTableProps) => {
@@ -90,14 +86,6 @@ export const MajorGroupTable = ({
             Department {renderSortIcon("department")}
           </div>
         </TableColumn>
-        <TableColumn
-          className={`cursor-pointer ${sortKey === "isActive" ? "text-primary" : ""}`}
-          onClick={() => handleSort("isActive")}
-        >
-          <div className="flex items-center">
-            Status {renderSortIcon("isActive")}
-          </div>
-        </TableColumn>
         <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody
@@ -115,15 +103,6 @@ export const MajorGroupTable = ({
             </TableCell>
             <TableCell>{majorGroup.department?.name || "N/A"}</TableCell>
             <TableCell>
-              <Chip
-                color={majorGroup.isActive ? "success" : "danger"}
-                size="sm"
-                variant="flat"
-              >
-                {majorGroup.isActive ? "Active" : "Inactive"}
-              </Chip>
-            </TableCell>
-            <TableCell>
               <div className="flex items-center gap-2">
                 <Dropdown>
                   <DropdownTrigger>
@@ -133,24 +112,16 @@ export const MajorGroupTable = ({
                   </DropdownTrigger>
                   <DropdownMenu>
                     <DropdownItem
-                      key="toggle"
-                      startContent={
-                        majorGroup.isActive ? (
-                          <PowerOff size={16} />
-                        ) : (
-                          <Power size={16} />
-                        )
-                      }
+                      key="update"
+                      startContent={<Edit size={16} />}
                       onPress={() =>
-                        onActiveToggle && onActiveToggle(majorGroup)
+                        onUpdateMajorGroup && onUpdateMajorGroup(majorGroup)
                       }
                     >
-                      {majorGroup.isActive ? "Deactivate" : "Activate"}
+                      Update
                     </DropdownItem>
                     <DropdownItem
                       key="delete"
-                      className="text-danger"
-                      color="danger"
                       isDisabled={!onDeleteMajorGroup}
                       startContent={<Trash size={16} />}
                       onPress={() =>

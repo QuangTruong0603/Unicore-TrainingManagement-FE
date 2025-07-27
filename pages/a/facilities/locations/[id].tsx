@@ -148,15 +148,23 @@ export default function LocationDetailPage() {
 
     try {
       setIsLocationLoading(true);
+      setLocationError(null); // Clear any previous errors
       const response = await locationService.getLocationById(locationId);
 
       if (response && response.data) {
         setLocation(response.data);
       }
     } catch (error) {
-      setLocationError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        setLocationError(
+          error instanceof Error ? error.message : "An error occurred"
+        );
+      }
     } finally {
       setIsLocationLoading(false);
     }
@@ -167,6 +175,7 @@ export default function LocationDetailPage() {
 
     try {
       setIsBuildingsLoading(true);
+      setBuildingsError(null); // Clear any previous errors
       const response = await buildingService.getBuildings({
         ...buildingQuery,
         filter: {
@@ -180,9 +189,16 @@ export default function LocationDetailPage() {
         setBuildingsTotal(response.data.total || 0);
       }
     } catch (error) {
-      setBuildingsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        setBuildingsError(
+          error instanceof Error ? error.message : "An error occurred"
+        );
+      }
     } finally {
       setIsBuildingsLoading(false);
     }
@@ -192,6 +208,7 @@ export default function LocationDetailPage() {
 
     try {
       setIsFloorsLoading(true);
+      setFloorsError(null); // Clear any previous errors
 
       // Create a clean query object to avoid nested references
       const currentQuery = {
@@ -212,9 +229,16 @@ export default function LocationDetailPage() {
         setFloorsTotal(response.data.total || 0);
       }
     } catch (error) {
-      setFloorsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        setFloorsError(
+          error instanceof Error ? error.message : "An error occurred"
+        );
+      }
     } finally {
       setIsFloorsLoading(false);
     }
@@ -226,6 +250,7 @@ export default function LocationDetailPage() {
 
     try {
       setIsRoomsLoading(true);
+      setRoomsError(null); // Clear any previous errors
 
       // Create a clean query object to avoid nested references
       const currentQuery = {
@@ -246,29 +271,20 @@ export default function LocationDetailPage() {
         setRoomsTotal(response.data.total || 0);
       }
     } catch (error) {
-      setRoomsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
+      // Only set error if it's not a cancellation error
+      if (
+        error instanceof Error &&
+        error.name !== "CanceledError" &&
+        !error.message?.includes("canceled")
+      ) {
+        setRoomsError(
+          error instanceof Error ? error.message : "An error occurred"
+        );
+      }
     } finally {
       setIsRoomsLoading(false);
     }
   }, [locationId, roomQuery]); // Add roomQuery to dependency array so it gets the latest values
-
-  // Handle building activation/deactivation
-  const toggleBuildingActive = async (building: Building) => {
-    try {
-      if (building.isActive) {
-        await buildingService.deactivateBuilding(building.id);
-      } else {
-        await buildingService.activateBuilding(building.id);
-      }
-      await fetchBuildings();
-    } catch (error) {
-      setBuildingsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    }
-  };
 
   // Handle adding new building
   const handleAddBuilding = () => {
@@ -284,22 +300,6 @@ export default function LocationDetailPage() {
     onBuildingModalOpen();
   };
 
-  // Handle floor activation/deactivation
-  const toggleFloorActive = async (floor: Floor) => {
-    try {
-      if (floor.isActive) {
-        await floorService.deactivateFloor(floor.id);
-      } else {
-        await floorService.activateFloor(floor.id);
-      }
-      await fetchFloors();
-    } catch (error) {
-      setFloorsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    }
-  };
-
   // Handle adding new floor
   const handleAddFloor = () => {
     setSelectedFloor(null);
@@ -312,22 +312,6 @@ export default function LocationDetailPage() {
     setSelectedFloor(floor);
     setFloorModalMode("update");
     onFloorModalOpen();
-  };
-
-  // Handle room activation/deactivation
-  const toggleRoomActive = async (room: Room) => {
-    try {
-      if (room.isActive) {
-        await roomService.deactivateRoom(room.id);
-      } else {
-        await roomService.activateRoom(room.id);
-      }
-      await fetchRooms();
-    } catch (error) {
-      setRoomsError(
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    }
   };
 
   // Handle adding new room
@@ -449,20 +433,20 @@ export default function LocationDetailPage() {
 
   // Initial data fetch
   useEffect(() => {
-    if (locationId) {
+    if (locationId && router.isReady) {
       fetchLocation();
     }
-  }, [locationId, fetchLocation]);
+  }, [locationId, router.isReady, fetchLocation]);
 
   // Fetch buildings when query changes
   useEffect(() => {
-    if (locationId) {
+    if (locationId && router.isReady) {
       fetchBuildings();
     }
-  }, [locationId, fetchBuildings]);
+  }, [locationId, router.isReady, fetchBuildings]);
 
   // Loading state
-  if (isLocationLoading) {
+  if (!router.isReady || isLocationLoading) {
     return (
       <DefaultLayout>
         <div className="flex justify-center items-center h-96">
@@ -473,7 +457,7 @@ export default function LocationDetailPage() {
   }
 
   // Error state
-  if (locationError || !location) {
+  if ((locationError || !location) && router.isReady && locationId) {
     return (
       <DefaultLayout>
         <div className="p-6 text-center">
@@ -481,7 +465,7 @@ export default function LocationDetailPage() {
           <p className="mb-6">Failed to load location details.</p>
           <Button
             color="primary"
-            onClick={() => router.push("/facilities/locations")}
+            onClick={() => router.push("/a/facilities/locations")}
           >
             Return to Locations
           </Button>
@@ -490,21 +474,32 @@ export default function LocationDetailPage() {
     );
   }
 
+  // Don't render content if location is not loaded yet
+  if (!location) {
+    return (
+      <DefaultLayout>
+        <div className="flex justify-center items-center h-96">
+          <Spinner color="primary" label="Loading location..." />
+        </div>
+      </DefaultLayout>
+    );
+  }
+
   return (
     <DefaultLayout>
       <Head>
-        <title>{location.name} - Location Details</title>
+        <title>{location!.name} - Location Details</title>
       </Head>
 
       <div className="container mx-auto py-6 px-4">
         <div className="mb-6">
-          <Link href="/facilities/locations">
+          <Link href="/a/facilities/locations">
             <Button color="default" variant="flat">
               Back to Locations
             </Button>
           </Link>
         </div>
-        <h1 className="text-3xl font-bold mb-6">{location.name}</h1>
+        <h1 className="text-3xl font-bold mb-6">{location!.name}</h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Main information */}
           <Card className="lg:col-span-2">
@@ -514,37 +509,37 @@ export default function LocationDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm text-gray-500">Country</p>
-                  <p className="font-medium">{location.country}</p>
+                  <p className="font-medium">{location!.country}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">City</p>
-                  <p className="font-medium">{location.city}</p>
+                  <p className="font-medium">{location!.city}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">District</p>
-                  <p className="font-medium">{location.district}</p>
+                  <p className="font-medium">{location!.district}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">Ward</p>
-                  <p className="font-medium">{location.ward}</p>
+                  <p className="font-medium">{location!.ward}</p>
                 </div>
 
                 <div className="md:col-span-2">
                   <p className="text-sm text-gray-500">Address Detail</p>
-                  <p>{location.addressDetail}</p>
+                  <p>{location!.addressDetail}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
                   <Chip
-                    color={location.isActive ? "success" : "danger"}
+                    color={location!.isActive ? "success" : "danger"}
                     size="sm"
                     variant="flat"
                   >
-                    {location.isActive ? "Active" : "Inactive"}
+                    {location!.isActive ? "Active" : "Inactive"}
                   </Chip>
                 </div>
               </div>
@@ -559,17 +554,19 @@ export default function LocationDetailPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-500">Total Buildings</p>
-                  <p className="text-2xl font-bold">{location.totalBuilding}</p>
+                  <p className="text-2xl font-bold">
+                    {location!.totalBuilding}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">Total Floors</p>
-                  <p className="text-2xl font-bold">{location.totalFloor}</p>
+                  <p className="text-2xl font-bold">{location!.totalFloor}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-500">Total Rooms</p>
-                  <p className="text-2xl font-bold">{location.totalRoom}</p>
+                  <p className="text-2xl font-bold">{location!.totalRoom}</p>
                 </div>
               </div>
             </CardBody>
@@ -608,7 +605,6 @@ export default function LocationDetailPage() {
                   rooms={rooms}
                   sortDirection={roomQuery.isDesc ? "desc" : "asc"}
                   sortKey={roomQuery.orderBy}
-                  onActiveToggle={toggleRoomActive}
                   onEdit={handleEditRoom}
                   onSort={handleRoomSort}
                 />
@@ -650,7 +646,6 @@ export default function LocationDetailPage() {
                   isLoading={isFloorsLoading}
                   sortDirection={floorQuery.isDesc ? "desc" : "asc"}
                   sortKey={floorQuery.orderBy}
-                  onActiveToggle={toggleFloorActive}
                   onEdit={handleEditFloor}
                   onSort={handleFloorSort}
                 />
@@ -693,7 +688,6 @@ export default function LocationDetailPage() {
                   isLoading={isBuildingsLoading}
                   sortDirection={buildingQuery.isDesc ? "desc" : "asc"}
                   sortKey={buildingQuery.orderBy}
-                  onActiveToggle={toggleBuildingActive}
                   onEdit={handleEditBuilding}
                   onSort={handleBuildingSort}
                 />

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardBody, Button } from "@heroui/react";
 import {
   Users,
-  Settings,
   BarChart,
   LogOut,
   ChevronLeft,
@@ -17,9 +16,7 @@ import {
   MapPin,
   School,
   UserPlus,
-  DollarSign,
   ClipboardList,
-  Bell,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -120,11 +117,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
         },
       ],
     },
-    {
-      key: "/a/notifications",
-      title: "Notifications",
-      icon: <Bell size={20} />,
-    },
   ];
   // Student menu items
   const studentMenuItems: IMenuItem[] = [
@@ -148,11 +140,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
           key: "/s/academic/roadmap",
           title: "My Roadmap",
           icon: <Map size={20} />,
-        },
-        {
-          key: "/s/academic/tuition",
-          title: "Tuition",
-          icon: <DollarSign size={20} />,
         },
       ],
     },
@@ -179,11 +166,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
         },
       ],
     },
-    {
-      key: "/s/notifications",
-      title: "Notifications",
-      icon: <Bell size={20} />,
-    },
   ];
 
   const trainingManagerMenuItems: IMenuItem[] = [
@@ -191,7 +173,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
   ];
 
   const lecturerMenuItems: IMenuItem[] = [
-    { key: "/l", title: "Lecturer", icon: <User size={20} /> },
     {
       key: "/l/class",
       title: "Class Mangement",
@@ -200,7 +181,6 @@ const Sidebar: React.FC<ISidebarProps> = ({
   ];
 
   const bottomMenuItems: IMenuItem[] = [
-    { key: "settings", title: "Settings", icon: <Settings size={20} /> },
     {
       key: "logout",
       title: "Logout",

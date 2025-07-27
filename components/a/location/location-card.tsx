@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Chip,
-  Button,
-} from "@heroui/react";
-import { Power, PowerOff } from "lucide-react";
+import { Card, CardBody, CardFooter, CardHeader, Button } from "@heroui/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 
@@ -57,7 +49,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
         />
       </CardHeader>
       <CardBody className="px-4 py-3">
-        <div className="flex items-start mb-2">
+        {/* <div className="flex items-start mb-2">
           <Chip
             className="mr-2 mt-1"
             color={location.isActive ? "success" : "danger"}
@@ -66,7 +58,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           >
             {location.isActive ? "Active" : "Inactive"}
           </Chip>
-        </div>
+        </div> */}
         <h2 className="text-xl font-bold">{location.name}</h2>
         <p className="text-xs text-gray-500 mb-3">{fullAddress}</p>
         <div className="grid grid-cols-3 gap-2">
@@ -105,7 +97,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
             Edit
           </Button>
         )}
-        {onActiveToggle && (
+        {/* {onActiveToggle && (
           <Button
             fullWidth
             className="flex items-center justify-center gap-1"
@@ -119,7 +111,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           >
             {location.isActive ? "Deactivate" : "Activate"}
           </Button>
-        )}
+        )} */}
       </CardFooter>
     </Card>
   );

@@ -141,18 +141,18 @@ export const CourseTable: React.FC<CourseTableProps> = ({
         </span>
       ),
     },
-    {
-      key: "activeStatus",
-      title: "Active Status",
-      sortable: true,
-      render: (course: Course) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${course.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-        >
-          {course.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
+    // {
+    //   key: "activeStatus",
+    //   title: "Active Status",
+    //   sortable: true,
+    //   render: (course: Course) => (
+    //     <span
+    //       className={`px-2 py-1 rounded-full text-xs ${course.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+    //     >
+    //       {course.isActive ? "Active" : "Inactive"}
+    //     </span>
+    //   ),
+    // },
     {
       key: "actions",
       title: "Actions",
@@ -202,7 +202,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
                 >
                   Delete
                 </DropdownItem>
-                <DropdownItem
+                {/* <DropdownItem
                   key="activate"
                   startContent={
                     course.isActive ? (
@@ -213,7 +213,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
                   }
                 >
                   {course.isActive ? "Deactivate" : "Activate"}
-                </DropdownItem>
+                </DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -308,7 +308,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             )}
           </div>
           {/* Course Certificates */}
-          <div>
+          {/* <div>
             <h4 className="font-semibold text-gray-700 mb-2">Certificates</h4>
             {course.courseCertificates &&
             course.courseCertificates.length > 0 ? (
@@ -322,9 +322,9 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             ) : (
               <p className="text-gray-600">No certificates available</p>
             )}
-          </div>
+          </div> */}
           {/* Course Materials */}
-          <div>
+          {/* <div>
             <h4 className="font-semibold text-gray-700 mb-2">Materials</h4>
             {course.courseMaterials && course.courseMaterials.length > 0 ? (
               <ul className="list-disc pl-5">
@@ -344,7 +344,7 @@ export const CourseTable: React.FC<CourseTableProps> = ({
             ) : (
               <p className="text-gray-600">No materials available</p>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     );

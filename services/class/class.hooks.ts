@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { courseClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
@@ -9,8 +9,10 @@ import {
   AcademicClassCreateDto,
   ClassRegistrationScheduleDto,
   AssignLecturerToClassesDto,
+  BulkChangeStatusDto,
 } from "./class.dto";
 import { classService } from "./class.service";
+import { AcademicClass } from "./class.schema";
 
 // React Query implementation for getting classes with pagination and filters
 export const useClasses = (query: AcademicClassQuery) => {
@@ -75,9 +77,16 @@ export const useCreateClassWithCustomHook = () => {
 
 // Mutation for updating a class
 export const useUpdateClass = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AcademicClassCreateDto }) =>
-      classService.updateClass(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<AcademicClass> }) => {
+      return await classService.updateClassPartial(id, data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch classes queries
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+    },
   });
 };
 
@@ -142,6 +151,14 @@ export const useAssignLecturerToClasses = () => {
   return useMutation({
     mutationFn: (assignData: AssignLecturerToClassesDto) =>
       classService.assignLecturerToClasses(assignData),
+  });
+};
+
+// Mutation for bulk changing status of classes
+export const useBulkChangeStatus = () => {
+  return useMutation({
+    mutationFn: (bulkChangeData: BulkChangeStatusDto) =>
+      classService.bulkChangeStatus(bulkChangeData),
   });
 };
 

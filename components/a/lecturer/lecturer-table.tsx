@@ -7,7 +7,6 @@ import {
   TableRow,
   TableCell,
   Button,
-  Chip,
   Spinner,
   Dropdown,
   DropdownTrigger,
@@ -61,17 +60,6 @@ export function LecturerTable({
     );
   };
 
-  const getWorkingStatusText = (status: number) => {
-    switch (status) {
-      case 0:
-        return "Inactive";
-      case 1:
-        return "Active";
-      default:
-        return "Unknown";
-    }
-  };
-
   const handleAction = (key: string, lecturer: Lecturer) => {
     if (key === "edit") {
       onEdit(lecturer);
@@ -80,8 +68,6 @@ export function LecturerTable({
         lecturer.id,
         `${lecturer.applicationUser.firstName} ${lecturer.applicationUser.lastName}`
       );
-    } else if (key === "details") {
-      onRowToggle(lecturer.id);
     } else if (key === "viewDetail") {
       onViewDetail(lecturer);
     }
@@ -139,14 +125,8 @@ export function LecturerTable({
               Degree {renderSortIcon("degree")}
             </div>
           </TableColumn>
-          <TableColumn
-            className="cursor-pointer"
-            onClick={() => onSort("workingStatus")}
-          >
-            <div className="flex items-center">
-              Status {renderSortIcon("workingStatus")}
-            </div>
-          </TableColumn>
+
+          <TableColumn>Details</TableColumn>
           <TableColumn>Actions</TableColumn>
         </TableHeader>
         <TableBody
@@ -174,14 +154,23 @@ export function LecturerTable({
                 </TableCell>
                 <TableCell>{lecturer.degree}</TableCell>
                 <TableCell>
-                  <Chip
-                    className={`status-badge ${
-                      lecturer.workingStatus === 1 ? "active" : "inactive"
-                    }`}
+                  <Button
+                    isIconOnly
+                    aria-label={
+                      expandedRows[lecturer.id]
+                        ? "Hide Details"
+                        : "Show Details"
+                    }
                     size="sm"
+                    variant="light"
+                    onClick={() => onRowToggle(lecturer.id)}
                   >
-                    {getWorkingStatusText(lecturer.workingStatus)}
-                  </Chip>
+                    {expandedRows[lecturer.id] ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <Dropdown>
@@ -213,20 +202,6 @@ export function LecturerTable({
                         startContent={<Trash2 className="w-4 h-4" />}
                       >
                         Delete
-                      </DropdownItem>
-                      <DropdownItem
-                        key="details"
-                        startContent={
-                          expandedRows[lecturer.id] ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )
-                        }
-                      >
-                        {expandedRows[lecturer.id]
-                          ? "Hide Details"
-                          : "Show Details"}
                       </DropdownItem>
                     </DropdownMenu>
                   </Dropdown>

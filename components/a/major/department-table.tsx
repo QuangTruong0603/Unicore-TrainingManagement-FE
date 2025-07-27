@@ -2,14 +2,12 @@ import { useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
-  Power,
-  PowerOff,
+  Edit,
   MoreVertical,
   Trash,
 } from "lucide-react";
 import {
   Button,
-  Chip,
   Table,
   TableHeader,
   TableColumn,
@@ -34,7 +32,6 @@ interface DepartmentTableProps {
   sortKey?: string;
   sortDirection?: string;
   onSort?: (key: string) => void;
-  onActiveToggle?: (department: Department) => void;
   onCreateDepartment?: (data: Partial<Department>) => Promise<void>;
   onDeleteDepartment?: (department: Department) => void;
   onUpdateDepartment?: (department: Department) => void;
@@ -46,7 +43,6 @@ export const DepartmentTable = ({
   sortKey,
   sortDirection = "asc",
   onSort,
-  onActiveToggle,
   onCreateDepartment,
   onDeleteDepartment,
   onUpdateDepartment,
@@ -109,14 +105,6 @@ export const DepartmentTable = ({
               Name {renderSortIcon("name")}
             </div>
           </TableColumn>
-          <TableColumn
-            className={`cursor-pointer ${sortKey === "isActive" ? "text-primary" : ""}`}
-            onClick={() => handleSort("isActive")}
-          >
-            <div className="flex items-center">
-              Status {renderSortIcon("isActive")}
-            </div>
-          </TableColumn>
           <TableColumn>Actions</TableColumn>
         </TableHeader>
         <TableBody
@@ -133,15 +121,6 @@ export const DepartmentTable = ({
                 <div className="font-medium">{department.name}</div>
               </TableCell>
               <TableCell>
-                <Chip
-                  color={department.isActive ? "success" : "danger"}
-                  size="sm"
-                  variant="flat"
-                >
-                  {department.isActive ? "Active" : "Inactive"}
-                </Chip>
-              </TableCell>
-              <TableCell>
                 <div className="flex items-center gap-2">
                   <Dropdown>
                     <DropdownTrigger>
@@ -151,24 +130,16 @@ export const DepartmentTable = ({
                     </DropdownTrigger>
                     <DropdownMenu>
                       <DropdownItem
-                        key="toggle"
-                        startContent={
-                          department.isActive ? (
-                            <PowerOff size={16} />
-                          ) : (
-                            <Power size={16} />
-                          )
-                        }
+                        key="update"
+                        startContent={<Edit size={16} />}
                         onPress={() =>
-                          onActiveToggle && onActiveToggle(department)
+                          onUpdateDepartment && onUpdateDepartment(department)
                         }
                       >
-                        {department.isActive ? "Deactivate" : "Activate"}
+                        Update
                       </DropdownItem>
                       <DropdownItem
                         key="delete"
-                        className="text-danger"
-                        color="danger"
                         isDisabled={!onDeleteDepartment}
                         startContent={<Trash size={16} />}
                         onPress={() =>

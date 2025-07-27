@@ -15,10 +15,7 @@ import {
   ChevronUp,
   MoreVertical,
   Trash,
-  Power,
   Edit,
-  CheckCheck,
-  X,
   Move,
 } from "lucide-react";
 import {
@@ -352,7 +349,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       },
     },
     {
-      key: "enrollmentStatus",
+      key: "status",
       title: "Enrollment Status",
       sortable: true,
       render: (academicClass: AcademicClass) => {
@@ -388,6 +385,11 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                 label: "Rejected",
                 color: "bg-purple-100 text-purple-800",
               };
+            case 7:
+              return {
+                label: "Ended",
+                color: "bg-red-100 text-red-800",
+              };
             default:
               return {
                 label: "Not Enrolled",
@@ -410,7 +412,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
       },
     },
     {
-      key: "status",
+      key: "isRegistrable",
       title: "Status",
       sortable: true,
       render: (academicClass: AcademicClass) => (
@@ -546,31 +548,12 @@ export const ClassTable: React.FC<ClassTableProps> = ({
                       >
                         Delete
                       </DropdownItem>
-                      <DropdownItem
-                        key="activate"
-                        startContent={<Power className="w-4 h-4" />}
-                      >
-                        {" "}
-                        {academicClass.isActive ? "Deactivate" : "Activate"}
-                      </DropdownItem>
                       {!academicClass.isRegistrable &&
                       academicClass.enrollmentStatus !== 3 &&
                       academicClass.enrollmentStatus !== 4 &&
                       academicClass.enrollmentStatus !== 5 &&
                       academicClass.enrollmentStatus !== undefined ? (
                         <>
-                          <DropdownItem
-                            key="approveEnrollments"
-                            startContent={<CheckCheck className="w-4 h-4" />}
-                          >
-                            Approve all enrollment
-                          </DropdownItem>
-                          <DropdownItem
-                            key="rejectEnrollments"
-                            startContent={<X className="w-4 h-4" />}
-                          >
-                            Reject all enrollment
-                          </DropdownItem>
                           <DropdownItem
                             key="moveEnrollments"
                             startContent={<Move className="w-4 h-4" />}

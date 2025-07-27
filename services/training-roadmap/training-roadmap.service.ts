@@ -73,6 +73,20 @@ export const trainingRoadmapService = {
     });
   },
 
+  getTrainingRoadmapByMajorIdAndBatchId: async (
+    majorId: string,
+    batchId: string
+  ): Promise<TrainingRoadmapResponse> => {
+    return courseClient.get(
+      `${API_ENDPOINTS.TRAINING_ROADMAPS}/major/${majorId}/batch/${batchId}`,
+      {
+        headers: {
+          accept: "text/plain",
+        },
+      }
+    );
+  },
+
   createTrainingRoadmap: async (
     data: CreateTrainingRoadmapData
   ): Promise<TrainingRoadmapResponse> => {

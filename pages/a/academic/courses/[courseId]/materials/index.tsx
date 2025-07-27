@@ -58,21 +58,7 @@ export default function CourseMaterialsPage() {
     onOpenChange: onModalOpenChange,
   } = useDisclosure();
 
-  // Fetch material types
-  const fetchMaterialTypes = async () => {
-    try {
-      const typesResponse = await materialTypeService.getAllMaterialTypes();
 
-      setMaterialTypes(typesResponse.data || []);
-    } catch (err) {
-      console.error("Failed to load material types:", err);
-      addToast({
-        title: "Error",
-        description: "Failed to load material types",
-        color: "danger",
-      });
-    }
-  };
 
   // Set course ID in Redux when it changes
   useEffect(() => {
@@ -90,7 +76,37 @@ export default function CourseMaterialsPage() {
 
   // Fetch material types on component mount
   useEffect(() => {
-    fetchMaterialTypes();
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        const typesResponse = await materialTypeService.getAllMaterialTypes();
+
+        if (isMounted) {
+          setMaterialTypes(typesResponse.data || []);
+        }
+      } catch (err) {
+        // Only log if it's not a cancellation error
+        if (
+          err instanceof Error &&
+          err.name !== "CanceledError" &&
+          !err.message?.includes("canceled")
+        ) {
+          console.error("Failed to load material types:", err);
+          addToast({
+            title: "Error",
+            description: "Failed to load material types",
+            color: "danger",
+          });
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Show error toast when there's an error from Redux
