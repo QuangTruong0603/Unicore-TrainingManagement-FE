@@ -17,6 +17,8 @@ import {
   Trash,
   Edit,
   Move,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import {
   Table,
@@ -26,6 +28,7 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/react";
+import router from "next/router";
 
 import styles from "./class-table.module.scss";
 
@@ -286,6 +289,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         </span>
       ),
     },
+
     {
       key: "status",
       title: "Enrollment Status",
@@ -365,111 +369,163 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         </div>
       ),
     },
-    ...(!isScorePage
-      ? [
-          {
-            key: "actions",
-            title: "Actions",
-            sortable: false,
-            render: (academicClass: AcademicClass) => {
-              const handleActionSelection = (key: React.Key) => {
-                switch (key) {
-                  case "update":
-                    if (onUpdateClass) onUpdateClass(academicClass);
-                    break;
-                  case "delete":
-                    if (onDeleteClass) onDeleteClass(academicClass);
-                    break;
-                  case "activate":
-                    if (onToggleActivation) onToggleActivation(academicClass);
-                    break;
-                  case "registration":
-                    onRegistrationToggle(academicClass);
-                    break;
-                  case "approveEnrollments":
-                    if (onApproveAllEnrollments)
-                      onApproveAllEnrollments(academicClass);
-                    break;
-                  case "rejectEnrollments":
-                    if (onRejectAllEnrollments)
-                      onRejectAllEnrollments(academicClass);
-                    break;
-                  case "moveEnrollments":
-                    if (onMoveEnrollments) onMoveEnrollments(academicClass);
-                    break;
-                }
-              };
+    {
+      key: "isActive",
+      title: "Is Active",
+      sortable: true,
+      render: (_academicClass: AcademicClass) => (
+        <div
+          className={`px-2 py-1 rounded-full text-xs text-center ${
+            true // Assuming all classes shown are active, update with actual field if available
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {"Active"}
+        </div>
+      ),
+    },
 
-              return (
-                <div className="flex gap-2 justify-end pr-2">
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label="Class Actions"
-                      onAction={handleActionSelection}
-                    >
-                      <DropdownItem
-                        key="update"
-                        startContent={<Edit className="w-4 h-4" />}
-                      >
-                        Update
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        startContent={<Trash className="w-4 h-4" />}
-                      >
-                        Delete
-                      </DropdownItem>
-                      {!academicClass.isRegistrable &&
-                      academicClass.enrollmentStatus !== 3 &&
-                      academicClass.enrollmentStatus !== 4 &&
-                      academicClass.enrollmentStatus !== 5 &&
-                      academicClass.enrollmentStatus !== undefined ? (
-                        <>
-                          <DropdownItem
-                            key="moveEnrollments"
-                            startContent={<Move className="w-4 h-4" />}
-                          >
-                            Move Enrollments
-                          </DropdownItem>
-                        </>
-                      ) : null}
-                    </DropdownMenu>
-                  </Dropdown>
-                  <Tooltip content="Toggle details">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="flat"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRowToggle(academicClass.id);
-                      }}
-                    >
-                      {expandedRows[academicClass.id] ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </Tooltip>
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
+    {
+      key: "actions",
+      title: "Actions",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        const handleActionSelection = (key: React.Key) => {
+          switch (key) {
+            case "viewMaterials":
+              if (typeof window !== "undefined") {
+                router.push({
+                  pathname: `/l/class/${academicClass.courseId}/materials`,
+                  query: {
+                    courseName: academicClass.course.name,
+                    courseId: academicClass.courseId,
+                  },
+                });
+              }
+              break;
+            case "viewScores":
+              if (typeof window !== "undefined") {
+                router.push(`/l/class/${academicClass.id}/score`);
+              }
+              break;
+            case "update":
+              if (onUpdateClass) onUpdateClass(academicClass);
+              break;
+            case "delete":
+              if (onDeleteClass) onDeleteClass(academicClass);
+              break;
+            case "activate":
+              if (onToggleActivation) onToggleActivation(academicClass);
+              break;
+            case "registration":
+              onRegistrationToggle(academicClass);
+              break;
+            case "approveEnrollments":
+              if (onApproveAllEnrollments)
+                onApproveAllEnrollments(academicClass);
+              break;
+            case "rejectEnrollments":
+              if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
+              break;
+            case "moveEnrollments":
+              if (onMoveEnrollments) onMoveEnrollments(academicClass);
+              break;
+          }
+        };
+
+        const dropdownItems = [
+          <DropdownItem
+            key="viewMaterials"
+            startContent={<BookOpen className="w-4 h-4" />}
+          >
+            View Materials
+          </DropdownItem>,
+          <DropdownItem
+            key="viewScores"
+            startContent={<GraduationCap className="w-4 h-4" />}
+          >
+            View Scores
+          </DropdownItem>,
+        ];
+
+        if (!isScorePage) {
+          dropdownItems.push(
+            <DropdownItem
+              key="update"
+              startContent={<Edit className="w-4 h-4" />}
+            >
+              Update
+            </DropdownItem>,
+            <DropdownItem
+              key="delete"
+              startContent={<Trash className="w-4 h-4" />}
+            >
+              Delete
+            </DropdownItem>
+          );
+
+          if (
+            !academicClass.isRegistrable &&
+            academicClass.enrollmentStatus !== 3 &&
+            academicClass.enrollmentStatus !== 4 &&
+            academicClass.enrollmentStatus !== 5 &&
+            academicClass.enrollmentStatus !== undefined
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="moveEnrollments"
+                startContent={<Move className="w-4 h-4" />}
+              >
+                Move Enrollments
+              </DropdownItem>
+            );
+          }
+        }
+
+        return (
+          <div className="flex gap-2 justify-end pr-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Class Actions"
+                onAction={handleActionSelection}
+              >
+                {dropdownItems.map((item) => item)}
+              </DropdownMenu>
+            </Dropdown>
+            <Tooltip content="Toggle details">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRowToggle(academicClass.id);
+                }}
+              >
+                {expandedRows[academicClass.id] ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+            </Tooltip>
+          </div>
+        );
+      },
+    },
   ];
 
   const handleSort = (key: string) => {

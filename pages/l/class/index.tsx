@@ -28,7 +28,7 @@ interface FilterChip {
   label: string;
 }
 
-export default function ScorePage() {
+export default function ClassPage() {
   const dispatch = useAppDispatch();
   const { classes, query, total, isLoading } = useAppSelector(
     (state) => state.class

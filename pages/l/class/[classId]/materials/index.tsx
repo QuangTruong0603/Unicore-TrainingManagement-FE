@@ -34,16 +34,17 @@ import {
 } from "@/store/slices/materialSlice";
 import { openConfirmDialog } from "@/store/slices/confirmDialogSlice";
 import { useAppDispatch } from "@/store/hooks";
-import "../../index.scss";
+import "./index.scss";
 
 export default function CourseMaterialsPage() {
   const router = useRouter();
-  const { courseId, name } = router.query;
-  const courseName = typeof name === "string" ? decodeURIComponent(name) : "";
+  const { courseId, courseName } = router.query;
+  const courseIdString = typeof courseId === "string" ? courseId : "";
+  const courseNameString = typeof courseName === "string" ? courseName : "";
   const dispatch = useAppDispatch();
 
   // Get material state from Redux
-  const { materials, query, total, isLoading } = useSelector(
+  const { materials, query, total, isLoading, error } = useSelector(
     (state: RootState) => state.material
   );
 
@@ -60,49 +61,42 @@ export default function CourseMaterialsPage() {
     onOpenChange: onModalOpenChange,
   } = useDisclosure();
 
+  // Fetch material types
+  const fetchMaterialTypes = async () => {
+    try {
+      const typesResponse = await materialTypeService.getAllMaterialTypes();
+
+      setMaterialTypes(typesResponse.data || []);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   // Set course ID in Redux when it changes
   useEffect(() => {
-    if (courseId && typeof courseId === "string") {
-      dispatch(setCourseId(courseId));
+    if (courseIdString) {
+      dispatch(setCourseId(courseIdString));
     }
-  }, [courseId, dispatch]);
+  }, [courseIdString, dispatch]);
 
   // Fetch materials when query parameters change
   useEffect(() => {
-    if (courseId && typeof courseId === "string") {
-      dispatch(fetchMaterials({ courseId, query }));
+    if (courseIdString) {
+      dispatch(fetchMaterials({ courseId: courseIdString, query }));
     }
-  }, [courseId, query, dispatch]);
+  }, [courseIdString, query, dispatch]);
 
   // Fetch material types on component mount
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        const typesResponse = await materialTypeService.getAllMaterialTypes();
-
-        if (isMounted) {
-          setMaterialTypes(typesResponse.data || []);
-        }
-      } catch (err) {
-        // Only log if it's not a cancellation error
-        if (
-          err instanceof Error &&
-          err.name !== "CanceledError" &&
-          !err.message?.includes("canceled")
-        ) {
-          console.error("Failed to load material types:", err);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
+    fetchMaterialTypes();
   }, []);
+
+  // Show error toast when there's an error from Redux
+  useEffect(() => {
+    if (error) {
+      console.log(error);
+    }
+  }, [error]);
 
   // Set page loading to false when all data is loaded
   useEffect(() => {
@@ -112,22 +106,17 @@ export default function CourseMaterialsPage() {
     }
 
     // If no courseId after router is ready, stop loading after material types are fetched
-    if (!courseId && materialTypes.length > 0) {
+    if (!courseIdString && materialTypes.length > 0) {
       setPageLoading(false);
 
       return;
     }
 
     // Check if we have course ID and both material types and materials have been fetched
-    if (
-      courseId &&
-      typeof courseId === "string" &&
-      materialTypes.length > 0 &&
-      !isLoading
-    ) {
+    if (courseIdString && materialTypes.length > 0 && !isLoading) {
       setPageLoading(false);
     }
-  }, [router.isReady, courseId, materialTypes, isLoading]);
+  }, [router.isReady, courseIdString, materialTypes, isLoading]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchTerm(e.target.value));
@@ -156,7 +145,7 @@ export default function CourseMaterialsPage() {
   };
 
   const handleDeleteMaterial = (materialId: string) => {
-    if (!courseId) return;
+    if (!courseIdString) return;
     console.log(materialId);
 
     // Validate materialId exists
@@ -180,12 +169,9 @@ export default function CourseMaterialsPage() {
         cancelText: "Cancel",
         onConfirm: async () => {
           try {
-            await materialService.deleteMaterial(
-              courseId as string,
-              materialId
-            );
+            await materialService.deleteMaterial(courseIdString, materialId);
             // Refresh materials after deletion
-            dispatch(fetchMaterials({ courseId: courseId as string, query }));
+            dispatch(fetchMaterials({ courseId: courseIdString, query }));
 
             addToast({
               title: "Success",
@@ -209,7 +195,8 @@ export default function CourseMaterialsPage() {
     data: MaterialCreateDto | MaterialUpdateDto | FormData,
     isFormData: boolean
   ) => {
-    if (!courseId) return;
+    console.log(courseIdString);
+    if (!courseIdString) return;
 
     try {
       setIsSubmitting(true);
@@ -220,7 +207,7 @@ export default function CourseMaterialsPage() {
           const formData = data as FormData;
 
           await materialService.updateMaterialWithFile(
-            courseId as string,
+            courseIdString,
             selectedMaterial.id,
             formData.get("Name") as string,
             formData.get("File") as File,
@@ -228,7 +215,7 @@ export default function CourseMaterialsPage() {
           );
         } else {
           await materialService.updateMaterial(
-            courseId as string,
+            courseIdString,
             selectedMaterial.id,
             data as MaterialUpdateDto
           );
@@ -245,14 +232,14 @@ export default function CourseMaterialsPage() {
           const formData = data as FormData;
 
           await materialService.createMaterialWithFile(
-            courseId as string,
+            courseIdString,
             formData.get("Name") as string,
             formData.get("File") as File,
             formData.get("MaterialTypeId") as string
           );
         } else {
           await materialService.createMaterial(
-            courseId as string,
+            courseIdString,
             data as MaterialCreateDto
           );
         }
@@ -266,21 +253,16 @@ export default function CourseMaterialsPage() {
 
       onModalOpenChange();
       // Refresh materials after creation/update
-      dispatch(fetchMaterials({ courseId: courseId as string, query }));
+      dispatch(fetchMaterials({ courseId: courseIdString, query }));
     } catch (err) {
       console.error("Failed to save material:", err);
-      addToast({
-        title: "Error",
-        description: "Failed to save material",
-        color: "danger",
-      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleBackToCourses = () => {
-    router.push("/a/academic/courses");
+  const handleBackToClasses = () => {
+    router.push("/l");
   };
 
   if (pageLoading) {
@@ -304,11 +286,13 @@ export default function CourseMaterialsPage() {
             isIconOnly
             className="mr-2"
             variant="light"
-            onPress={handleBackToCourses}
+            onPress={handleBackToClasses}
           >
             <ArrowLeft size={20} />
           </Button>
-          <h1 className="text-2xl font-bold">{courseName} - Materials</h1>
+          <h1 className="text-2xl font-bold">
+            {courseNameString ? `${courseNameString} - Materials` : "Materials"}
+          </h1>
         </div>
 
         <div className="flex justify-between items-center mb-6">
@@ -387,7 +371,7 @@ export default function CourseMaterialsPage() {
 
         {/* Material Modal */}
         <MaterialModal
-          courseId={courseId as string}
+          courseId={courseIdString}
           initialData={selectedMaterial || undefined}
           isOpen={isModalOpen}
           isSubmitting={isSubmitting}
