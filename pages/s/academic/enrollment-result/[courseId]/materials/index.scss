@@ -1,0 +1,14 @@
+.container {
+    height: calc(100vh - 64px);
+    overflow-y: scroll;
+}
+.container::-webkit-scrollbar {
+    display: none;
+}
+
+.loading-screen {
+    height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 
