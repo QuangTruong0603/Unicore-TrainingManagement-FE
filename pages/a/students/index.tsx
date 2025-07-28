@@ -386,6 +386,16 @@ export default function StudentsPage() {
     }
   };
 
+  const handleBatchCreated = (newBatch: Batch) => {
+    // Add the new batch to the batches list
+    setBatches(prev => [...prev, newBatch]);
+    addToast({
+      title: "Success",
+      description: `Batch "${newBatch.title}" created successfully`,
+      color: "success",
+    });
+  };
+
   return (
     <DefaultLayout>
       <div className="container mx-auto p-4">
@@ -477,6 +487,7 @@ export default function StudentsPage() {
           batches={batches}
           isOpen={isImportModalOpen}
           majors={majors}
+          onBatchCreated={handleBatchCreated}
           onClose={() => setIsImportModalOpen(false)}
           onSubmit={handleImport}
         />
