@@ -15,8 +15,13 @@ import {
   Chip,
   Button,
   Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
-import { Trash2 } from "lucide-react";
+import { Trash2, MoreVertical, BookOpen } from "lucide-react";
+import { useRouter } from "next/router";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentEnrollments } from "@/services/enrollment/enrollment.hooks";
@@ -31,6 +36,7 @@ import "./index.scss";
 const EnrollmentResultPage = () => {
   const { user, studentInfo } = useAuth();
   const { confirmDialog } = useConfirmDialog();
+  const router = useRouter();
   const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
 
   // Fetch semesters for dropdown
@@ -168,6 +174,22 @@ const EnrollmentResultPage = () => {
   const canDeleteEnrollment = (status: number) => {
     // Can delete if status is Pending (1), Approved (2), or Rejected (6)
     return status === 1 || status === 2 || status === 6;
+  };
+
+  const handleActionSelection = (key: React.Key, enrollment: Enrollment) => {
+    switch (key) {
+      case "viewMaterials":
+        if (enrollment.academicClass?.courseId) {
+          router.push({
+            pathname: `/s/academic/enrollment-result/${enrollment.academicClass.courseId}/materials`,
+            query: {
+              courseName: enrollment.academicClass.course?.name,
+              classId: enrollment.academicClass.id,
+            },
+          });
+        }
+        break;
+    }
   };
 
   if (!user || !studentInfo) {
@@ -339,21 +361,49 @@ const EnrollmentResultPage = () => {
                               </p>
                             </TableCell>
                             <TableCell>
-                              {canDeleteEnrollment(enrollment.status) && (
-                                <Tooltip content="Delete enrollment">
-                                  <Button
-                                    isIconOnly
-                                    color="danger"
-                                    size="sm"
-                                    variant="light"
-                                    onPress={() =>
-                                      handleDeleteEnrollment(enrollment.id)
+                              <div className="flex gap-2 justify-center">
+                                <Dropdown>
+                                  <DropdownTrigger>
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="light"
+                                    >
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownTrigger>
+                                  <DropdownMenu
+                                    aria-label="Enrollment Actions"
+                                    onAction={(key) =>
+                                      handleActionSelection(key, enrollment)
                                     }
                                   >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </Tooltip>
-                              )}
+                                    <DropdownItem
+                                      key="viewMaterials"
+                                      startContent={
+                                        <BookOpen className="w-4 h-4" />
+                                      }
+                                    >
+                                      View Materials
+                                    </DropdownItem>
+                                  </DropdownMenu>
+                                </Dropdown>
+                                {canDeleteEnrollment(enrollment.status) && (
+                                  <Tooltip content="Delete enrollment">
+                                    <Button
+                                      isIconOnly
+                                      color="danger"
+                                      size="sm"
+                                      variant="light"
+                                      onPress={() =>
+                                        handleDeleteEnrollment(enrollment.id)
+                                      }
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </Tooltip>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         )

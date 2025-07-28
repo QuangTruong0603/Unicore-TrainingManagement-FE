@@ -7,8 +7,8 @@ import { Material } from "@/services/material/material.schema";
 interface MaterialCardProps {
   material: Material;
   materialType?: MaterialType;
-  onEdit: (material: Material) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (material: Material) => void;
+  onDelete?: (id: string) => void;
 }
 
 export const MaterialCard: React.FC<MaterialCardProps> = ({
@@ -18,7 +18,11 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
   onDelete,
 }) => {
   return (
-    <Card key={material.id} className="shadow-sm">
+    <Card
+      key={material.id}
+      className="shadow-sm"
+      style={{ backgroundColor: "aliceblue" }}
+    >
       <CardHeader className="flex justify-between items-start">
         <div>
           <h3 className="text-lg font-medium">{material.name}</h3>
@@ -54,24 +58,28 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({
             <Download size={16} />
           </Button>
         )}
-        <Button
-          isIconOnly
-          color="warning"
-          size="sm"
-          variant="flat"
-          onPress={() => onEdit(material)}
-        >
-          <Edit size={16} />
-        </Button>
-        <Button
-          isIconOnly
-          color="danger"
-          size="sm"
-          variant="flat"
-          onPress={() => onDelete(material.id)}
-        >
-          <Trash2 size={16} />
-        </Button>
+        {onEdit && (
+          <Button
+            isIconOnly
+            color="warning"
+            size="sm"
+            variant="flat"
+            onPress={() => onEdit(material)}
+          >
+            <Edit size={16} />
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            isIconOnly
+            color="danger"
+            size="sm"
+            variant="flat"
+            onPress={() => onDelete(material.id)}
+          >
+            <Trash2 size={16} />
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

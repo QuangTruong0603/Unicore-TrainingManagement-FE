@@ -28,7 +28,7 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/react";
-import router, { useRouter } from "next/router";
+import router from "next/router";
 
 import styles from "./class-table.module.scss";
 
@@ -120,7 +120,6 @@ export const ClassTable: React.FC<ClassTableProps> = ({
 }) => {
   // Safety check: Ensure classes is an array
   const safeClasses = Array.isArray(classes) ? classes : [];
-  console.log(safeClasses);
 
   const handleSelectionChange = (classId: string, isChecked: boolean) => {
     if (isChecked) {
@@ -447,7 +446,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             startContent={<GraduationCap className="w-4 h-4" />}
           >
             View Scores
-          </DropdownItem>
+          </DropdownItem>,
         ];
 
         if (!isScorePage) {
@@ -466,11 +465,13 @@ export const ClassTable: React.FC<ClassTableProps> = ({
             </DropdownItem>
           );
 
-          if (!academicClass.isRegistrable &&
-              academicClass.enrollmentStatus !== 3 &&
-              academicClass.enrollmentStatus !== 4 &&
-              academicClass.enrollmentStatus !== 5 &&
-              academicClass.enrollmentStatus !== undefined) {
+          if (
+            !academicClass.isRegistrable &&
+            academicClass.enrollmentStatus !== 3 &&
+            academicClass.enrollmentStatus !== 4 &&
+            academicClass.enrollmentStatus !== 5 &&
+            academicClass.enrollmentStatus !== undefined
+          ) {
             dropdownItems.push(
               <DropdownItem
                 key="moveEnrollments"
