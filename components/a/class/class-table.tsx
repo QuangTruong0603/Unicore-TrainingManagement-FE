@@ -38,7 +38,6 @@ import { useLecturerById } from "@/services/lecturer/lecturer.hooks";
 // Lecturer cell component that fetches lecturer data
 const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
   const isInvalidLecturerId = !lecturerId || lecturerId.includes("000000");
-  const router = useRouter();
 
   if (isInvalidLecturerId) {
     return <span className="text-xs text-gray-400 italic">Not assigned</span>;

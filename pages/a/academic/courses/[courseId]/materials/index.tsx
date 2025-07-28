@@ -34,6 +34,7 @@ import {
 } from "@/store/slices/materialSlice";
 import { openConfirmDialog } from "@/store/slices/confirmDialogSlice";
 import { useAppDispatch } from "@/store/hooks";
+import "../../index.scss";
 
 export default function CourseMaterialsPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function CourseMaterialsPage() {
   const dispatch = useAppDispatch();
 
   // Get material state from Redux
-  const { materials, query, total, isLoading, error } = useSelector(
+  const { materials, query, total, isLoading } = useSelector(
     (state: RootState) => state.material
   );
 
@@ -50,6 +51,7 @@ export default function CourseMaterialsPage() {
   const [selectedMaterial, setSelectedMaterial] =
     useState<MaterialInterface | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   // Modal disclosure
   const {
@@ -57,8 +59,6 @@ export default function CourseMaterialsPage() {
     onOpen: onOpenModal,
     onOpenChange: onModalOpenChange,
   } = useDisclosure();
-
-
 
   // Set course ID in Redux when it changes
   useEffect(() => {
@@ -93,11 +93,6 @@ export default function CourseMaterialsPage() {
           !err.message?.includes("canceled")
         ) {
           console.error("Failed to load material types:", err);
-          addToast({
-            title: "Error",
-            description: "Failed to load material types",
-            color: "danger",
-          });
         }
       }
     };
@@ -109,16 +104,30 @@ export default function CourseMaterialsPage() {
     };
   }, []);
 
-  // Show error toast when there's an error from Redux
+  // Set page loading to false when all data is loaded
   useEffect(() => {
-    if (error) {
-      addToast({
-        title: "Error",
-        description: error,
-        color: "danger",
-      });
+    // Wait for router to be ready
+    if (!router.isReady) {
+      return;
     }
-  }, [error]);
+
+    // If no courseId after router is ready, stop loading after material types are fetched
+    if (!courseId && materialTypes.length > 0) {
+      setPageLoading(false);
+
+      return;
+    }
+
+    // Check if we have course ID and both material types and materials have been fetched
+    if (
+      courseId &&
+      typeof courseId === "string" &&
+      materialTypes.length > 0 &&
+      !isLoading
+    ) {
+      setPageLoading(false);
+    }
+  }, [router.isReady, courseId, materialTypes, isLoading]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchTerm(e.target.value));
@@ -274,11 +283,14 @@ export default function CourseMaterialsPage() {
     router.push("/a/academic/courses");
   };
 
-  if (isLoading && materials.length === 0) {
+  if (pageLoading) {
     return (
       <DefaultLayout>
-        <div className="flex justify-center items-center h-96">
-          <Spinner size="lg" />
+        <div className="loading-screen">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading materials...</p>
+          </div>
         </div>
       </DefaultLayout>
     );
@@ -333,12 +345,6 @@ export default function CourseMaterialsPage() {
             <Tab key={type.id} title={type.name} />
           ))}
         </Tabs>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
 
         <div className="bg-white rounded-lg shadow p-4">
           {materials.length === 0 ? (
