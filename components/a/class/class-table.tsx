@@ -17,6 +17,8 @@ import {
   Trash,
   Edit,
   Move,
+  BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import {
   Table,
@@ -26,12 +28,12 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/react";
+import router, { useRouter } from "next/router";
 
 import styles from "./class-table.module.scss";
 
 import { AcademicClass } from "@/services/class/class.schema";
 import { useLecturerById } from "@/services/lecturer/lecturer.hooks";
-import router, { useRouter } from "next/router";
 
 // Lecturer cell component that fetches lecturer data
 const LecturerCell: React.FC<{ lecturerId?: string }> = ({ lecturerId }) => {
@@ -119,6 +121,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
 }) => {
   // Safety check: Ensure classes is an array
   const safeClasses = Array.isArray(classes) ? classes : [];
+  console.log(safeClasses);
 
   const handleSelectionChange = (classId: string, isChecked: boolean) => {
     if (isChecked) {
@@ -288,66 +291,7 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         </span>
       ),
     },
-    {
-      key: "room",
-      title: "Room",
-      sortable: false,
-      render: (academicClass: AcademicClass) => {
-        if (!academicClass.scheduleInDays || academicClass.scheduleInDays.length === 0) {
-          return <span className="text-xs text-gray-400 italic">Not assigned</span>;
-        }
-        
-        const rooms = academicClass.scheduleInDays.map((schedule: any) => schedule.room.name as string);
-        const uniqueRooms = Array.from(new Set(rooms));
-        
-        return (
-          <div className="max-w-[120px]">
-            <Tooltip content={uniqueRooms.join(", ")}>
-              <span className="text-xs text-gray-700 cursor-help">
-                {uniqueRooms.length > 1 ? `${String(uniqueRooms[0])}...` : String(uniqueRooms[0] || "")}
-              </span>
-            </Tooltip>
-          </div>
-        );
-      },
-    },
-    {
-      key: "schedule",
-      title: "Schedule",
-      sortable: false,
-      render: (academicClass: AcademicClass) => {
-        if (!academicClass.scheduleInDays || academicClass.scheduleInDays.length === 0) {
-          return <span className="text-xs text-gray-400 italic">Not scheduled</span>;
-        }
-        
-        const schedules = academicClass.scheduleInDays.map((schedule: any) => 
-          `${schedule.dayOfWeek}: ${schedule.shift.startTime.substring(0, 5)}-${schedule.shift.endTime.substring(0, 5)}`
-        );
-        
-        return (
-          <div className="max-w-[150px]">
-            <Tooltip content={
-              <div className="space-y-1">
-                {schedules.map((sched: string, index: number) => (
-                  <div key={index} className="text-xs">{sched}</div>
-                ))}
-              </div>
-            }>
-              <div className="text-xs text-gray-700 cursor-help">
-                {schedules.length > 1 ? (
-                  <div>
-                    <div>{schedules[0]}</div>
-                    <div className="text-gray-400">+{schedules.length - 1} more</div>
-                  </div>
-                ) : (
-                  schedules[0]
-                )}
-              </div>
-            </Tooltip>
-          </div>
-        );
-      },
-    },
+
     {
       key: "status",
       title: "Enrollment Status",
@@ -443,150 +387,145 @@ export const ClassTable: React.FC<ClassTableProps> = ({
         </div>
       ),
     },
-    {
-      key: "view_actions",
-      title: "View",
-      sortable: false,
-      render: (academicClass: AcademicClass) => (
-        <div className="flex gap-2 justify-center">
-          <Tooltip content="View Materials">
-            <Button
-              size="sm"
-              variant="flat"
-              color="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (typeof window !== 'undefined') {
-                  router.push(`/l/class/${academicClass.id}/materials`);
-                }
-              }}
-            >
-              Materials
-            </Button>
-          </Tooltip>
-          <Tooltip content="View Scores">
-            <Button
-              size="sm"
-              variant="flat"
-              color="secondary"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (typeof window !== 'undefined') {
-                  router.push(`/l/class/${academicClass.id}/score`);
-                }
-              }}
-            >
-              Scores
-            </Button>
-          </Tooltip>
-        </div>
-      ),
-    },
-    ...(!isScorePage
-      ? [
-          {
-            key: "actions",
-            title: "Actions",
-            sortable: false,
-            render: (academicClass: AcademicClass) => {
-              const handleActionSelection = (key: React.Key) => {
-                switch (key) {
-                  case "update":
-                    if (onUpdateClass) onUpdateClass(academicClass);
-                    break;
-                  case "delete":
-                    if (onDeleteClass) onDeleteClass(academicClass);
-                    break;
-                  case "activate":
-                    if (onToggleActivation) onToggleActivation(academicClass);
-                    break;
-                  case "registration":
-                    onRegistrationToggle(academicClass);
-                    break;
-                  case "approveEnrollments":
-                    if (onApproveAllEnrollments)
-                      onApproveAllEnrollments(academicClass);
-                    break;
-                  case "rejectEnrollments":
-                    if (onRejectAllEnrollments)
-                      onRejectAllEnrollments(academicClass);
-                    break;
-                  case "moveEnrollments":
-                    if (onMoveEnrollments) onMoveEnrollments(academicClass);
-                    break;
-                }
-              };
 
-              return (
-                <div className="flex gap-2 justify-end pr-2">
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label="Class Actions"
-                      onAction={handleActionSelection}
-                    >
-                      <DropdownItem
-                        key="update"
-                        startContent={<Edit className="w-4 h-4" />}
-                      >
-                        Update
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        startContent={<Trash className="w-4 h-4" />}
-                      >
-                        Delete
-                      </DropdownItem>
-                      {!academicClass.isRegistrable &&
-                      academicClass.enrollmentStatus !== 3 &&
-                      academicClass.enrollmentStatus !== 4 &&
-                      academicClass.enrollmentStatus !== 5 &&
-                      academicClass.enrollmentStatus !== undefined ? (
-                        <>
-                          <DropdownItem
-                            key="moveEnrollments"
-                            startContent={<Move className="w-4 h-4" />}
-                          >
-                            Move Enrollments
-                          </DropdownItem>
-                        </>
-                      ) : null}
-                    </DropdownMenu>
-                  </Dropdown>
-                  <Tooltip content="Toggle details">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="flat"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRowToggle(academicClass.id);
-                      }}
-                    >
-                      {expandedRows[academicClass.id] ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </Tooltip>
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
+    {
+      key: "actions",
+      title: "Actions",
+      sortable: false,
+      render: (academicClass: AcademicClass) => {
+        const handleActionSelection = (key: React.Key) => {
+          switch (key) {
+            case "viewMaterials":
+              if (typeof window !== "undefined") {
+                router.push({
+                  pathname: `/l/class/${academicClass.courseId}/materials`,
+                  query: {
+                    courseName: academicClass.course.name,
+                    courseId: academicClass.courseId,
+                  },
+                });
+              }
+              break;
+            case "viewScores":
+              if (typeof window !== "undefined") {
+                router.push(`/l/class/${academicClass.id}/score`);
+              }
+              break;
+            case "update":
+              if (onUpdateClass) onUpdateClass(academicClass);
+              break;
+            case "delete":
+              if (onDeleteClass) onDeleteClass(academicClass);
+              break;
+            case "activate":
+              if (onToggleActivation) onToggleActivation(academicClass);
+              break;
+            case "registration":
+              onRegistrationToggle(academicClass);
+              break;
+            case "approveEnrollments":
+              if (onApproveAllEnrollments)
+                onApproveAllEnrollments(academicClass);
+              break;
+            case "rejectEnrollments":
+              if (onRejectAllEnrollments) onRejectAllEnrollments(academicClass);
+              break;
+            case "moveEnrollments":
+              if (onMoveEnrollments) onMoveEnrollments(academicClass);
+              break;
+          }
+        };
+
+        const dropdownItems = [
+          <DropdownItem
+            key="viewMaterials"
+            startContent={<BookOpen className="w-4 h-4" />}
+          >
+            View Materials
+          </DropdownItem>,
+          <DropdownItem
+            key="viewScores"
+            startContent={<GraduationCap className="w-4 h-4" />}
+          >
+            View Scores
+          </DropdownItem>
+        ];
+
+        if (!isScorePage) {
+          dropdownItems.push(
+            <DropdownItem
+              key="update"
+              startContent={<Edit className="w-4 h-4" />}
+            >
+              Update
+            </DropdownItem>,
+            <DropdownItem
+              key="delete"
+              startContent={<Trash className="w-4 h-4" />}
+            >
+              Delete
+            </DropdownItem>
+          );
+
+          if (!academicClass.isRegistrable &&
+              academicClass.enrollmentStatus !== 3 &&
+              academicClass.enrollmentStatus !== 4 &&
+              academicClass.enrollmentStatus !== 5 &&
+              academicClass.enrollmentStatus !== undefined) {
+            dropdownItems.push(
+              <DropdownItem
+                key="moveEnrollments"
+                startContent={<Move className="w-4 h-4" />}
+              >
+                Move Enrollments
+              </DropdownItem>
+            );
+          }
+        }
+
+        return (
+          <div className="flex gap-2 justify-end pr-2">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Class Actions"
+                onAction={handleActionSelection}
+              >
+                {dropdownItems.map((item) => item)}
+              </DropdownMenu>
+            </Dropdown>
+            <Tooltip content="Toggle details">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRowToggle(academicClass.id);
+                }}
+              >
+                {expandedRows[academicClass.id] ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+            </Tooltip>
+          </div>
+        );
+      },
+    },
   ];
 
   const handleSort = (key: string) => {
