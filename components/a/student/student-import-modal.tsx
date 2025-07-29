@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +12,7 @@ import {
   Autocomplete,
   AutocompleteItem,
 } from "@heroui/react";
+import { Download } from "lucide-react";
 
 import {
   studentImportSchema,
@@ -64,12 +66,138 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
   const fileList = watch("file");
   const file = fileList && fileList.length > 0 ? fileList[0] : null;
 
+  const handleExportTemplate = () => {
+    // Create template data based on actual Excel format
+    const templateData = [
+      [
+        "Order",
+        "PrivateEmail",
+        "FirstName",
+        "LastName",
+        "PersonId",
+        "Dob",
+        "PhoneNumber",
+      ],
+      [
+        "1",
+        "tranhuuquangtruong2003@gmail.com",
+        "Trần",
+        "A",
+        "950",
+        "3-Feb",
+        "1023456791",
+      ],
+      [
+        "2",
+        "tranhuuquangtruong2003@gmail.com",
+        "Nguyễn",
+        "B",
+        "951",
+        "4-Feb",
+        "1023456792",
+      ],
+      [
+        "3",
+        "tranhuuquangtruong2003@gmail.com",
+        "Trần",
+        "C",
+        "952",
+        "5-Feb",
+        "1023456793",
+      ],
+      [
+        "4",
+        "tranhuuquangtruong2003@gmail.com",
+        "Nguyễn",
+        "D",
+        "953",
+        "6-Feb",
+        "1023456794",
+      ],
+      [
+        "5",
+        "tranhuuquangtruong2003@gmail.com",
+        "Trần",
+        "E",
+        "954",
+        "7-Feb",
+        "1023456795",
+      ],
+      [
+        "6",
+        "tranhuuquangtruong2003@gmail.com",
+        "Nguyễn",
+        "G",
+        "955",
+        "8-Feb",
+        "1023456796",
+      ],
+      [
+        "7",
+        "tranhuuquangtruong2003@gmail.com",
+        "Trần",
+        "H",
+        "956",
+        "9-Feb",
+        "1023456797",
+      ],
+      [
+        "8",
+        "tranhuuquangtruong2003@gmail.com",
+        "Nguyễn",
+        "I",
+        "957",
+        "10-Feb",
+        "1023456798",
+      ],
+      [
+        "9",
+        "tranhuuquangtruong2003@gmail.com",
+        "Trần",
+        "K",
+        "958",
+        "11-Feb",
+        "1023456799",
+      ],
+      ["", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", ""],
+    ];
+
+    // Create CSV content
+    const csvContent = templateData
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
+
+    // Add BOM for proper UTF-8 encoding in Excel
+    const BOM = "\uFEFF";
+    const csvWithBOM = BOM + csvContent;
+
+    // Create and download file
+    const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", "student_import_template.csv");
+    link.style.visibility = "hidden";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   const handleCreateNewBatch = async () => {
     if (!newBatchTitle.trim() || !newBatchStartYear.trim()) {
       return;
     }
 
     const startYear = parseInt(newBatchStartYear);
+
     if (isNaN(startYear) || startYear < 1900 || startYear > 2100) {
       return;
     }
@@ -84,7 +212,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
       if (response.success && response.data) {
         // Set the newly created batch as selected
         setValue("batchId", response.data.id, { shouldValidate: true });
-        
+
         // Call the callback to update the parent component's batch list
         if (onBatchCreated) {
           onBatchCreated(response.data);
@@ -159,7 +287,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
     onClose();
   };
 
-      return (
+  return (
     <Modal isOpen={isOpen} onClose={handleModalClose}>
       <ModalContent>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -184,14 +312,22 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                 >
-                  <div className="text-center text-gray-500">
-                    {file
-                      ? "File selected: " + file.name
-                      : "Drag & drop file here or click to select"}
+                  <div className="text-center">
+                    <div className="text-gray-500">
+                      {file
+                        ? "File selected: " + file.name
+                        : "Drag & drop file here or click to select"}
+                    </div>
+                    {!file && (
+                      <div className="text-xs text-gray-400 mt-2">
+                        Need a template? Click &quot;Export Template&quot; above
+                        to download a sample file.
+                      </div>
+                    )}
                   </div>
                   <input
                     ref={fileInputRef}
-                    accept=".xlsx,.xls"
+                    accept=".xlsx,.xls,.csv"
                     style={{ display: "none" }}
                     type="file"
                     onChange={(e) => {
@@ -228,7 +364,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                 >
                   Batch
                 </label>
-                
+
                 {!isCreatingNewBatch ? (
                   <div className="space-y-2">
                     <Controller
@@ -289,28 +425,34 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                         Cancel
                       </Button>
                     </div>
-                    
+
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1" htmlFor="batch-title">
+                      <label
+                        className="block text-xs font-medium text-gray-600 mb-1"
+                        htmlFor="batch-title"
+                      >
                         Batch Title
                       </label>
                       <input
-                        id="batch-title"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="batch-title"
                         placeholder="Enter batch title (e.g., K19, K20)"
                         type="text"
                         value={newBatchTitle}
                         onChange={(e) => setNewBatchTitle(e.target.value)}
                       />
                     </div>
-                    
+
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1" htmlFor="batch-start-year">
+                      <label
+                        className="block text-xs font-medium text-gray-600 mb-1"
+                        htmlFor="batch-start-year"
+                      >
                         Start Year
                       </label>
                       <input
-                        id="batch-start-year"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="batch-start-year"
                         max="2100"
                         min="1900"
                         placeholder="Enter start year (e.g., 2024)"
@@ -319,12 +461,12 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                         onChange={(e) => setNewBatchStartYear(e.target.value)}
                       />
                     </div>
-                    
+
                     <Button
                       color="primary"
                       isDisabled={
-                        !newBatchTitle.trim() || 
-                        !newBatchStartYear.trim() || 
+                        !newBatchTitle.trim() ||
+                        !newBatchStartYear.trim() ||
                         isNaN(parseInt(newBatchStartYear)) ||
                         parseInt(newBatchStartYear) < 1900 ||
                         parseInt(newBatchStartYear) > 2100
@@ -337,7 +479,7 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
                     </Button>
                   </div>
                 )}
-                
+
                 {errors.batchId && (
                   <p className="text-xs text-red-500 mt-1">
                     {errors.batchId.message}
@@ -393,17 +535,34 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="danger" variant="light" onPress={handleModalClose}>
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              isDisabled={!isFormValid}
-              isLoading={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? "Importing..." : "Import"}
-            </Button>
+            <div className="flex justify-between items-center w-full">
+              <Button
+                color="secondary"
+                size="sm"
+                startContent={<Download className="w-4 h-4" />}
+                variant="bordered"
+                onPress={handleExportTemplate}
+              >
+                Export Template
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={handleModalClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  isDisabled={!isFormValid}
+                  isLoading={isSubmitting}
+                  type="submit"
+                >
+                  {isSubmitting ? "Importing..." : "Import"}
+                </Button>
+              </div>
+            </div>
           </ModalFooter>
         </form>
       </ModalContent>

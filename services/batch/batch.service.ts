@@ -1,9 +1,9 @@
 import { batchClient } from "../api/http-client";
 import { API_ENDPOINTS } from "../api/api-config";
+import { BaseResponse } from "../dto";
 
 import { BatchListResponse, CreateBatchData } from "./batch.dto";
 import { Batch } from "./batch.schema";
-import { BaseResponse } from "../dto";
 
 export const batchService = {
   getBatches: async (): Promise<BatchListResponse> => {

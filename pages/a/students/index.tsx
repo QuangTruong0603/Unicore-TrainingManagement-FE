@@ -388,7 +388,7 @@ export default function StudentsPage() {
 
   const handleBatchCreated = (newBatch: Batch) => {
     // Add the new batch to the batches list
-    setBatches(prev => [...prev, newBatch]);
+    setBatches((prev) => [...prev, newBatch]);
     addToast({
       title: "Success",
       description: `Batch "${newBatch.title}" created successfully`,
