@@ -15,8 +15,18 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Badge,
 } from "@heroui/react";
-import { Download, Upload, FileDown, MoreVertical } from "lucide-react";
+import {
+  Download,
+  Upload,
+  Users,
+  BookOpen,
+  Calendar,
+  GraduationCap,
+  FileText,
+  FileSpreadsheet,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import { addToast } from "@heroui/react";
 
@@ -60,6 +70,7 @@ export default function ClassScorePage() {
   const [loadingClass, setLoadingClass] = useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+
   const dispatch = useAppDispatch();
   const { editingStudentCode, edits } = useAppSelector(
     (state) => state.scoreEdit
@@ -67,7 +78,7 @@ export default function ClassScorePage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!classId) return;
+    if (!classId || typeof window === "undefined") return;
     setLoadingClass(true);
     classService
       .getClassById(classId as string)
@@ -79,7 +90,7 @@ export default function ClassScorePage() {
   }, [classId]);
 
   useEffect(() => {
-    if (!classId) return;
+    if (!classId || typeof window === "undefined") return;
     setLoading(true);
     enrollmentService
       .getStudentResultsByClassId(classId as string)
@@ -132,7 +143,7 @@ export default function ClassScorePage() {
   };
 
   // Export Data: Student Code, Student Name, score columns (actual value)
-  const handleExportData = () => {
+  const handleExportData = (format: "excel" | "pdf") => {
     const wsData: any[] = [];
     // Header
     const header = [
@@ -154,16 +165,73 @@ export default function ClassScorePage() {
         }),
       ]);
     });
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(wb, ws, "Scores");
-    XLSX.writeFile(wb, `class_score_${classId}.xlsx`);
+    switch (format) {
+      case "excel":
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(wb, ws, "Scores");
+        XLSX.writeFile(wb, `class_score_${classId}.xlsx`);
+        break;
+      case "pdf":
+        // For PDF, we'll create a simple HTML table and print it
+        const htmlContent = `
+          <html>
+            <head>
+              <title>Class Score Report</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .header { text-align: center; margin-bottom: 20px; }
+                @media print { body { margin: 0; } }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>Class Score Report</h1>
+                <p>Class: ${classInfo?.name || "N/A"}</p>
+                <p>Course: ${classInfo?.course?.name || "N/A"}</p>
+                <p>Semester: ${classInfo?.semester?.semesterNumber}/${classInfo?.semester?.year || "N/A"}</p>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    ${header.map((h) => `<th>${h}</th>`).join("")}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${wsData
+                    .slice(1)
+                    .map(
+                      (row) =>
+                        `<tr>${row.map((cell: any) => `<td>${cell}</td>`).join("")}</tr>`
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </body>
+          </html>
+        `;
+
+        if (typeof window !== "undefined") {
+          const printWindow = window.open("", "_blank");
+
+          if (printWindow) {
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.print();
+          }
+        }
+        break;
+    }
   };
 
   // Import điểm từ file Excel qua modal
   const handleImportModalSubmit = async (file: File) => {
-    if (!classId) return;
+    if (!classId || typeof window === "undefined") return;
     setIsImporting(true);
     try {
       const res = await enrollmentService.importStudentResults(
@@ -215,7 +283,7 @@ export default function ClassScorePage() {
 
   // Handler for Save Changes
   const handleSaveChanges = async () => {
-    if (!classId || edits.length === 0) return;
+    if (!classId || edits.length === 0 || typeof window === "undefined") return;
     setIsSaving(true);
     try {
       const res = await enrollmentService.updateStudentScores(
@@ -269,83 +337,212 @@ export default function ClassScorePage() {
     <DefaultLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Class Scoreboard</h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <GraduationCap className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Class Scoreboard
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Manage and update student scores
+                </p>
+              </div>
+            </div>
+
             {loadingClass ? (
-              <Spinner size="sm" />
+              <div className="flex items-center gap-2">
+                <Spinner size="sm" />
+                <span className="text-sm text-gray-500">
+                  Loading class information...
+                </span>
+              </div>
             ) : classInfo ? (
-              <Card className="w-full max-w-2xl mb-2">
+              <Card className="w-full max-w-4xl">
                 <CardBody>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <b>Name:</b> {classInfo.name}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <BookOpen className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          CLASS NAME
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {classInfo.name}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <b>Group:</b> {classInfo.groupNumber}
+
+                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <Users className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          GROUP
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          Group {classInfo.groupNumber}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <b>Course:</b> {classInfo.course?.code} -{" "}
-                      {classInfo.course?.name}
+
+                    <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Calendar className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          SEMESTER
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {classInfo.semester?.semesterNumber}/
+                          {classInfo.semester?.year}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <b>Semester:</b> {classInfo.semester?.semesterNumber}/
-                      {classInfo.semester?.year}
+
+                    <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <BookOpen className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          COURSE
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {classInfo.course?.code} - {classInfo.course?.name}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <b>Capacity:</b> {classInfo.capacity}
+
+                    <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
+                      <div className="p-2 bg-indigo-100 rounded-lg">
+                        <Users className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          CAPACITY
+                        </p>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {classInfo.capacity} students
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <b>Enrolled:</b> {classInfo.enrollmentCount}
+
+                    <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-lg">
+                      <div className="p-2 bg-teal-100 rounded-lg">
+                        <Users className="w-5 h-5 text-teal-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">
+                          ENROLLED
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-800">
+                            {classInfo.enrollmentCount}
+                          </p>
+                          <Badge
+                            color={
+                              classInfo.enrollmentCount >= classInfo.capacity
+                                ? "danger"
+                                : "success"
+                            }
+                            size="sm"
+                            variant="flat"
+                          >
+                            {classInfo.enrollmentCount >= classInfo.capacity
+                              ? "Full"
+                              : "Available"}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardBody>
               </Card>
             ) : (
-              <div className="text-red-500 text-sm">Class info not found.</div>
+              <Card className="w-full max-w-2xl">
+                <CardBody>
+                  <div className="flex items-center gap-3 text-red-500">
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        Class information not found
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Please check the class ID and try again
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
             )}
           </div>
-          <div className="flex gap-2 items-center">
-            <Button
-              color="success"
-              isDisabled={edits.length === 0}
-              isLoading={isSaving}
-              onClick={handleSaveChanges}
-            >
-              Save Changes
-            </Button>
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly color="secondary" variant="flat">
-                  <MoreVertical size={20} />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Score Actions">
-                <DropdownItem
-                  key="export-template"
-                  startContent={<FileDown size={16} />}
-                  onClick={handleExportTemplate}
+
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <div className="flex gap-2">
+              <Button
+                color="success"
+                isDisabled={edits.length === 0}
+                isLoading={isSaving}
+                startContent={<Download className="w-4 h-4" />}
+                onClick={handleSaveChanges}
+              >
+                Save Changes
+              </Button>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    color="primary"
+                    startContent={<Download className="w-4 h-4" />}
+                    variant="bordered"
+                  >
+                    Export Data
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Export Format"
+                  onAction={(key) => {
+                    if (key === "excel" || key === "pdf") {
+                      handleExportData(key);
+                    }
+                  }}
                 >
-                  Export Template
-                </DropdownItem>
-                <DropdownItem
-                  key="export"
-                  startContent={<Download size={16} />}
-                  onClick={handleExportData}
-                >
-                  Export
-                </DropdownItem>
-                <DropdownItem
-                  key="import"
-                  startContent={<Upload size={16} />}
-                  onClick={() => setIsImportModalOpen(true)}
-                >
-                  Import
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+                  <DropdownItem
+                    key="excel"
+                    startContent={<FileSpreadsheet className="w-4 h-4" />}
+                  >
+                    Export as Excel
+                  </DropdownItem>
+                  <DropdownItem
+                    key="pdf"
+                    startContent={<FileText className="w-4 h-4" />}
+                  >
+                    Export as PDF
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+              <Button
+                color="warning"
+                startContent={<Upload className="w-4 h-4" />}
+                variant="bordered"
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                Import
+              </Button>
+            </div>
+
             <ImportScoreModal
               isOpen={isImportModalOpen}
               isSubmitting={isImporting}
+              onExportTemplate={handleExportTemplate}
               onOpenChange={() => setIsImportModalOpen(false)}
               onSubmit={handleImportModalSubmit}
             />
@@ -355,8 +552,6 @@ export default function ClassScorePage() {
           <div className="flex justify-center items-center h-40">
             <Spinner />
           </div>
-        ) : error ? (
-          <div className="text-red-500">{error}</div>
         ) : (
           <Card>
             <CardBody>
