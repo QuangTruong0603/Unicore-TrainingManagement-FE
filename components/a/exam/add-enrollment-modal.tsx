@@ -62,7 +62,7 @@ export function AddEnrollmentModal({
         setError("Failed to fetch enrollments");
       }
     } catch {
-      setError("Error fetching enrollments");
+      // setError("Error fetching enrollments");
     } finally {
       setIsLoading(false);
     }

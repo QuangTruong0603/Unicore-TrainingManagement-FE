@@ -96,69 +96,6 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
         "4-Feb",
         "1023456792",
       ],
-      [
-        "3",
-        "tranhuuquangtruong2003@gmail.com",
-        "Trần",
-        "C",
-        "952",
-        "5-Feb",
-        "1023456793",
-      ],
-      [
-        "4",
-        "tranhuuquangtruong2003@gmail.com",
-        "Nguyễn",
-        "D",
-        "953",
-        "6-Feb",
-        "1023456794",
-      ],
-      [
-        "5",
-        "tranhuuquangtruong2003@gmail.com",
-        "Trần",
-        "E",
-        "954",
-        "7-Feb",
-        "1023456795",
-      ],
-      [
-        "6",
-        "tranhuuquangtruong2003@gmail.com",
-        "Nguyễn",
-        "G",
-        "955",
-        "8-Feb",
-        "1023456796",
-      ],
-      [
-        "7",
-        "tranhuuquangtruong2003@gmail.com",
-        "Trần",
-        "H",
-        "956",
-        "9-Feb",
-        "1023456797",
-      ],
-      [
-        "8",
-        "tranhuuquangtruong2003@gmail.com",
-        "Nguyễn",
-        "I",
-        "957",
-        "10-Feb",
-        "1023456798",
-      ],
-      [
-        "9",
-        "tranhuuquangtruong2003@gmail.com",
-        "Trần",
-        "K",
-        "958",
-        "11-Feb",
-        "1023456799",
-      ],
       ["", "", "", "", "", "", ""],
       ["", "", "", "", "", "", ""],
       ["", "", "", "", "", "", ""],
@@ -166,9 +103,23 @@ export const StudentImportModal: React.FC<StudentImportModalProps> = ({
       ["", "", "", "", "", "", ""],
     ];
 
-    // Create CSV content
+    // Create CSV content with semicolon separator and proper escaping
     const csvContent = templateData
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .map((row) =>
+        row
+          .map((cell) => {
+            if (
+              typeof cell === "string" &&
+              (cell.includes(";") || cell.includes('"') || cell.includes("\n"))
+            ) {
+              // Escape quotes by doubling them
+              return `"${cell.replace(/\"/g, '""')}"`;
+            }
+
+            return cell;
+          })
+          .join(";")
+      )
       .join("\n");
 
     // Add BOM for proper UTF-8 encoding in Excel

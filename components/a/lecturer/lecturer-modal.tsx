@@ -16,6 +16,8 @@ import {
 
 import { Lecturer } from "@/services/lecturer/lecturer.schema";
 import { Department } from "@/services/department/department.schema";
+import { Major } from "@/services/major/major.schema";
+import { majorService } from "@/services/major/major.service";
 
 interface LecturerModalProps {
   isOpen: boolean;
@@ -69,6 +71,32 @@ export function LecturerModal({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LecturerFormData>>({});
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [isLoadingMajors, setIsLoadingMajors] = useState(false);
+
+  // Fetch majors when modal opens
+  useEffect(() => {
+    const fetchMajors = async () => {
+      if (isOpen && majors.length === 0) {
+        setIsLoadingMajors(true);
+        try {
+          const response = await majorService.getMajorsPagination({
+            pageNumber: 1,
+            itemsPerpage: 100,
+            orderBy: "name",
+            isDesc: false,
+          });
+          setMajors(response.data.data);
+        } catch (error) {
+          console.error("Error fetching majors:", error);
+        } finally {
+          setIsLoadingMajors(false);
+        }
+      }
+    };
+
+    fetchMajors();
+  }, [isOpen, majors.length]);
 
   // Reset form when modal opens/closes or lecturer changes
   useEffect(() => {
@@ -342,13 +370,23 @@ export function LecturerModal({
                 >
                   Degree
                 </label>
-                <Input
+                <Select
                   id="degree"
-                  isInvalid={!!errors.degree}
-                  errorMessage={errors.degree}
-                  value={formData.degree}
-                  onChange={(e) => handleChange("degree", e.target.value)}
-                />
+                  selectedKeys={formData.degree ? [formData.degree] : []}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+                    handleChange("degree", selectedKey || "");
+                  }}
+                >
+                  <SelectItem key="Master">Master</SelectItem>
+                  <SelectItem key="Doctorate">Doctorate</SelectItem>
+                  <SelectItem key="Professor">Professor</SelectItem>
+                </Select>
+                {errors.degree && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.degree}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -375,13 +413,37 @@ export function LecturerModal({
                 >
                   Main Major
                 </label>
-                <Input
+                <Autocomplete
                   id="mainMajor"
-                  isInvalid={!!errors.mainMajor}
-                  errorMessage={errors.mainMajor}
-                  value={formData.mainMajor}
-                  onChange={(e) => handleChange("mainMajor", e.target.value)}
-                />
+                  allowsCustomValue={false}
+                  defaultItems={majors}
+                  isLoading={isLoadingMajors}
+                  selectedKey={formData.mainMajor}
+                  onSelectionChange={(key) =>
+                    handleChange("mainMajor", key?.toString() || "")
+                  }
+                >
+                  {(major) => (
+                    <AutocompleteItem
+                      key={major.id}
+                      textValue={major.name || ""}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">
+                          {major.name || "No name"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {major.code}
+                        </span>
+                      </div>
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+                {errors.mainMajor && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.mainMajor}
+                  </p>
+                )}
               </div>
 
               <div>

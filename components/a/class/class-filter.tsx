@@ -21,50 +21,99 @@ interface ClassFilterProps {
   query: AcademicClassQuery;
   onFilterChange: (newQuery: AcademicClassQuery) => void;
   onFilterClear: () => void;
+  courses?: Course[];
+  semesters?: Semester[];
 }
 
 export function ClassFilter({
   query,
   onFilterChange,
   onFilterClear,
+  courses: propCourses,
+  semesters: propSemesters,
 }: ClassFilterProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [courseSearchValue, setCourseSearchValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch data on component mount
+  // Use props if available, otherwise fetch data
   useEffect(() => {
+    if (propCourses && propSemesters) {
+      // Use props if provided
+      setCourses(propCourses);
+      setSemesters(propSemesters);
+
+      return;
+    }
+
+    // Only fetch if props are not provided
+    let isMounted = true;
+    let courseRequestCompleted = false;
+    let semesterRequestCompleted = false;
+
     const fetchData = async () => {
-      try {
-        // Fetch courses
-        const courseResponse = await courseService.getCourses({
+      if (isLoading) return; // Prevent multiple simultaneous requests
+
+      setIsLoading(true);
+      console.log("Fetching courses and semesters...");
+
+      // Fetch courses and semesters in parallel
+      const coursePromise = courseService
+        .getCourses({
           pageNumber: 1,
           itemsPerpage: 100,
           orderBy: "name",
           isDesc: false,
+        })
+        .then((response) => {
+          if (isMounted && !courseRequestCompleted) {
+            console.log("Course response:", response);
+            setCourses(response.data.data);
+            courseRequestCompleted = true;
+          }
+        })
+        .catch((error) => {
+          if (isMounted) {
+            console.error("Failed to fetch courses:", error);
+          }
         });
 
-        setCourses(courseResponse.data.data);
-
-        // Fetch semesters
-        const semesterResponse = await semesterService.getSemesters({
+      const semesterPromise = semesterService
+        .getSemesters({
           pageNumber: 1,
           itemsPerpage: 100,
           orderBy: "year",
           isDesc: true,
+        })
+        .then((response) => {
+          if (isMounted && !semesterRequestCompleted) {
+            setSemesters(response.data.data);
+            semesterRequestCompleted = true;
+          }
+        })
+        .catch((error) => {
+          if (isMounted) {
+            console.error("Failed to fetch semesters:", error);
+          }
         });
 
-        console.log("Semester response:", semesterResponse);
+      // Wait for both requests to complete
+      await Promise.allSettled([coursePromise, semesterPromise]);
 
-        setSemesters(semesterResponse.data.data);
-      } catch {
-        // Handle errors silently
+      if (isMounted) {
+        setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+
+    // Cleanup function to prevent setting state on unmounted component
+    return () => {
+      isMounted = false;
+    };
+  }, [propCourses, propSemesters]);
 
   // Get display value for selected course
   const getSelectedCourseDisplay = () => {

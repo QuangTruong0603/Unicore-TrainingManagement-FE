@@ -236,7 +236,7 @@ export default function ClassPage() {
   };
 
   const handleClassNameClick = (academicClass: AcademicClass) => {
-    router.push(`/l/score/${academicClass.id}`);
+    // router.push(`/l/score/${academicClass.id}`);
   };
 
   return (
@@ -265,6 +265,8 @@ export default function ClassPage() {
               query={query}
               onFilterChange={handleFilterChange}
               onFilterClear={handleFilterClear}
+              courses={courses}
+              semesters={semesters}
             />
           </div>
           {/* Filter chips display */}
