@@ -1193,6 +1193,8 @@ export default function ClassesPage() {
               query={query}
               onFilterChange={handleFilterChange}
               onFilterClear={handleFilterClear}
+              courses={courses}
+              semesters={semesters}
             />
           </div>
 

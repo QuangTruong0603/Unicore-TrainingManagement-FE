@@ -76,7 +76,7 @@ const StudentExamTable: React.FC<{ exams: Exam[]; isLoading: boolean }> = ({
       <TableBody>
         {exams.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7}>
+            <TableCell colSpan={6}>
               <div className="text-center py-8 text-gray-500">
                 No exams found
               </div>
